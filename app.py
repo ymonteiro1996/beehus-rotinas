@@ -1,7 +1,5 @@
 import os
-import sys
 import subprocess
-import threading
 from flask import Flask, redirect, request, jsonify
 from pages.dashboard          import bp as dashboard_bp
 from pages.controle_carteiras import bp as controle_carteiras_bp
@@ -59,8 +57,7 @@ def api_update():
             return jsonify({"status": "error", "message": result.stderr or "Falha no git pull"})
         if already_latest:
             return jsonify({"status": "up_to_date", "message": "Já está na versão mais recente."})
-        threading.Timer(0.3, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()
-        return jsonify({"status": "updated", "message": "Código atualizado! Reiniciando em instantes…"})
+        return jsonify({"status": "updated", "message": "Código atualizado!"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
