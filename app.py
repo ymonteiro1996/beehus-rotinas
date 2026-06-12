@@ -63,5 +63,7 @@ def api_update():
 
 
 if __name__ == "__main__":
+    import webbrowser, threading
     port = int(os.environ.get("PORT", 5002))
+    threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{port}")).start()
     app.run(host="0.0.0.0", port=port, use_reloader=False, threaded=True)

@@ -11,8 +11,11 @@ echo Atualizando codigo...
 git pull
 
 echo.
-echo Iniciando servidor...
-timeout /t 1 /nobreak >nul
-start "" "http://localhost:5002"
+echo Iniciando servidor... (feche esta janela para encerrar)
 python app.py
-pause
+
+echo.
+echo Encerrando servidor...
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5002 ^| findstr LISTENING 2^>nul') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
