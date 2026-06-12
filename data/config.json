@@ -1,0 +1,289 @@
+[
+  {
+    "companyId": "10000000000000",
+    "entityId": "67cf6a5c71f5e8c88f760505",
+    "delay": 3,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "10000005955125",
+    "entityId": "67c0a6ca71f5e8c88f76044f",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "10000005955125",
+    "entityId": "6809691b3b2296d8611909a2",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "10000005955125",
+    "entityId": "67c0a6ee71f5e8c88f760452",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "10000005955125",
+    "entityId": "67c0a77f71f5e8c88f76047c",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "10000005955125",
+    "entityId": "69133c29a598ef537a894289",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "10000005955125",
+    "entityId": "67c0a72271f5e8c88f76045e",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67c0a6ca71f5e8c88f76044f",
+    "delay": 2,
+    "method": "API",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67c0a6b471f5e8c88f76044b",
+    "delay": 2,
+    "method": "scraping",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67c0a72271f5e8c88f76045e",
+    "delay": 2,
+    "method": "scraping",
+    "responsible": "Parceiro"
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67c0a75d71f5e8c88f760473",
+    "delay": 2,
+    "method": "XML",
+    "responsible": "Parceiro"
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67c204dc71f5e8c88f7604e5",
+    "delay": 2,
+    "method": "other",
+    "responsible": "Parceiro"
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67c0a6a971f5e8c88f760448",
+    "delay": 4,
+    "method": "other",
+    "responsible": "Parceiro"
+  },
+  {
+    "companyId": "23313334000110",
+    "entityId": "67cf6a5c71f5e8c88f760505",
+    "delay": 2,
+    "method": "API",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "67c0a6ca71f5e8c88f76044f",
+    "delay": 2,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "67c0a6ee71f5e8c88f760452",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "688d11496e481cfa6c82f5e3",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "67c0a6b471f5e8c88f76044b",
+    "delay": 2,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "67c0a7ab71f5e8c88f760485",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "67c0a72271f5e8c88f76045e",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "00000000000000",
+    "entityId": "685e8cfa061f97bea2eb5947",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "689234386e481cfa6c27a520",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a81e71f5e8c88f7604aa",
+    "delay": 1,
+    "method": "scraping",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a6ca71f5e8c88f76044f",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a85371f5e8c88f7604bc",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "685f021fbf483394d2ca143f",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "6847221d06d02993a0fd8e3c",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a7f571f5e8c88f76049b",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a6b471f5e8c88f76044b",
+    "delay": 1,
+    "method": "scraping",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a7ab71f5e8c88f760485",
+    "delay": 1,
+    "method": "scraping",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a77f71f5e8c88f76047c",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a7bf71f5e8c88f76048b",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a72271f5e8c88f76045e",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a72a71f5e8c88f760461",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "685e8cfa061f97bea2eb5947",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a80471f5e8c88f7604a1",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a80d71f5e8c88f7604a4",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a75d71f5e8c88f760473",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67c0a6a971f5e8c88f760448",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "67cf6a5c71f5e8c88f760505",
+    "delay": 1,
+    "method": "API",
+    "responsible": "Beehus"
+  },
+  {
+    "companyId": "54577402000182",
+    "entityId": "68769aed598eb02707184402",
+    "delay": 1,
+    "method": "",
+    "responsible": ""
+  }
+]

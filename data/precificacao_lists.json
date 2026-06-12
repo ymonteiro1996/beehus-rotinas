@@ -1,0 +1,33 @@
+[
+  {
+    "name": "TF8",
+    "securities": [
+      {
+        "id": "69c30afa84ea99045a1734c5",
+        "beehusName": "Debênture Rumo IPCA + 4.00% Pós-fixado Dez/2035",
+        "mainId": "DEBRUMOIPCA400DEZ2035",
+        "securityType": "bond",
+        "indexer": "IPCA",
+        "indexerPercentual": 100,
+        "calcType": "inflacao_curva",
+        "benchmarkId": "66fc4ab9e88f2f542b80563d",
+        "benchmarkName": "IPCA",
+        "walletId": "6952ee36795bf829359776f3",
+        "walletName": "MLM - Itaú",
+        "pricingType": "C3",
+        "lastPU": 1362.751156632994,
+        "lastPUDate": "2026-03-26",
+        "posPU": 1362.751156632994,
+        "positionDate": "2026-03-26",
+        "transactions": [
+          {
+            "date": "2000-01-01",
+            "quantity": 70.89,
+            "yield": 4
+          }
+        ],
+        "weightedYield": 4
+      }
+    ]
+  }
+]

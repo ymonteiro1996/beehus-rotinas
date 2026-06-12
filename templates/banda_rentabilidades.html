@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+{% set active = "banda_rentabilidades" %}
+{% block title %}Banda de Rentabilidades{% endblock %}
+
+{% block head %}
+<style>
+  .tab-btn         { transition: color .15s, border-color .15s; }
+  .tab-btn.active  { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+  .mode-btn        { transition: background .15s, color .15s; }
+  .mode-btn.active { background: #2563eb; color: #fff; }
+  .table-wrap      { overflow-x: auto; max-height: calc(100vh - 320px); overflow-y: auto; }
+  .cell-ok         { background: #dcfce7; color: #166534; }
+  .cell-anom       { background: #fee2e2; color: #991b1b; font-weight: 600; }
+  .cell-na         { background: #f9fafb; color: #9ca3af; }
+  .row-anom td:first-child { border-left: 3px solid #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<header class="bg-white shadow px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <h1 class="font-semibold text-gray-700">Banda de Rentabilidades</h1>
+  <div class="flex items-center gap-3">
+    <!-- Anomaly counter badge -->
+    <span id="anomaly-badge" class="hidden items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-1.5 text-xs font-semibold">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <span id="anomaly-count">0</span> anomalia(s)
+    </span>
+  </div>
+</header>
+
+<!-- Company + end-date -->
+<div class="px-6 pt-5 pb-3 flex items-end gap-6 flex-wrap">
+  <div>
+    <label class="block text-xs text-gray-500 mb-1.5">Empresa</label>
+    <select id="company-select" onchange="onCompanyChange()"
+      class="border rounded px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-[280px]">
+      <option value="">Selecione uma empresa...</option>
+      {% for c in companies %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="block text-xs text-gray-500 mb-1.5">Data final</label>
+    <input type="date" id="end-date-input" onchange="onEndDateChange()"
+      class="border rounded px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="px-6 border-b border-gray-200 flex gap-6" id="tabs-bar">
+  <button class="tab-btn active pb-2.5 text-sm text-gray-500 hover:text-blue-600"
+          data-tab="ativos" onclick="switchTab('ativos')">Ativos</button>
+  <button class="tab-btn pb-2.5 text-sm text-gray-500 hover:text-blue-600"
+          data-tab="carteiras" onclick="switchTab('carteiras')">Carteiras</button>
+  <button class="tab-btn pb-2.5 text-sm text-gray-500 hover:text-blue-600"
+          data-tab="agrupamentos" onclick="switchTab('agrupamentos')">Agrupamentos</button>
+  <button class="tab-btn pb-2.5 text-sm text-gray-500 hover:text-blue-600"
+          data-tab="benchmarks" onclick="switchTab('benchmarks')">Benchmarks</button>
+</div>
+
+<!-- Filter bar -->
+<div class="px-6 pt-4 pb-2 flex items-center gap-4 flex-wrap">
+  <!-- View toggle -->
+  <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-medium">
+    <button class="mode-btn active px-3 py-1.5" data-mode="daily"   onclick="switchMode('daily')">Diário</button>
+    <button class="mode-btn        px-3 py-1.5" data-mode="summary" onclick="switchMode('summary')">Resumo</button>
+  </div>
+  <!-- Text filter -->
+  <input id="row-filter" type="text" oninput="filterRows()" placeholder="Filtrar..."
+    class="border rounded px-3 py-1.5 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-[200px]" />
+  <!-- Published only -->
+  <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+    <input type="checkbox" id="published-only" onchange="reload()" />
+    Somente publicadas
+  </label>
+  <!-- Anomaly only -->
+  <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+    <input type="checkbox" id="anomaly-only" onchange="reload()" />
+    Somente discrepantes
+  </label>
+  <span id="row-count" class="text-xs text-gray-400 ml-auto"></span>
+</div>
+
+<!-- Table container -->
+<div id="table-section" class="px-6 pb-6">
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="table-wrap">
+      <table id="main-table" class="w-full text-xs border-collapse" style="display:none">
+        <thead id="main-thead" class="bg-gray-50 text-gray-500 uppercase sticky top-0 z-10"></thead>
+        <tbody id="main-tbody"></tbody>
+      </table>
+      <p id="table-msg" class="text-center text-gray-400 py-10 text-sm">Selecione uma empresa.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DETAIL MODAL ══════════════════ -->
+<div id="detail-modal" class="hidden fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center pt-8 pb-8 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col" style="max-height:90vh">
+    <div class="flex items-center justify-between px-6 py-4 border-b shrink-0">
+      <div>
+        <h2 class="font-semibold text-gray-800 text-sm" id="detail-title">Detalhe</h2>
+        <p class="text-[11px] text-gray-400 mt-0.5 font-mono" id="detail-subtitle"></p>
+      </div>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 ml-4 shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div id="detail-body" class="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+      <span class="text-xs text-gray-400 italic">Carregando...</span>
+    </div>
+    <!-- Comment area -->
+    <div class="px-6 py-4 border-t shrink-0 space-y-2">
+      <label class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Comentário</label>
+      <textarea id="comment-input" rows="2"
+        class="w-full border rounded px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+        placeholder="Inserir comentário sobre esta discrepância..."></textarea>
+      <button onclick="saveComment()"
+        class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-1.5 text-xs font-semibold">
+        Salvar comentário
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block modals %}
+<script>
+  // ── State ───────────────────────────────────────────────────────────────────
+  let _company   = "";
+  let _endDate   = "";
+  let _tab       = "ativos";
+  let _mode      = "daily";
+  let _rows      = [];
+  let _dates     = [];
+  let _openId    = null;   // current detail row id
+  let _openTab   = null;   // tab when modal was opened
+
+  // ── Formatters ──────────────────────────────────────────────────────────────
+  const fmtPct = v =>
+    v == null ? '<span class="text-gray-300">—</span>'
+              : (v * 100).toLocaleString("pt-BR", {minimumFractionDigits:4, maximumFractionDigits:4}) + "%";
+
+  const fmtPct6 = v =>
+    v == null ? '—'
+              : (v * 100).toLocaleString("pt-BR", {minimumFractionDigits:6, maximumFractionDigits:6}) + "%";
+
+  const fmtNum = v =>
+    v == null ? '—'
+              : v.toLocaleString("pt-BR", {minimumFractionDigits:6, maximumFractionDigits:6});
+
+  function escHtml(s) {
+    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ── Company / date controls ─────────────────────────────────────────────────
+  function onCompanyChange() {
+    _company = document.getElementById("company-select").value;
+    _endDate = "";
+    document.getElementById("end-date-input").value = "";
+    if (!_company) {
+      showMsg("Selecione uma empresa.");
+      updateBadge([]);
+      return;
+    }
+    // Auto-detect latest date
+    fetch(`/api/banda-rentabilidades/dates?companyId=${enc(_company)}`)
+      .then(r => r.json())
+      .then(({ latestDate }) => {
+        if (latestDate) {
+          _endDate = latestDate;
+          document.getElementById("end-date-input").value = latestDate;
+        }
+        reload();
+      });
+  }
+
+  function onEndDateChange() {
+    _endDate = document.getElementById("end-date-input").value;
+    if (_company) reload();
+  }
+
+  // ── Tab / mode switching ────────────────────────────────────────────────────
+  function switchTab(tab) {
+    _tab = tab;
+    document.querySelectorAll(".tab-btn").forEach(b =>
+      b.classList.toggle("active", b.dataset.tab === tab)
+    );
+    if (_company) reload();
+  }
+
+  function switchMode(mode) {
+    _mode = mode;
+    document.querySelectorAll(".mode-btn").forEach(b =>
+      b.classList.toggle("active", b.dataset.mode === mode)
+    );
+    if (_company) reload();
+  }
+
+  // ── Load data ───────────────────────────────────────────────────────────────
+  function reload() {
+    if (!_company) return;
+    showMsg("Carregando...");
+    document.getElementById("main-table").style.display = "none";
+    updateBadge([]);
+
+    const pub  = document.getElementById("published-only").checked ? "1" : "0";
+    const anom = document.getElementById("anomaly-only").checked   ? "1" : "0";
+    const ed   = _endDate ? `&endDate=${enc(_endDate)}` : "";
+    const url  = `/api/banda-rentabilidades/${_tab}?companyId=${enc(_company)}&mode=${_mode}&publishedOnly=${pub}&anomalyOnly=${anom}${ed}`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        _rows  = data.rows  || [];
+        _dates = data.dates || [];
+        renderTable();
+      })
+      .catch(() => showMsg("Erro ao carregar dados."));
+  }
+
+  // ── Render table ────────────────────────────────────────────────────────────
+  function renderTable() {
+    if (!_rows.length) {
+      showMsg("Nenhum dado encontrado para esta seleção.");
+      updateBadge([]);
+      return;
+    }
+
+    const hasType = _tab === "ativos" || _tab === "benchmarks";
+
+    // Header
+    let hdr = `<tr>
+      <th class="px-3 py-2.5 text-left min-w-[220px] sticky left-0 bg-gray-50 z-20">Nome</th>`;
+    if (hasType) hdr += `<th class="px-3 py-2.5 text-left min-w-[160px]">Tipo</th>`;
+    _dates.forEach(d => {
+      const label = _mode === "daily" ? d.slice(5) : d;   // show MM-DD in daily
+      hdr += `<th class="px-3 py-2.5 text-right min-w-[110px]">${escHtml(label)}</th>`;
+    });
+    hdr += `<th class="px-3 py-2.5 text-center min-w-[80px]">Hoje</th></tr>`;
+    document.getElementById("main-thead").innerHTML = hdr;
+
+    // Body
+    document.getElementById("main-tbody").innerHTML = _rows.map(row => {
+      const rowClass = row.isAnomalyToday ? "row-anom" : "";
+      const statusBadge = row.isAnomalyToday
+        ? `<span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">Anomalia</span>`
+        : `<span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">OK</span>`;
+
+      const stickyBg = row.isAnomalyToday ? "bg-red-50" : "bg-white";
+      let tr = `<tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer ${rowClass}"
+                    data-name="${escHtml((row.name||"").toLowerCase())}"
+                    data-anom="${row.isAnomalyToday ? '1' : '0'}"
+                    data-id="${escHtml(row.id)}"
+                    onclick="openDetail('${escHtml(row.id)}','${escHtml(row.name)}')">
+        <td class="px-3 py-2 sticky left-0 ${stickyBg} z-10">
+          <p class="font-medium text-gray-800 truncate max-w-[200px]" title="${escHtml(row.name)}">${escHtml(row.name)}</p>
+          ${row.comment ? `<p class="text-[10px] text-blue-500 mt-0.5 truncate max-w-[200px]" title="${escHtml(row.comment)}">${escHtml(row.comment)}</p>` : ""}
+        </td>`;
+
+      if (hasType) tr += `<td class="px-3 py-2 text-gray-500">${escHtml(row.type || "")}</td>`;
+
+      row.cells.forEach(cell => {
+        let cls = "cell-na";
+        if (cell.return !== null && cell.return !== undefined) {
+          cls = cell.isAnomaly ? "cell-anom" : "cell-ok";
+        }
+        const tooltip = (cell.lower != null && cell.upper != null)
+          ? `title="Banda: ${fmtPct6(cell.lower)} / ${fmtPct6(cell.upper)}"`
+          : "";
+        tr += `<td class="px-3 py-2 text-right ${cls}" ${tooltip}>${fmtPct(cell.return)}</td>`;
+      });
+
+      tr += `<td class="px-3 py-2 text-center">${statusBadge}</td></tr>`;
+      return tr;
+    }).join("");
+
+    document.getElementById("main-table").style.display = "";
+    document.getElementById("table-msg").style.display  = "none";
+    updateBadge(_rows);
+    filterRows();
+  }
+
+  // ── Filter rows ─────────────────────────────────────────────────────────────
+  function filterRows() {
+    const q    = document.getElementById("row-filter").value.toLowerCase();
+    const rows = document.querySelectorAll("#main-tbody tr");
+    let vis = 0;
+    rows.forEach(tr => {
+      const nameMatch = tr.dataset.name.includes(q);
+      tr.style.display = nameMatch ? "" : "none";
+      if (nameMatch) vis++;
+    });
+    const anom = _rows.filter(r => r.isAnomalyToday).length;
+    document.getElementById("row-count").textContent =
+      `${vis} de ${_rows.length} item(ns)${anom ? ` · ${anom} anomalia(s)` : ""}`;
+  }
+
+  // ── Anomaly badge ────────────────────────────────────────────────────────────
+  function updateBadge(rows) {
+    const n = rows.filter(r => r.isAnomalyToday).length;
+    const badge = document.getElementById("anomaly-badge");
+    badge.classList.toggle("hidden", n === 0);
+    badge.classList.toggle("flex",   n > 0);
+    document.getElementById("anomaly-count").textContent = n;
+  }
+
+  // ── Detail modal ─────────────────────────────────────────────────────────────
+  function openDetail(id, name) {
+    _openId  = id;
+    _openTab = _tab;
+    document.getElementById("detail-title").textContent    = name;
+    document.getElementById("detail-subtitle").textContent = `${_tab} · ${_endDate || ""}`;
+    document.getElementById("detail-body").innerHTML =
+      `<span class="text-xs text-gray-400 italic">Carregando...</span>`;
+    document.getElementById("detail-modal").classList.remove("hidden");
+
+    // Pre-fill comment
+    const row = _rows.find(r => r.id === id);
+    document.getElementById("comment-input").value = row ? (row.comment || "") : "";
+
+    if (_tab === "ativos" || _tab === "benchmarks") {
+      const ed = _endDate ? `&endDate=${enc(_endDate)}` : "";
+      fetch(`/api/banda-rentabilidades/ativo-detail?securityId=${enc(id)}&companyId=${enc(_company)}${ed}`)
+        .then(r => r.json())
+        .then(data => renderDetail(data))
+        .catch(() => {
+          document.getElementById("detail-body").innerHTML =
+            `<p class="text-sm text-red-500">Erro ao carregar detalhe.</p>`;
+        });
+    } else {
+      // For carteiras/agrupamentos: show cell breakdown
+      renderCellDetail(_rows.find(r => r.id === id));
+    }
+  }
+
+  function closeModal() {
+    document.getElementById("detail-modal").classList.add("hidden");
+    _openId  = null;
+    _openTab = null;
+  }
+
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+  function renderDetail(data) {
+    if (!data.history || !data.history.length) {
+      document.getElementById("detail-body").innerHTML =
+        `<p class="text-sm text-gray-400 italic">Nenhum histórico encontrado.</p>`;
+      return;
+    }
+
+    let html = `<div>
+      <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Histórico de Rentabilidade (últimas datas)</p>
+      <div class="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+        <table class="w-full text-xs border-collapse">
+          <thead class="bg-gray-50 text-gray-500 uppercase">
+            <tr>
+              <th class="px-3 py-2.5 text-left">Data</th>
+              <th class="px-3 py-2.5 text-right">PU</th>
+              <th class="px-3 py-2.5 text-right">Quantidade</th>
+              <th class="px-3 py-2.5 text-right">Ret. Contribuição</th>
+              <th class="px-3 py-2.5 text-right">Ret. PU</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    data.history.forEach(h => {
+      html += `<tr class="border-t border-gray-100">
+        <td class="px-3 py-2 text-gray-700">${escHtml(h.date)}</td>
+        <td class="px-3 py-2 text-right font-mono">${fmtNum(h.pu)}</td>
+        <td class="px-3 py-2 text-right font-mono">${fmtNum(h.quantity)}</td>
+        <td class="px-3 py-2 text-right font-semibold ${h.retContrib != null ? (Math.abs(h.retContrib) > 0.01 ? 'text-red-600' : 'text-green-700') : 'text-gray-400'}">${fmtPct(h.retContrib)}</td>
+        <td class="px-3 py-2 text-right text-gray-600">${fmtPct(h.retPU)}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+    document.getElementById("detail-body").innerHTML = html;
+  }
+
+  function renderCellDetail(row) {
+    if (!row) {
+      document.getElementById("detail-body").innerHTML =
+        `<p class="text-sm text-gray-400 italic">Dado não encontrado.</p>`;
+      return;
+    }
+
+    let html = `<div>
+      <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Rentabilidade por período</p>
+      <div class="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+        <table class="w-full text-xs border-collapse">
+          <thead class="bg-gray-50 text-gray-500 uppercase">
+            <tr>
+              <th class="px-3 py-2.5 text-left">Período</th>
+              <th class="px-3 py-2.5 text-right">Retorno</th>
+              <th class="px-3 py-2.5 text-right">Benchmark</th>
+              <th class="px-3 py-2.5 text-right">Banda Inf.</th>
+              <th class="px-3 py-2.5 text-right">Banda Sup.</th>
+              <th class="px-3 py-2.5 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    row.cells.forEach(cell => {
+      const badge = cell.isAnomaly
+        ? `<span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">Fora</span>`
+        : `<span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">OK</span>`;
+      html += `<tr class="border-t border-gray-100 ${cell.isAnomaly ? 'bg-red-50' : ''}">
+        <td class="px-3 py-2 font-medium text-gray-700">${escHtml(cell.date)}</td>
+        <td class="px-3 py-2 text-right font-semibold ${cell.isAnomaly ? 'text-red-700' : 'text-gray-700'}">${fmtPct(cell.return)}</td>
+        <td class="px-3 py-2 text-right text-gray-500">${fmtPct(cell.center)}</td>
+        <td class="px-3 py-2 text-right text-gray-400">${fmtPct(cell.lower)}</td>
+        <td class="px-3 py-2 text-right text-gray-400">${fmtPct(cell.upper)}</td>
+        <td class="px-3 py-2 text-center">${badge}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+    document.getElementById("detail-body").innerHTML = html;
+  }
+
+  // ── Save comment ─────────────────────────────────────────────────────────────
+  function saveComment() {
+    if (!_openId) return;
+    const comment = document.getElementById("comment-input").value.trim();
+    const key     = _openTab === "carteiras"    ? `carteira_${_openId}`
+                  : _openTab === "agrupamentos" ? `grupo_${_openId}`
+                  : _openId;
+    fetch("/api/banda-rentabilidades/comment", {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({ key, comment }),
+    })
+    .then(r => r.json())
+    .then(() => {
+      // Update local row data so it shows without full reload
+      const row = _rows.find(r => r.id === _openId);
+      if (row) row.comment = comment;
+      // Re-render comment text in table cell
+      const trEl = document.querySelector(`#main-tbody tr[data-id="${CSS.escape(_openId)}"]`);
+      if (trEl) {
+        const firstTd = trEl.querySelector("td");
+        const cmEl = firstTd.querySelector("p.text-blue-500");
+        if (comment) {
+          if (cmEl) { cmEl.textContent = comment; cmEl.title = comment; }
+          else {
+            const p = document.createElement("p");
+            p.className = "text-[10px] text-blue-500 mt-0.5 truncate max-w-[200px]";
+            p.title = comment;
+            p.textContent = comment;
+            firstTd.appendChild(p);
+          }
+        } else if (cmEl) {
+          cmEl.remove();
+        }
+      }
+    })
+    .catch(() => alert("Erro ao salvar comentário."));
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function enc(v) { return encodeURIComponent(v); }
+
+  function showMsg(msg) {
+    document.getElementById("table-msg").textContent = msg;
+    document.getElementById("table-msg").style.display = "block";
+    document.getElementById("main-table").style.display = "none";
+  }
+</script>
+{% endblock %}

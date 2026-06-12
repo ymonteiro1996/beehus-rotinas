@@ -1,0 +1,897 @@
+{% extends "base.html" %}
+{% block title %}Controle de Demandas – Beehus{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Client badges ───────────────────────────────────────────────────── */
+  .cl-mira       { background:#dbeafe; color:#1e40af; }
+  .cl-smig       { background:#ede9fe; color:#5b21b6; }
+  .cl-fincere    { background:#fce7f3; color:#9d174d; }
+  .cl-blue3      { background:#e0e7ff; color:#3730a3; }
+  .cl-blue3wealth{ background:#f3e8ff; color:#6b21a8; }
+  .cl-oikos      { background:#ccfbf1; color:#065f46; }
+  .cl-nextwealth { background:#d1fae5; color:#065f46; }
+  .cl-rts        { background:#fee2e2; color:#991b1b; }
+  .cl-beehus     { background:#fef3c7; color:#92400e; }
+  html.dark .cl-mira      { background:#1e3a5f; color:#93c5fd; }
+  html.dark .cl-smig      { background:#2d1b69; color:#c4b5fd; }
+  html.dark .cl-fincere   { background:#4a0030; color:#f9a8d4; }
+  html.dark .cl-blue3     { background:#1e1b4b; color:#a5b4fc; }
+  html.dark .cl-blue3wealth{ background:#3b0764; color:#d8b4fe; }
+  html.dark .cl-oikos     { background:#022c22; color:#6ee7b7; }
+  html.dark .cl-nextwealth{ background:#022c22; color:#6ee7b7; }
+  html.dark .cl-rts       { background:#450a0a; color:#fca5a5; }
+  html.dark .cl-beehus    { background:#451a03; color:#fcd34d; }
+
+  /* ── Status badges ───────────────────────────────────────────────────── */
+  .st-pendente     { background:#f3f4f6; color:#6b7280; }
+  .st-em-andamento { background:#dbeafe; color:#1d4ed8; }
+  .st-concluido    { background:#dcfce7; color:#15803d; }
+  .st-cancelado    { background:#f3f4f6; color:#9ca3af; }
+  .st-on-hold      { background:#fef3c7; color:#b45309; }
+  html.dark .st-pendente     { background:#374151; color:#9ca3af; }
+  html.dark .st-em-andamento { background:#1e3a5f; color:#93c5fd; }
+  html.dark .st-concluido    { background:#052e16; color:#86efac; }
+  html.dark .st-cancelado    { background:#1f2937; color:#6b7280; }
+  html.dark .st-on-hold      { background:#292524; color:#f59e0b; }
+
+  /* ── Tipo badges ─────────────────────────────────────────────────────── */
+  .tp-operacional       { background:#e0f2fe; color:#0369a1; }
+  .tp-sistema           { background:#f3e8ff; color:#6b21a8; }
+  .tp-sistemaoperacional{ background:#fef9c3; color:#854d0e; }
+  html.dark .tp-operacional       { background:#0c2a3a; color:#38bdf8; }
+  html.dark .tp-sistema           { background:#2d1b69; color:#c4b5fd; }
+  html.dark .tp-sistemaoperacional{ background:#2d1f00; color:#fde68a; }
+
+  /* ── Kanban board ────────────────────────────────────────────────────── */
+  .kb-board {
+    display: flex; gap: 10px; padding: 0 16px 20px;
+    overflow-x: auto; align-items: flex-start;
+    min-height: calc(100vh - 160px);
+  }
+  .kb-col {
+    flex-shrink: 0; width: 220px;
+    background: #f9fafb; border-radius: 8px;
+    display: flex; flex-direction: column;
+    border: 1px solid #e5e7eb;
+    max-height: calc(100vh - 170px);
+  }
+  html.dark .kb-col { background: #1f2937; border-color: #374151; }
+  .kb-col-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px 8px; flex-shrink: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  html.dark .kb-col-header { border-bottom-color: #374151; }
+  .kb-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: white;
+  }
+  .kb-cards {
+    padding: 8px 8px 4px; flex: 1; overflow-y: auto; min-height: 50px;
+  }
+  .kb-cards.drag-over { background: rgba(59,130,246,.07); border-radius: 6px; }
+  .kb-add-btn {
+    margin: 4px 8px 8px; padding: 6px; font-size: 11px; color: #9ca3af;
+    border: 1.5px dashed #d1d5db; border-radius: 7px; cursor: pointer;
+    background: none; width: calc(100% - 16px); text-align: center;
+    transition: all .15s;
+  }
+  .kb-add-btn:hover { color: #374151; border-color: #9ca3af; background: #fff; }
+  html.dark .kb-add-btn { border-color: #374151; color: #6b7280; }
+  html.dark .kb-add-btn:hover { background: #374151; color: #d1d5db; }
+
+  /* ── Card ────────────────────────────────────────────────────────────── */
+  .kb-card {
+    background: white; border-radius: 8px; margin-bottom: 6px;
+    border: 1px solid #e5e7eb; border-left-width: 3px;
+    padding: 9px 10px 8px;
+    cursor: grab; transition: box-shadow .15s;
+    position: relative;
+  }
+  html.dark .kb-card { background: #111827; border-color: #374151; }
+  .kb-card:active { cursor: grabbing; }
+  .kb-card:hover  { box-shadow: 0 3px 12px rgba(0,0,0,.1); }
+  .kb-card.dragging { opacity: .45; box-shadow: none; }
+  .kb-card.dim { opacity: .55; }
+  .prio-alto  { border-left-color: #f87171; }
+  .prio-medio { border-left-color: #fbbf24; }
+  .prio-baixo { border-left-color: #34d399; }
+  .prio-none  { border-left-color: #e5e7eb; }
+
+  /* hover actions shown on card */
+  .kb-actions { display:none; gap:2px; }
+  .kb-card:hover .kb-actions { display:flex; }
+  .kb-action-btn {
+    padding: 2px 4px; border-radius: 4px; border: none; background: none;
+    color: #9ca3af; cursor: pointer; font-size: 11px; line-height: 1;
+    transition: all .1s;
+  }
+  .kb-action-btn:hover { background: #f3f4f6; color: #374151; }
+  html.dark .kb-action-btn:hover { background: #374151; color: #d1d5db; }
+
+  /* ── Add column sidebar button ───────────────────────────────────────── */
+  .kb-add-col {
+    flex-shrink: 0; width: 36px; display: flex;
+    flex-direction: column; align-items: center; padding-top: 12px; gap: 6px;
+  }
+  .kb-add-col-btn {
+    width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6;
+    border: 1.5px dashed #d1d5db; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #9ca3af; font-size: 18px; transition: all .15s;
+  }
+  .kb-add-col-btn:hover { background: #fff; border-color: #9ca3af; color: #374151; }
+  html.dark .kb-add-col-btn { background: #1f2937; border-color: #374151; color: #6b7280; }
+
+  /* hidden-cols dropdown */
+  .hidden-cols-menu {
+    position: absolute; left: 0; top: 100%;
+    background: white; border: 1px solid #e5e7eb; border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.12); padding: 6px; z-index: 40;
+    min-width: 160px; margin-top: 4px;
+  }
+  html.dark .hidden-cols-menu { background: #1f2937; border-color: #374151; }
+  .hidden-cols-menu button {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 6px 8px; border-radius: 6px; border: none; background: none;
+    font-size: 12px; color: #374151; cursor: pointer; text-align: left;
+  }
+  .hidden-cols-menu button:hover { background: #f3f4f6; }
+  html.dark .hidden-cols-menu button { color: #d1d5db; }
+  html.dark .hidden-cols-menu button:hover { background: #374151; }
+
+  /* ── Modal ───────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem;
+  }
+  .modal-box {
+    background:white; border-radius:.75rem; width:100%;
+    max-width:540px; max-height:90vh; overflow-y:auto; padding:1.5rem;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  html.dark .modal-box { background:#1f2937; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-thumb { border-radius:3px; background:#d1d5db; }
+  html.dark ::-webkit-scrollbar-thumb { background:#374151; }
+  .line-clamp-2 {
+    display:-webkit-box; -webkit-line-clamp:2;
+    -webkit-box-orient:vertical; overflow:hidden;
+  }
+
+  /* ── Metrics bar ─────────────────────────────────────────────────────── */
+  .met-bar {
+    background:#fff; border-bottom:1px solid #e5e7eb;
+    padding:7px 16px; display:flex; align-items:center;
+    gap:6px; flex-wrap:wrap;
+  }
+  .met-chip {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:11px; padding:3px 9px; border-radius:20px;
+    font-weight:500; border:1px solid #e5e7eb;
+    background:#f9fafb; color:#374151; white-space:nowrap;
+  }
+  .met-chip b { font-weight:700; }
+  .met-chip.done   { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+  .met-chip.active { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+  .met-chip.pend   { background:#f9fafb; color:#6b7280; border-color:#e5e7eb; }
+  .met-chip.hold   { background:#fffbeb; color:#b45309; border-color:#fde68a; }
+  .met-chip.late   { background:#fff1f2; color:#be123c; border-color:#fecdd3; }
+  html.dark .met-chip       { background:#1f2937; border-color:#374151; color:#d1d5db; }
+  html.dark .met-chip.done  { background:#052e16; border-color:#166534; color:#86efac; }
+  html.dark .met-chip.active{ background:#1e3a5f; border-color:#1e40af; color:#93c5fd; }
+  html.dark .met-chip.late  { background:#450a0a; border-color:#991b1b; color:#fca5a5; }
+
+  /* ── Progress row on card ───────────────────────────────────────────── */
+  .kb-prog-row {
+    display:flex; align-items:center; gap:4px; margin-bottom:6px;
+  }
+  .kb-prog-btn {
+    width:16px; height:16px; border-radius:3px; border:1px solid #d1d5db;
+    background:#f3f4f6; color:#6b7280; font-size:13px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; line-height:1; padding:0; transition:all .1s;
+    user-select:none;
+  }
+  .kb-prog-btn:hover { background:#e5e7eb; color:#111827; border-color:#9ca3af; }
+  .kb-prog-btn:active { transform:scale(.9); }
+  .kb-prog-track {
+    flex:1; height:5px; background:#e5e7eb; border-radius:3px; overflow:hidden;
+  }
+  .kb-prog-fill { height:100%; border-radius:3px; transition:width .2s; }
+  .kb-prog-pct {
+    font-size:9px; font-weight:700; color:#6b7280;
+    min-width:22px; text-align:right; flex-shrink:0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Header ── -->
+<header class="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center gap-3">
+    <div>
+      <h1 class="text-base font-semibold text-gray-900">Controle de Demandas</h1>
+      <p class="text-xs text-gray-400" id="count-label">Carregando…</p>
+    </div>
+  </div>
+  <button onclick="openNew()"
+    class="flex items-center gap-1.5 bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+    </svg>
+    Nova Demanda
+  </button>
+</header>
+
+<!-- ── Filter bar ── -->
+<div class="bg-white border-b px-5 py-2.5 flex flex-wrap gap-2 items-center">
+  <div class="relative">
+    <input id="f-search" type="text" placeholder="Buscar…"
+      class="pl-7 pr-3 py-1.5 border rounded-lg text-xs w-48 focus:outline-none focus:ring-2 focus:ring-black/20"
+      oninput="debounceLoad()">
+    <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+    </svg>
+  </div>
+
+  <select id="f-cliente" onchange="loadData()"
+    class="border rounded-lg text-xs px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-black/20">
+    <option value="">Todos os clientes</option>
+    {% for c in clientes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+  </select>
+
+  <select id="f-prioridade" onchange="loadData()"
+    class="border rounded-lg text-xs px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-black/20">
+    <option value="">Todas as prioridades</option>
+    {% for p in prioridades %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+  </select>
+
+  <select id="f-status" onchange="loadData()"
+    class="border rounded-lg text-xs px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-black/20">
+    <option value="">Todos os status</option>
+    {% for s in status_opts %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+  </select>
+
+  <select id="f-tipo" onchange="loadData()"
+    class="border rounded-lg text-xs px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-black/20">
+    <option value="">Todos os tipos</option>
+    {% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+  </select>
+
+  <label class="flex items-center gap-1.5 cursor-pointer select-none">
+    <input type="checkbox" id="f-show-done" onchange="loadData()"
+      class="w-3.5 h-3.5 rounded border-gray-300 accent-gray-700">
+    <span class="text-xs text-gray-500">Mostrar concluídos</span>
+  </label>
+
+  <button onclick="clearFilters()"
+    class="text-xs text-gray-400 hover:text-gray-700 underline transition-colors ml-auto">
+    Limpar filtros
+  </button>
+</div>
+
+<!-- ── Metrics ── -->
+<div class="met-bar" id="met-bar"></div>
+
+<!-- ── Board ── -->
+<div class="kb-board" id="kb-board"></div>
+{% endblock %}
+
+{% block modals %}
+
+<!-- Modal: Nova / Editar Demanda -->
+<div id="modal-form" class="modal-overlay hidden" onclick="if(event.target===this)closeForm()">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-4">
+      <h2 id="form-title" class="text-sm font-semibold text-gray-900">Nova Demanda</h2>
+      <button onclick="closeForm()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <input type="hidden" id="form-id">
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Cliente *</label>
+        <select id="form-cliente"
+          class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20">
+          <option value="">Selecione…</option>
+          {% for c in clientes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Demanda *</label>
+        <textarea id="form-demanda" rows="3"
+          class="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black/20"
+          placeholder="Descreva a demanda…"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+          <select id="form-tipo"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20">
+            <option value="">—</option>
+            {% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Prioridade</label>
+          <select id="form-prioridade"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20">
+            {% for p in prioridades %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Status</label>
+        <select id="form-status"
+          class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20">
+          {% for s in status_opts %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Responsável</label>
+          <input id="form-responsavel" type="text" list="resp-list"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
+            placeholder="Ex: Yuri">
+          <datalist id="resp-list">
+            {% for r in responsaveis %}<option value="{{ r }}">{% endfor %}
+          </datalist>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Deadline</label>
+          <input id="form-deadline" type="text"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
+            placeholder="Ex: 30/05/2026 ou Diário">
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeForm()"
+        class="flex-1 border rounded-lg py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="submitForm()"
+        class="flex-1 bg-gray-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-gray-700 transition-colors">
+        Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Comentários -->
+<div id="modal-comments" class="modal-overlay hidden" onclick="if(event.target===this)closeComments()">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-gray-900">Atualizações</h2>
+      <button onclick="closeComments()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <p id="cm-demand-title" class="text-xs text-gray-500 mb-4 leading-snug"></p>
+    <div id="cm-list" class="space-y-2 mb-4 max-h-56 overflow-y-auto pr-1"></div>
+    <textarea id="cm-text" rows="3"
+      class="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black/20 mb-3"
+      placeholder="Descreva a atualização…"></textarea>
+    <div class="flex gap-3">
+      <button onclick="closeComments()"
+        class="flex-1 border rounded-lg py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        Fechar
+      </button>
+      <button onclick="submitComment()"
+        class="flex-1 bg-gray-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-gray-700 transition-colors">
+        Adicionar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar delete -->
+<div id="modal-delete" class="modal-overlay hidden" onclick="if(event.target===this)closeDelete()">
+  <div class="modal-box max-w-xs">
+    <h2 class="text-sm font-semibold text-gray-900 mb-2">Remover demanda?</h2>
+    <p class="text-xs text-gray-500 mb-5">Essa ação não pode ser desfeita.</p>
+    <div class="flex gap-3">
+      <button onclick="closeDelete()"
+        class="flex-1 border rounded-lg py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="confirmDelete()"
+        class="flex-1 bg-red-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-red-700 transition-colors">
+        Remover
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants from server ──────────────────────────────────────────────────
+const ALL_RESP = {{ responsaveis | tojson }};
+const LS_KEY   = "kb_columns_v2";
+
+// ── State ──────────────────────────────────────────────────────────────────
+let _map      = {};
+let _activeId = null;
+let _deleteId = null;
+let _debounce = null;
+let _dragId   = null;
+let _lastRows = [];
+
+// Columns: load from localStorage or default to ALL_RESP
+function _loadColumns() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch(_) {}
+  return [...ALL_RESP];
+}
+let _columns = _loadColumns();
+function _saveColumns() { localStorage.setItem(LS_KEY, JSON.stringify(_columns)); }
+
+// ── Colour helpers ─────────────────────────────────────────────────────────
+const CLIENT_CLS = {
+  "Mira":"cl-mira","SMIG":"cl-smig","Fincere":"cl-fincere",
+  "Blue3":"cl-blue3","Blue3 Wealth":"cl-blue3wealth","Oikos":"cl-oikos",
+  "Next Wealth":"cl-nextwealth","RTS":"cl-rts",
+  "Beehus":"cl-beehus",
+};
+const STATUS_CLS = {
+  "Pendente":"st-pendente","Em Andamento":"st-em-andamento",
+  "Concluído":"st-concluido","Cancelado":"st-cancelado","On Hold":"st-on-hold",
+};
+const TIPO_CLS = {
+  "Operacional":"tp-operacional","Sistema":"tp-sistema",
+  "Sistema Operacional":"tp-sistemaoperacional",
+};
+const PRIO_CLS = { "Alto":"prio-alto","Médio":"prio-medio","Baixo":"prio-baixo" };
+const PRIO_DOT = { "Alto":"bg-red-400","Médio":"bg-amber-400","Baixo":"bg-emerald-400" };
+
+// Avatar colours cycle
+const AVATAR_COLORS = [
+  "#1d4ed8","#7c3aed","#db2777","#059669","#d97706",
+  "#0891b2","#4338ca","#dc2626","#15803d","#b45309",
+];
+function avatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function avatarInitials(name) {
+  return (name || "?").split(/[\s\/]/).filter(Boolean).map(w => w[0]).slice(0,2).join("").toUpperCase();
+}
+
+function escHtml(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function fmtDate(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+
+// ── Overdue detection ──────────────────────────────────────────────────────
+function isOverdue(d) {
+  if (["Concluído","Cancelado"].includes(d.status)) return false;
+  const m = (d.deadline||"").match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (!m) return false;
+  const dlDate = new Date(+m[3], +m[2]-1, +m[1]);
+  const today  = new Date(); today.setHours(0,0,0,0);
+  return dlDate < today;
+}
+
+// ── Metrics ────────────────────────────────────────────────────────────────
+function renderMetrics(rows) {
+  const total   = rows.length;
+  const done    = rows.filter(d => d.status === "Concluído").length;
+  const active  = rows.filter(d => d.status === "Em Andamento").length;
+  const pending = rows.filter(d => d.status === "Pendente").length;
+  const onhold  = rows.filter(d => d.status === "On Hold").length;
+  const overdue = rows.filter(isOverdue).length;
+  const avgProg = total
+    ? Math.round(rows.reduce((s,d) => s + (parseInt(d.progress)||0), 0) / total)
+    : 0;
+
+  document.getElementById("met-bar").innerHTML = `
+    <span class="met-chip">📋 <b>${total}</b> total</span>
+    <span class="met-chip done">✅ <b>${done}</b> concluídas</span>
+    <span class="met-chip active">▶ <b>${active}</b> em andamento</span>
+    <span class="met-chip pend">⏳ <b>${pending}</b> pendentes</span>
+    ${onhold  ? `<span class="met-chip hold">⏸ <b>${onhold}</b> on hold</span>` : ""}
+    ${overdue ? `<span class="met-chip late">⚠️ <b>${overdue}</b> atrasadas</span>`
+              : `<span class="met-chip" style="color:#15803d;border-color:#bbf7d0">✓ sem atrasos</span>`}
+    <span class="met-chip" style="margin-left:auto">📈 progresso médio <b>${avgProg}%</b></span>
+  `;
+}
+
+// ── Assign demands to columns ──────────────────────────────────────────────
+// A card goes in the FIRST column whose name appears in responsavel.
+// Demands that match no column go to the "Sem Responsável" overflow.
+function assignToColumns(rows) {
+  const buckets = {};
+  _columns.forEach(p => { buckets[p] = []; });
+  buckets["__none__"] = [];
+
+  rows.forEach(d => {
+    const resp = (d.responsavel || "").toLowerCase();
+    const col = _columns.find(p => resp.includes(p.toLowerCase()));
+    (col ? buckets[col] : buckets["__none__"]).push(d);
+  });
+  return buckets;
+}
+
+// ── Build board ────────────────────────────────────────────────────────────
+function renderBoard(rows) {
+  _lastRows = rows;
+  renderMetrics(rows);
+  const showDone = document.getElementById("f-show-done").checked;
+  const DONE_ST  = new Set(["Concluído", "Cancelado"]);
+  const visible  = showDone ? rows : rows.filter(d => !DONE_ST.has(d.status));
+
+  document.getElementById("count-label").textContent =
+    visible.length === 1 ? "1 demanda" : `${visible.length} demandas` +
+    (!showDone && rows.length !== visible.length
+      ? ` (${rows.length - visible.length} ocultos)`  : "");
+
+  const buckets = assignToColumns(visible);
+  const board   = document.getElementById("kb-board");
+  board.innerHTML = "";
+
+  // "Sem Responsável" FIRST
+  const noneCards = buckets["__none__"] || [];
+  board.appendChild(buildColumn("__none__", noneCards, true));
+
+  // Person columns
+  _columns.forEach(person => {
+    board.appendChild(buildColumn(person, buckets[person] || [], false));
+  });
+
+  // "+ Add column" button
+  const hiddenPeople = ALL_RESP.filter(p => !_columns.includes(p));
+  board.appendChild(buildAddColBtn(hiddenPeople));
+}
+
+function buildColumn(person, cards, isNone) {
+  const displayName = isNone ? "Sem Responsável" : person;
+  const col = document.createElement("div");
+  col.className = "kb-col";
+  col.dataset.person = person;
+
+  // Header
+  const headerBg = isNone ? "#9ca3af" : avatarColor(person);
+  col.innerHTML = `
+    <div class="kb-col-header">
+      <div class="kb-avatar" style="background:${headerBg}">${isNone ? "?" : avatarInitials(person)}</div>
+      <span class="text-xs font-semibold text-gray-800 flex-1 truncate" title="${escHtml(displayName)}">${escHtml(displayName)}</span>
+      <span class="text-[10px] font-medium text-gray-400 bg-gray-200 rounded-full px-1.5 py-0.5 shrink-0">${cards.length}</span>
+      ${!isNone ? `<button class="text-gray-300 hover:text-gray-600 transition-colors ml-1 text-sm" title="Ocultar coluna" onclick="hideColumn('${escHtml(person)}')">×</button>` : ""}
+    </div>
+  `;
+
+  // Drop zone
+  const zone = document.createElement("div");
+  zone.className = "kb-cards";
+  zone.dataset.person = person;
+  zone.addEventListener("dragover",  onDragOver);
+  zone.addEventListener("dragleave", onDragLeave);
+  zone.addEventListener("drop",      onDrop);
+
+  // Cards
+  cards.forEach(d => zone.appendChild(buildCard(d)));
+  col.appendChild(zone);
+
+  // "+ Demanda" add button
+  const addBtn = document.createElement("button");
+  addBtn.className = "kb-add-btn";
+  addBtn.textContent = "+ Demanda";
+  addBtn.onclick = () => openNew(isNone ? "" : person);
+  col.appendChild(addBtn);
+
+  return col;
+}
+
+function buildCard(d) {
+  const card = document.createElement("div");
+  const prioCls = PRIO_CLS[d.prioridade] || "prio-none";
+  const isDone  = d.status === "Concluído" || d.status === "Cancelado";
+  const isHold  = d.status === "On Hold";
+  const dimCls  = (isDone || isHold) ? "dim" : "";
+  const strikeCls = isDone ? "line-through text-gray-400" : isHold ? "text-gray-400" : "text-gray-800";
+  const cc   = CLIENT_CLS[d.cliente] || "cl-beehus";
+  const sc   = STATUS_CLS[d.status]  || "st-pendente";
+  const cmN  = (d.comments || []).length;
+  const dotClr = (PRIO_DOT[d.prioridade] || "bg-gray-300");
+
+  card.className = `kb-card ${prioCls} ${dimCls}`;
+  card.draggable = true;
+  card.dataset.id = d._id;
+  card.addEventListener("dragstart", onDragStart);
+  card.addEventListener("dragend",   onDragEnd);
+
+  const prog     = parseInt(d.progress) || 0;
+  const progColor = prog >= 100 ? "#34d399" : prog >= 70 ? "#60a5fa" : prog >= 30 ? "#fbbf24" : "#f87171";
+  const overdueFlag = isOverdue(d) ? `<span style="font-size:9px;color:#be123c" title="Atrasada">⚠️</span>` : "";
+
+  card.innerHTML = `
+    <div class="kb-prog-row">
+      <button class="kb-prog-btn" data-action="prog-dec" data-id="${d._id}" title="−5%">−</button>
+      <div class="kb-prog-track">
+        <div class="kb-prog-fill" style="width:${prog}%;background:${progColor}"></div>
+      </div>
+      <span class="kb-prog-pct" style="color:${prog>0?progColor:'#9ca3af'}">${prog}%</span>
+      <button class="kb-prog-btn" data-action="prog-inc" data-id="${d._id}" title="+5%">+</button>
+    </div>
+    <div class="flex items-center justify-between mb-1.5 gap-1">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="w-2 h-2 rounded-full shrink-0 ${dotClr}"></span>
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${cc} shrink-0">${escHtml(d.cliente)}</span>
+        ${overdueFlag}
+      </div>
+      <div class="kb-actions items-center shrink-0">
+        <button class="kb-action-btn" data-action="comment" data-id="${d._id}" title="Comentários">
+          💬${cmN > 0 ? `<span class="text-blue-500">${cmN}</span>` : ""}
+        </button>
+        <button class="kb-action-btn" data-action="edit" data-id="${d._id}" title="Editar">✏️</button>
+        <button class="kb-action-btn" data-action="delete" data-id="${d._id}" title="Remover">🗑</button>
+      </div>
+    </div>
+    <p class="text-xs ${strikeCls} leading-snug mb-2 line-clamp-2" title="${escHtml(d.demanda)}">${escHtml(d.demanda)}</p>
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${sc}">${escHtml(d.status)}</span>
+      ${d.deadline ? `<span class="text-[10px] text-gray-400">${escHtml(d.deadline)}</span>` : ""}
+    </div>
+  `;
+
+  card.addEventListener("click", e => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    e.stopPropagation();
+    const id = btn.dataset.id, act = btn.dataset.action;
+    if (act === "comment")  openComments(id);
+    if (act === "edit")     openEdit(id);
+    if (act === "delete")   openDelete(id);
+    if (act === "prog-dec") adjustProgress(id, -5);
+    if (act === "prog-inc") adjustProgress(id,  5);
+  });
+
+  return card;
+}
+
+function buildAddColBtn(hiddenPeople) {
+  const wrap = document.createElement("div");
+  wrap.className = "kb-add-col";
+  wrap.style.position = "relative";
+
+  const btn = document.createElement("button");
+  btn.className = "kb-add-col-btn";
+  btn.title = "Adicionar pessoa";
+  btn.innerHTML = "+";
+  wrap.appendChild(btn);
+
+  if (!hiddenPeople.length) {
+    btn.style.opacity = ".3"; btn.style.cursor = "default";
+    return wrap;
+  }
+
+  const menu = document.createElement("div");
+  menu.className = "hidden-cols-menu hidden";
+  hiddenPeople.forEach(p => {
+    const item = document.createElement("button");
+    const bg   = avatarColor(p);
+    item.innerHTML = `<span style="width:18px;height:18px;border-radius:50%;background:${bg};color:white;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${avatarInitials(p)}</span>${escHtml(p)}`;
+    item.onclick = () => { addColumn(p); menu.classList.add("hidden"); };
+    menu.appendChild(item);
+  });
+  wrap.appendChild(menu);
+
+  btn.onclick = e => { e.stopPropagation(); menu.classList.toggle("hidden"); };
+  document.addEventListener("click", () => menu.classList.add("hidden"), {capture:false});
+
+  return wrap;
+}
+
+// ── Progress inline control ────────────────────────────────────────────────
+async function adjustProgress(id, delta) {
+  const d = _map[id]; if (!d) return;
+  const newVal = Math.max(0, Math.min(100, (parseInt(d.progress)||0) + delta));
+  if (newVal === (parseInt(d.progress)||0)) return;
+  d.progress = newVal;
+
+  // Optimistic re-render of just this card
+  const oldCard = document.querySelector(`.kb-card[data-id="${id}"]`);
+  if (oldCard) oldCard.replaceWith(buildCard(d));
+  renderMetrics(_lastRows);
+
+  // Persist
+  fetch(`/api/demandas/${id}`, {
+    method:"PATCH", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({progress: newVal}),
+  });
+}
+
+// ── Column management ──────────────────────────────────────────────────────
+function hideColumn(person) {
+  _columns = _columns.filter(p => p !== person);
+  _saveColumns();
+  renderBoard(_lastRows);
+}
+function addColumn(person) {
+  if (!_columns.includes(person)) { _columns.push(person); _saveColumns(); }
+  renderBoard(_lastRows);
+}
+
+// ── Drag & drop ────────────────────────────────────────────────────────────
+function onDragStart(e) {
+  _dragId = e.currentTarget.dataset.id;
+  e.currentTarget.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+}
+function onDragEnd(e) {
+  e.currentTarget.classList.remove("dragging");
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  e.currentTarget.classList.add("drag-over");
+}
+function onDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget))
+    e.currentTarget.classList.remove("drag-over");
+}
+async function onDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove("drag-over");
+  if (!_dragId) return;
+  const person = e.currentTarget.dataset.person;
+  const newResp = person === "__none__" ? "" : person;
+  await fetch(`/api/demandas/${_dragId}`, {
+    method:"PATCH", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({responsavel: newResp}),
+  });
+  _dragId = null;
+  loadData();
+}
+
+// ── Load data ──────────────────────────────────────────────────────────────
+function debounceLoad() {
+  clearTimeout(_debounce);
+  _debounce = setTimeout(loadData, 300);
+}
+async function loadData() {
+  const params = new URLSearchParams();
+  const s  = document.getElementById("f-search").value.trim();
+  const c  = document.getElementById("f-cliente").value;
+  const p  = document.getElementById("f-prioridade").value;
+  const st = document.getElementById("f-status").value;
+  const tp = document.getElementById("f-tipo").value;
+  if (s)  params.set("search",     s);
+  if (c)  params.set("cliente",    c);
+  if (p)  params.set("prioridade", p);
+  if (st) params.set("status",     st);
+  if (tp) params.set("tipo",       tp);
+
+  const rows = await fetch("/api/demandas?" + params).then(r => r.json());
+  _map = {};
+  rows.forEach(d => { _map[d._id] = d; });
+  renderBoard(rows);
+}
+
+// ── Form modal ─────────────────────────────────────────────────────────────
+function openNew(person) {
+  document.getElementById("form-title").textContent = "Nova Demanda";
+  document.getElementById("form-id").value          = "";
+  document.getElementById("form-cliente").value     = "";
+  document.getElementById("form-demanda").value     = "";
+  document.getElementById("form-tipo").value        = "";
+  document.getElementById("form-prioridade").value  = "Médio";
+  document.getElementById("form-status").value      = "Pendente";
+  document.getElementById("form-responsavel").value = person || "";
+  document.getElementById("form-deadline").value    = "";
+  document.getElementById("modal-form").classList.remove("hidden");
+}
+function openEdit(id) {
+  const d = _map[id]; if (!d) return;
+  document.getElementById("form-title").textContent = "Editar Demanda";
+  document.getElementById("form-id").value          = d._id;
+  document.getElementById("form-cliente").value     = d.cliente;
+  document.getElementById("form-demanda").value     = d.demanda;
+  document.getElementById("form-tipo").value        = d.tipo || "";
+  document.getElementById("form-prioridade").value  = d.prioridade;
+  document.getElementById("form-status").value      = d.status;
+  document.getElementById("form-responsavel").value = d.responsavel;
+  document.getElementById("form-deadline").value    = d.deadline;
+  document.getElementById("modal-form").classList.remove("hidden");
+}
+function closeForm() { document.getElementById("modal-form").classList.add("hidden"); }
+async function submitForm() {
+  const id      = document.getElementById("form-id").value;
+  const payload = {
+    cliente:     document.getElementById("form-cliente").value,
+    demanda:     document.getElementById("form-demanda").value.trim(),
+    tipo:        document.getElementById("form-tipo").value,
+    prioridade:  document.getElementById("form-prioridade").value,
+    status:      document.getElementById("form-status").value,
+    responsavel: document.getElementById("form-responsavel").value.trim(),
+    deadline:    document.getElementById("form-deadline").value.trim(),
+  };
+  if (!payload.cliente || !payload.demanda) { alert("Preencha Cliente e Demanda."); return; }
+  await fetch(id ? `/api/demandas/${id}` : "/api/demandas", {
+    method: id ? "PATCH" : "POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(payload),
+  });
+  closeForm(); loadData();
+}
+
+// ── Comments modal ─────────────────────────────────────────────────────────
+async function openComments(id) {
+  _activeId = id;
+  const d = _map[id];
+  document.getElementById("cm-demand-title").textContent = d ? d.demanda : "";
+  document.getElementById("cm-text").value = "";
+  document.getElementById("modal-comments").classList.remove("hidden");
+  renderCommentsList(d ? (d.comments || []) : []);
+}
+function renderCommentsList(comments) {
+  const list = document.getElementById("cm-list");
+  if (!comments.length) {
+    list.innerHTML = `<p class="text-xs text-gray-400">Nenhuma atualização ainda.</p>`; return;
+  }
+  list.innerHTML = [...comments].reverse().map(c => `
+    <div class="bg-gray-50 rounded-lg px-3 py-2 border">
+      <p class="text-xs text-gray-800 leading-snug whitespace-pre-wrap">${escHtml(c.text)}</p>
+      <p class="text-[10px] text-gray-400 mt-1">${fmtDate(c.created_at)}</p>
+    </div>`).join("");
+}
+function closeComments() {
+  document.getElementById("modal-comments").classList.add("hidden"); _activeId = null;
+}
+async function submitComment() {
+  const text = document.getElementById("cm-text").value.trim();
+  if (!text) return;
+  await fetch(`/api/demandas/${_activeId}/comments`, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({text}),
+  });
+  document.getElementById("cm-text").value = "";
+  await loadData();
+  if (_activeId && _map[_activeId]) renderCommentsList(_map[_activeId].comments || []);
+}
+
+// ── Delete modal ───────────────────────────────────────────────────────────
+function openDelete(id)  { _deleteId = id; document.getElementById("modal-delete").classList.remove("hidden"); }
+function closeDelete()   { _deleteId = null; document.getElementById("modal-delete").classList.add("hidden"); }
+async function confirmDelete() {
+  await fetch(`/api/demandas/${_deleteId}`, {method:"DELETE"});
+  closeDelete(); loadData();
+}
+
+// ── Filters ────────────────────────────────────────────────────────────────
+function clearFilters() {
+  ["f-search","f-cliente","f-prioridade","f-status","f-tipo"]
+    .forEach(id => { document.getElementById(id).value = ""; });
+  document.getElementById("f-show-done").checked = false;
+  loadData();
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeForm(); closeComments(); closeDelete(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    if (!document.getElementById("modal-form").classList.contains("hidden"))         submitForm();
+    else if (!document.getElementById("modal-comments").classList.contains("hidden")) submitComment();
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadData();
+</script>
+{% endblock %}

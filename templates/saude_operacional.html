@@ -1,0 +1,853 @@
+{% extends "base.html" %}
+{% block title %}Saúde Operacional – Beehus{% endblock %}
+
+{% block head %}
+<style>
+/* ── Tabs ──────────────────────────────────────────────────────────── */
+.stab-btn {
+  padding: 6px 20px; font-size: 12px; font-weight: 500;
+  border-radius: 6px; border: none; cursor: pointer;
+  color: #6b7280; background: transparent; transition: all .15s;
+}
+.stab-btn:hover { background: #f3f4f6; color: #374151; }
+.stab-btn.stab-active { background: #1d4ed8; color: #fff; }
+
+/* ── Health cards ──────────────────────────────────────────────────── */
+.hcard { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb;
+         box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+.hcard-head { padding: 16px 20px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 12px; }
+.hcard-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+
+/* health dot */
+.hdot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.h-green  { background: #16a34a; }
+.h-yellow { background: #eab308; }
+.h-red    { background: #ef4444; }
+.h-none   { background: #d1d5db; }
+
+/* category row inside card */
+.hcat { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #4b5563; }
+.hcat .hdot { width: 11px; height: 11px; }
+.hcat-label { flex: 1; }
+.hcat-frac  { font-size: 12px; color: #9ca3af; font-weight: 500; }
+
+/* ── Company notes section ─────────────────────────────────────────── */
+.hcard-notes { border-top: 1px solid #f3f4f6; padding: 14px 20px; }
+.hdot-sm { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.hnote-status-row { display: flex; align-items: center; gap: 16px; }
+.hnote-status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; font-weight: 500; }
+.hnote-edit { color: #d1d5db; cursor: pointer; background: none; border: none; padding: 2px; margin-left: auto; transition: color .15s; line-height: 0; }
+.hnote-edit:hover { color: #3b82f6; }
+.hnote-section { margin-top: 8px; }
+.hnote-section-label { font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 3px; }
+.hnote-bullet { font-size: 12px; color: #9ca3af; line-height: 1.5; padding-left: 4px; }
+.hnote-bullet::before { content: '•'; margin-right: 5px; color: #d1d5db; }
+/* status selector buttons in modal */
+.nstat-btn { padding: 3px 11px; font-size: 11px; border-radius: 6px; cursor: pointer;
+             border: 1.5px solid #e5e7eb; background: transparent; color: #9ca3af;
+             transition: all .12s; font-weight: 500; }
+.nstat-btn:hover { border-color: #9ca3af; color: #6b7280; }
+.nstat-none.nstat-active   { color: #6b7280;  border-color: #9ca3af;  background: #f9fafb; }
+.nstat-green.nstat-active  { color: #16a34a;  border-color: #16a34a;  background: #f0fdf4; }
+.nstat-yellow.nstat-active { color: #d97706;  border-color: #eab308;  background: #fefce8; }
+.nstat-red.nstat-active    { color: #dc2626;  border-color: #ef4444;  background: #fef2f2; }
+
+html.dark .hcard-notes { border-color: #374151; }
+html.dark .hnote-status-item { color: #9ca3af; }
+html.dark .hnote-text { color: #6b7280; }
+html.dark .hnote-text b { color: #9ca3af; }
+
+/* ── Time log ──────────────────────────────────────────────────────── */
+.stat-card { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb;
+             padding: 16px 20px; text-align: center; }
+.stat-val  { font-size: 28px; font-weight: 700; color: #1d4ed8; }
+.stat-lbl  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+/* ── Minutes tooltip ───────────────────────────────────────────────── */
+.min-wrap { position: relative; display: inline-block; cursor: default; }
+.min-tip  {
+  display: none; position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%); z-index: 50;
+  background: #1f2937; color: #f9fafb; font-size: 11px;
+  border-radius: 8px; padding: 8px 12px; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  pointer-events: none;
+}
+.min-tip::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%); border: 5px solid transparent;
+  border-top-color: #1f2937;
+}
+.min-wrap:hover .min-tip { display: block; }
+.min-tip-row { padding: 1px 0; }
+.min-tip-row.tip-max { color: #60a5fa; font-weight: 600; }
+
+/* ── Log table ─────────────────────────────────────────────────────── */
+.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.log-tbl th { text-align: left; padding: 6px 12px; color: #6b7280; font-weight: 600;
+               border-bottom: 2px solid #f3f4f6; }
+.log-tbl td { padding: 8px 12px; border-bottom: 1px solid #f9fafb; color: #374151; }
+.log-tbl tr:hover td { background: #f0f9ff; }
+
+html.dark .hcard, html.dark .stat-card { background: #1f2937; border-color: #374151; }
+html.dark .hcard-head { border-color: #374151; }
+html.dark .log-tbl th { color: #9ca3af; border-color: #374151; }
+html.dark .log-tbl td { color: #d1d5db; border-color: #374151; }
+html.dark .log-tbl tr:hover td { background: #1e3a5f; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Header ── -->
+<header class="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-0 z-20">
+  <div>
+    <h1 class="text-lg font-semibold text-gray-900">Saúde Operacional</h1>
+    <p class="text-xs text-gray-400 mt-0.5">{{ month_name }} {{ year }}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1">
+      <a href="/saude-operacional?year={{ prev_m[0] }}&month={{ prev_m[1] }}"
+         class="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <span class="text-sm font-medium text-gray-700 w-32 text-center">{{ month_name }} {{ year }}</span>
+      <a href="/saude-operacional?year={{ next_m[0] }}&month={{ next_m[1] }}"
+         class="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <a href="/saude-operacional" class="text-xs text-gray-400 hover:text-gray-700 underline ml-1">Hoje</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Tab switcher ── -->
+<div class="bg-white border-b px-6 py-2 flex items-center gap-1">
+  <button id="stabbtn-companies"  class="stab-btn stab-active" onclick="switchSTab('companies')">Status Geral</button>
+  <button id="stabbtn-onboarding" class="stab-btn"             onclick="switchSTab('onboarding')">Onboarding</button>
+  <button id="stabbtn-ops"        class="stab-btn"             onclick="switchSTab('ops')">Saúde do Operacional</button>
+</div>
+
+<!-- ══════════════════ TAB: Status Geral ══════════════════ -->
+<div id="stab-companies" class="p-6">
+
+  {% if not all_partners %}
+  <div class="text-center py-16 text-gray-400 text-sm">
+    <p class="text-2xl mb-3">📋</p>
+    <p>Nenhum dado ainda. Configure os templates em Controle de Carteiras.</p>
+  </div>
+  {% else %}
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+  {% for partner in all_partners %}
+  {%- set cats       = health.get(partner, {}) %}
+  {%- set note       = company_notes.get(partner, {}) %}
+  {%- set _override  = note.get('override_overall', '') %}
+  {%- set overall    = _override if _override else cats.get('_overall', 'none') %}
+  {%- set is_manual  = _override | length > 0 %}
+  {%- set op_st      = note.get('status_operacional', 'none') %}
+  {%- set sent_st    = note.get('status_sentimento',  'none') %}
+  {%- set last_pub   = last_pub_by_partner.get(partner, '') %}
+  {%- set hist       = sentiment_history.get(partner, []) %}
+  <div class="hcard">
+
+    <!-- Header -->
+    <div class="hcard-head">
+      <span class="hdot h-{{ overall }}"></span>
+      <span class="font-semibold text-base text-gray-800">{{ partner }}</span>
+      <span class="ml-auto text-xs font-medium px-3 py-1 rounded-full{% if is_manual %} ring-1 ring-offset-1 ring-blue-300{% endif %}
+        {% if overall == 'green' %}bg-green-100 text-green-700
+        {% elif overall == 'yellow' %}bg-yellow-100 text-yellow-700
+        {% elif overall == 'red' %}bg-red-100 text-red-700
+        {% else %}bg-gray-100 text-gray-400{% endif %}"
+        title="{{ 'Status definido manualmente' if is_manual else '' }}">
+        {% if overall == 'green' %}OK
+        {% elif overall == 'yellow' %}Parcial
+        {% elif overall == 'red' %}Atenção
+        {% else %}—{% endif %}
+      </span>
+      <button class="hnote-edit"
+        data-partner="{{ partner }}"
+        data-op="{{ op_st }}"
+        data-sent="{{ sent_st }}"
+        data-pend="{{ note.get('pendencias', '') }}"
+        data-override="{{ note.get('override_overall', '') }}"
+        onclick="openNotesModal(this)" title="Editar sentimento">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Last published -->
+    <div class="px-4 py-2 border-b border-gray-50 flex items-center gap-2">
+      <span class="text-xs text-gray-400">Última publicação:</span>
+      {% if last_pub %}
+      <span class="text-xs font-medium text-gray-700">{{ last_pub[8:] }}/{{ last_pub[5:7] }}/{{ last_pub[:4] }}</span>
+      {% else %}
+      <span class="text-xs text-gray-300">—</span>
+      {% endif %}
+    </div>
+
+    <!-- Sentiment + evolution -->
+    <div class="px-4 py-2.5 border-b border-gray-50">
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-1.5">
+          <span class="hdot-sm h-{{ op_st }}"></span>
+          <span class="text-xs text-gray-500">Operacional</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="hdot-sm h-{{ sent_st }}"></span>
+          <span class="text-xs text-gray-500">Sentimento</span>
+        </div>
+        {% if hist %}
+        <div class="ml-auto flex items-center gap-1" title="Evolução do sentimento (3 meses)">
+          {% for h in hist %}
+          <span class="hdot-sm h-{{ h.sent }}" title="{{ h.month }}"></span>
+          {% endfor %}
+          <span class="text-xs text-gray-300 ml-0.5">3m</span>
+        </div>
+        {% endif %}
+      </div>
+      {% if note.get('pendencias') %}
+      <div class="mt-2">
+        <div class="text-xs font-semibold text-gray-400 mb-0.5">Pendências</div>
+        {% for line in note.pendencias.split('\n') %}{% if line.strip() %}
+        <div class="text-xs text-gray-500">· {{ line.strip() }}</div>
+        {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Demands -->
+    <div class="px-4 py-2.5">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-gray-500">Demandas</span>
+        <button data-partner="{{ partner }}" onclick="openAddDemand(this.dataset.partner)"
+          class="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors">+ Adicionar</button>
+      </div>
+      {%- set open_demands = [] %}
+      {%- for d in demands.get(partner, []) %}
+      {%- if not d.closed %}{% set _ = open_demands.append(d) %}{% endif %}
+      {%- endfor %}
+      {% if open_demands %}
+      {% for d in open_demands %}
+      <div class="flex items-center gap-2 py-0.5 group">
+        <span class="flex-1 text-xs text-gray-700 truncate" title="{{ d.title }}">{{ d.title }}</span>
+        {% if d.sla %}
+        <span class="text-xs shrink-0 {% if d.sla < today %}text-red-400 font-medium{% else %}text-gray-400{% endif %}">
+          {{ d.sla[8:] }}/{{ d.sla[5:7] }}
+        </span>
+        {% endif %}
+        <button data-partner="{{ partner }}" data-demand-id="{{ d.id }}"
+          onclick="closeDemand(this.dataset.partner, this.dataset.demandId)"
+          class="shrink-0 text-gray-300 hover:text-green-500 transition-colors opacity-0 group-hover:opacity-100"
+          title="Marcar como concluída">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+        </button>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="text-xs text-gray-300 py-0.5">Nenhuma demanda aberta</div>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ══════════════════ TAB: Onboarding ══════════════════ -->
+<div id="stab-onboarding" class="p-6 hidden">
+  {% include "_onboarding_partial.html" %}
+</div>
+
+<!-- ══════════════════ TAB: Operacional ══════════════════ -->
+<div id="stab-ops" class="p-6 hidden">
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+    <div class="stat-card">
+      <div class="stat-val">{{ total_minutes }}</div>
+      <div class="stat-lbl">Minutos no mês</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ avg_minutes }}</div>
+      <div class="stat-lbl">Minutos médio / dia</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ entries | length }}</div>
+      <div class="stat-lbl">Dias registrados / {{ biz_count }} úteis</div>
+    </div>
+  </div>
+
+  <!-- Add entry form -->
+  <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6 shadow-sm">
+    <h2 class="text-sm font-semibold text-gray-800 mb-4">Registrar dia</h2>
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Data</label>
+        <input id="log-date" type="date" value="{{ today }}"
+          class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-36">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Pessoa</label>
+        <input id="log-pessoa" type="text" placeholder="ex: João"
+          class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-32">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Minutos gastos</label>
+        <input id="log-minutes" type="number" step="1" min="0" placeholder="ex: 45"
+          class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-28">
+      </div>
+      <div class="flex-1 min-w-[160px]">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Observações</label>
+        <input id="log-notes" type="text" placeholder="opcional"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+      </div>
+      <button onclick="submitLog()"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg font-medium shrink-0">
+        Salvar
+      </button>
+    </div>
+  </div>
+
+  <!-- Entries table -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-gray-800">Registros — {{ month_name }} {{ year }}</h2>
+    </div>
+    {% if entries %}
+    <table class="log-tbl">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Minutos</th>
+          <th>Pessoa</th>
+          <th>Observações</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for e in entries %}
+      {% set adds = e.get('additions', []) or [] %}
+      {% set max_add = adds | sort(attribute='minutes') | last if adds else none %}
+      <tr>
+        <td class="font-medium">{{ e.date[8:] }}/{{ e.date[5:7] }}/{{ e.date[:4] }}</td>
+        <td>
+          <div class="min-wrap">
+            <span class="font-medium text-gray-700">{{ e.get('minutes', e.get('hours', 0)) }}min</span>
+            {% if adds | length > 0 %}
+            <div class="min-tip">
+              {% for a in adds %}
+              {% set is_max = max_add and a.minutes == max_add.minutes and loop.revindex == 1 %}
+              <div class="min-tip-row{{ ' tip-max' if is_max else '' }}">
+                {{ a.timestamp[8:10] }}/{{ a.timestamp[5:7] }} {{ a.timestamp[11:16] }} — {{ a.minutes }}min{% if a.get('pessoa') %} · {{ a.pessoa }}{% endif %}{{ ' ★' if is_max else '' }}
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </td>
+        <td class="text-gray-600">
+          {%- set pessoas = [] %}
+          {%- for a in adds %}{% if a.get('pessoa') and a.pessoa not in pessoas %}{% set _ = pessoas.append(a.pessoa) %}{% endif %}{% endfor %}
+          {{ pessoas | join(', ') or e.get('pessoa', '—') or '—' }}
+        </td>
+        <td class="text-gray-400">{{ e.notes or '—' }}</td>
+        <td class="text-right flex items-center justify-end gap-2">
+          <button onclick="openAddMinutes('{{ e.id }}')"
+            class="text-blue-400 hover:text-blue-600 transition-colors text-xs font-bold leading-none" title="Adicionar minutos">+</button>
+          <button onclick="deleteLog('{{ e.id }}', '{{ e.date }}')"
+            class="text-gray-300 hover:text-red-400 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center py-12 text-gray-400 text-xs">Nenhum registro neste mês. Adicione acima.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Company notes modal -->
+<div id="notes-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-96 max-w-full">
+    <h3 class="text-sm font-semibold text-gray-800 mb-1">Anotações</h3>
+    <p id="nm-title" class="text-xs text-blue-600 font-medium mb-4"></p>
+
+    <!-- Override Status Geral -->
+    <div class="mb-4 pb-4 border-b border-gray-100">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Status Geral <span class="font-normal text-gray-400">(substituir automático)</span></label>
+      <div id="nstat-grp-override" class="flex gap-2">
+        <button class="nstat-btn nstat-none"   data-val=""       onclick="selNstat('override','')">Auto</button>
+        <button class="nstat-btn nstat-green"  data-val="green"  onclick="selNstat('override','green')">OK</button>
+        <button class="nstat-btn nstat-yellow" data-val="yellow" onclick="selNstat('override','yellow')">Parcial</button>
+        <button class="nstat-btn nstat-red"    data-val="red"    onclick="selNstat('override','red')">Atenção</button>
+      </div>
+    </div>
+
+    <!-- Status Operacional -->
+    <div class="mb-4">
+      <label class="block text-xs font-medium text-gray-500 mb-2">Status Operacional</label>
+      <div id="nstat-grp-op" class="flex gap-2">
+        <button class="nstat-btn nstat-none"   data-val="none"   onclick="selNstat('op','none')">—</button>
+        <button class="nstat-btn nstat-green"  data-val="green"  onclick="selNstat('op','green')">Verde</button>
+        <button class="nstat-btn nstat-yellow" data-val="yellow" onclick="selNstat('op','yellow')">Amarelo</button>
+        <button class="nstat-btn nstat-red"    data-val="red"    onclick="selNstat('op','red')">Vermelho</button>
+      </div>
+    </div>
+
+    <!-- Status Sentimento -->
+    <div class="mb-4">
+      <label class="block text-xs font-medium text-gray-500 mb-2">Sentimento do Cliente</label>
+      <div id="nstat-grp-sent" class="flex gap-2">
+        <button class="nstat-btn nstat-none"   data-val="none"   onclick="selNstat('sent','none')">—</button>
+        <button class="nstat-btn nstat-green"  data-val="green"  onclick="selNstat('sent','green')">Verde</button>
+        <button class="nstat-btn nstat-yellow" data-val="yellow" onclick="selNstat('sent','yellow')">Amarelo</button>
+        <button class="nstat-btn nstat-red"    data-val="red"    onclick="selNstat('sent','red')">Vermelho</button>
+      </div>
+    </div>
+
+    <!-- Pendências -->
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Pendências <span class="font-normal text-gray-400">(uma por linha)</span></label>
+      <textarea id="nm-pend" rows="4" placeholder="Pendência 1&#10;Pendência 2&#10;Pendência 3"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 resize-y"></textarea>
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeNotesModal()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="saveNotes()" class="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-demand modal -->
+<div id="add-demand-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-96 max-w-full">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Adicionar Demanda</h3>
+    <div class="mb-3">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Título</label>
+      <input id="ad-title" type="text" placeholder="Descreva a demanda"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+    </div>
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 mb-1">SLA <span class="font-normal text-gray-400">(data de entrega)</span></label>
+      <input id="ad-sla" type="date"
+        class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-40">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeAddDemand()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="confirmAddDemand()" class="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-minutes modal -->
+<div id="add-min-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-80">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Adicionar minutos</h3>
+    <p id="add-min-label" class="text-xs text-gray-500 mb-3"></p>
+    <div class="flex gap-2 mb-3">
+      <div class="flex-1">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Minutos</label>
+        <input id="add-min-input" type="number" step="1" min="1" placeholder="ex: 30"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Pessoa</label>
+        <input id="add-min-pessoa" type="text" placeholder="ex: João"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+      </div>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeAddMinutes()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="confirmAddMinutes()" class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-company (onboarding) modal -->
+<div id="add-company-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-96 max-w-full">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Adicionar Empresa ao Onboarding</h3>
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Nome da Empresa</label>
+      <input id="ob-company-name" type="text" placeholder="ex: Oikos"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeAddCompany()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="confirmAddCompany()" class="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-ob-demand modal -->
+<div id="add-ob-demand-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-96 max-w-full">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Adicionar Demanda</h3>
+    <div class="mb-3">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Título</label>
+      <input id="ob-dem-title" type="text" placeholder="Descreva a demanda"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+    </div>
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 mb-1">SLA <span class="font-normal text-gray-400">(data de entrega)</span></label>
+      <input id="ob-dem-sla" type="date"
+        class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-40">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeAddObDemand()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="confirmAddObDemand()" class="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-ob-item modal -->
+<div id="add-ob-item-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-96 max-w-full">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Adicionar Item ao Checklist</h3>
+    <div class="mb-3">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Descrição</label>
+      <input id="ob-item-text" type="text" placeholder="ex: Configurar acesso ao sistema"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+    </div>
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 mb-1">SLA <span class="font-normal text-gray-400">(opcional)</span></label>
+      <input id="ob-item-sla" type="date"
+        class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-40">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeAddObItem()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="confirmAddObItem()" class="px-4 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Tab switching ─────────────────────────────────────────────────── */
+const _STAB_KEY = "saude_active_tab_v1";
+let _sActiveTab = localStorage.getItem(_STAB_KEY) || "companies";
+
+function switchSTab(tab) {
+  _sActiveTab = tab;
+  localStorage.setItem(_STAB_KEY, tab);
+  ["companies", "onboarding", "ops"].forEach(t => {
+    document.getElementById(`stab-${t}`).classList.toggle("hidden", t !== tab);
+    document.getElementById(`stabbtn-${t}`).classList.toggle("stab-active", t === tab);
+  });
+}
+
+/* ── Time log ──────────────────────────────────────────────────────── */
+async function submitLog() {
+  const payload = {
+    date:         document.getElementById("log-date").value,
+    pessoa:       document.getElementById("log-pessoa").value.trim(),
+    minutes:      parseInt(document.getElementById("log-minutes").value) || 0,
+    notes:        document.getElementById("log-notes").value.trim(),
+  };
+  if (!payload.date) return alert("Informe a data.");
+  await fetch("/api/saude/time-log", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload),
+  });
+  location.reload();
+}
+
+async function deleteLog(entryId, dateStr) {
+  if (!confirm(`Remover registro de ${dateStr}?`)) return;
+  await fetch(`/api/saude/time-log/${entryId}`, {method: "DELETE"});
+  location.reload();
+}
+
+/* ── Add minutes ───────────────────────────────────────────────────── */
+let _addMinDate = null;
+
+function openAddMinutes(dateStr) {
+  _addMinDate = dateStr;
+  document.getElementById("add-min-label").textContent = `Registrar tempo adicional para ${dateStr}`;
+  document.getElementById("add-min-input").value = "";
+  document.getElementById("add-min-pessoa").value = "";
+  document.getElementById("add-min-modal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("add-min-input").focus(), 50);
+}
+
+function closeAddMinutes() {
+  document.getElementById("add-min-modal").classList.add("hidden");
+  _addMinDate = null;
+}
+
+async function confirmAddMinutes() {
+  const mins = parseInt(document.getElementById("add-min-input").value) || 0;
+  if (!mins || mins < 1) return alert("Informe quantos minutos adicionar.");
+  await fetch(`/api/saude/time-log/${_addMinDate}/add`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      minutes: mins,
+      pessoa:  document.getElementById("add-min-pessoa").value.trim(),
+    }),
+  });
+  closeAddMinutes();
+  location.reload();
+}
+
+document.getElementById("add-min-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeAddMinutes();
+});
+document.getElementById("add-min-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") confirmAddMinutes();
+  if (e.key === "Escape") closeAddMinutes();
+});
+
+/* ── Init ──────────────────────────────────────────────────────────── */
+switchSTab(_sActiveTab);
+
+/* ── Company notes modal ───────────────────────────────────────────── */
+let _nmPartner = null, _nmOp = 'none', _nmSent = 'none', _nmOverride = '';
+
+function openNotesModal(btn) {
+  _nmPartner  = btn.dataset.partner;
+  _nmOp       = btn.dataset.op       || 'none';
+  _nmSent     = btn.dataset.sent     || 'none';
+  _nmOverride = btn.dataset.override || '';
+  document.getElementById('nm-title').textContent = _nmPartner;
+  document.getElementById('nm-pend').value = btn.dataset.pend || '';
+  selNstat('op',       _nmOp);
+  selNstat('sent',     _nmSent);
+  selNstat('override', _nmOverride);
+  document.getElementById('notes-modal').classList.remove('hidden');
+}
+
+function selNstat(grp, val) {
+  document.querySelectorAll(`#nstat-grp-${grp} .nstat-btn`).forEach(b =>
+    b.classList.toggle('nstat-active', b.dataset.val === val)
+  );
+  if (grp === 'op') _nmOp = val;
+  else if (grp === 'sent') _nmSent = val;
+  else _nmOverride = val;
+}
+
+function closeNotesModal() {
+  document.getElementById('notes-modal').classList.add('hidden');
+  _nmPartner = null;
+}
+
+async function saveNotes() {
+  await fetch('/api/saude/company-notes', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      year: {{ year }}, month: {{ month }},
+      partner:            _nmPartner,
+      override_overall:   _nmOverride,
+      status_operacional: _nmOp,
+      status_sentimento:  _nmSent,
+      pendencias: document.getElementById('nm-pend').value.trim(),
+    }),
+  });
+  closeNotesModal();
+  location.reload();
+}
+
+document.getElementById('notes-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeNotesModal();
+});
+
+/* ── Add demand ────────────────────────────────────────────────────── */
+let _adPartner = null;
+
+function openAddDemand(partner) {
+  _adPartner = partner;
+  document.getElementById('ad-title').value = '';
+  document.getElementById('ad-sla').value = '';
+  document.getElementById('add-demand-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ad-title').focus(), 50);
+}
+
+function closeAddDemand() {
+  document.getElementById('add-demand-modal').classList.add('hidden');
+  _adPartner = null;
+}
+
+async function confirmAddDemand() {
+  const title = document.getElementById('ad-title').value.trim();
+  if (!title) return alert('Informe o título da demanda.');
+  await fetch('/api/saude/demands', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      partner: _adPartner,
+      title:   title,
+      sla:     document.getElementById('ad-sla').value || '',
+    }),
+  });
+  closeAddDemand();
+  location.reload();
+}
+
+async function closeDemand(partner, demandId) {
+  await fetch(`/api/saude/demands/${encodeURIComponent(partner)}/${demandId}`, {
+    method: 'DELETE',
+  });
+  location.reload();
+}
+
+document.getElementById('add-demand-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddDemand();
+});
+document.getElementById('ad-title').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') confirmAddDemand();
+  if (e.key === 'Escape') closeAddDemand();
+});
+
+/* ── Onboarding: refresh sem reload completo ───────────────────────── */
+async function _refreshOnboarding() {
+  const html = await fetch('/api/saude/onboarding/fragment').then(r => r.text());
+  document.getElementById('stab-onboarding').innerHTML = html;
+}
+
+/* ── Onboarding: add company ───────────────────────────────────────── */
+function openAddCompany() {
+  document.getElementById('ob-company-name').value = '';
+  document.getElementById('add-company-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ob-company-name').focus(), 50);
+}
+function closeAddCompany() {
+  document.getElementById('add-company-modal').classList.add('hidden');
+}
+async function confirmAddCompany() {
+  const name = document.getElementById('ob-company-name').value.trim();
+  if (!name) return alert('Informe o nome da empresa.');
+  await fetch('/api/saude/onboarding/companies', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({company: name}),
+  });
+  closeAddCompany();
+  await _refreshOnboarding();
+}
+async function removeCompany(company) {
+  if (!confirm(`Remover "${company}" do onboarding?`)) return;
+  await fetch(`/api/saude/onboarding/companies/${encodeURIComponent(company)}`, {method: 'DELETE'});
+  await _refreshOnboarding();
+}
+document.getElementById('add-company-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddCompany();
+});
+document.getElementById('ob-company-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') confirmAddCompany();
+  if (e.key === 'Escape') closeAddCompany();
+});
+
+/* ── Onboarding: add demand ────────────────────────────────────────── */
+let _obDemCompany = null;
+function openAddObDemand(company) {
+  _obDemCompany = company;
+  document.getElementById('ob-dem-title').value = '';
+  document.getElementById('ob-dem-sla').value = '';
+  document.getElementById('add-ob-demand-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ob-dem-title').focus(), 50);
+}
+function closeAddObDemand() {
+  document.getElementById('add-ob-demand-modal').classList.add('hidden');
+  _obDemCompany = null;
+}
+async function confirmAddObDemand() {
+  const title = document.getElementById('ob-dem-title').value.trim();
+  if (!title) return alert('Informe o título da demanda.');
+  await fetch('/api/saude/onboarding/demands', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      company: _obDemCompany,
+      title:   title,
+      sla:     document.getElementById('ob-dem-sla').value || '',
+    }),
+  });
+  closeAddObDemand();
+  await _refreshOnboarding();
+}
+async function toggleObDemand(company, demandId) {
+  await fetch(`/api/saude/onboarding/demands/${encodeURIComponent(company)}/${demandId}`, {method: 'PATCH'});
+  await _refreshOnboarding();
+}
+async function deleteObDemand(company, demandId) {
+  if (!confirm('Remover esta demanda?')) return;
+  await fetch(`/api/saude/onboarding/demands/${encodeURIComponent(company)}/${demandId}`, {method: 'DELETE'});
+  await _refreshOnboarding();
+}
+document.getElementById('add-ob-demand-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddObDemand();
+});
+document.getElementById('ob-dem-title').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') confirmAddObDemand();
+  if (e.key === 'Escape') closeAddObDemand();
+});
+
+/* ── Onboarding: add checklist item ───────────────────────────────── */
+let _obItemCompany = null, _obItemDemand = null;
+function openAddObItem(company, demandId) {
+  _obItemCompany = company;
+  _obItemDemand  = demandId;
+  document.getElementById('ob-item-text').value = '';
+  document.getElementById('ob-item-sla').value = '';
+  document.getElementById('add-ob-item-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ob-item-text').focus(), 50);
+}
+function closeAddObItem() {
+  document.getElementById('add-ob-item-modal').classList.add('hidden');
+  _obItemCompany = null;
+  _obItemDemand  = null;
+}
+async function confirmAddObItem() {
+  const text = document.getElementById('ob-item-text').value.trim();
+  if (!text) return alert('Informe o texto do item.');
+  await fetch('/api/saude/onboarding/checklist', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      company:   _obItemCompany,
+      demand_id: _obItemDemand,
+      text:      text,
+      sla:       document.getElementById('ob-item-sla').value || '',
+    }),
+  });
+  closeAddObItem();
+  await _refreshOnboarding();
+}
+async function toggleObItem(company, demandId, itemId) {
+  await fetch(`/api/saude/onboarding/checklist/${encodeURIComponent(company)}/${demandId}/${itemId}`, {method: 'PATCH'});
+  await _refreshOnboarding();
+}
+async function deleteObItem(company, demandId, itemId) {
+  if (!confirm('Remover este item?')) return;
+  await fetch(`/api/saude/onboarding/checklist/${encodeURIComponent(company)}/${demandId}/${itemId}`, {method: 'DELETE'});
+  await _refreshOnboarding();
+}
+document.getElementById('add-ob-item-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddObItem();
+});
+document.getElementById('ob-item-text').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') confirmAddObItem();
+  if (e.key === 'Escape') closeAddObItem();
+});
+</script>
+{% endblock %}

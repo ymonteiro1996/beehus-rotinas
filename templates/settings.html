@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% set active = "settings" %}
+{% block title %}Configurações{% endblock %}
+
+{% block content %}
+<header class="bg-white shadow px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center gap-4">
+    <h1 class="font-semibold text-gray-700">Configurações</h1>
+    <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+      <button id="btn-cargas" onclick="setMode('cargas')"
+        class="px-4 py-1.5 font-medium transition-colors bg-gray-800 text-white">Cargas</button>
+      <button id="btn-nav" onclick="setMode('nav')"
+        class="px-4 py-1.5 font-medium transition-colors bg-white text-gray-500 hover:bg-gray-50">NAV</button>
+    </div>
+  </div>
+  <button onclick="save()" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Salvar</button>
+</header>
+
+<div class="px-6 py-6 space-y-4 max-w-2xl">
+  <div class="bg-white rounded-xl shadow p-5 flex items-center justify-between">
+    <div>
+      <p class="font-medium text-gray-800 text-sm">Apenas carteiras com posição diária</p>
+      <p class="text-xs text-gray-400 mt-0.5">Filtra somente carteiras com <code class="bg-gray-100 px-1 rounded">hasDailyPosition = true</code></p>
+    </div>
+    <button id="toggle-daily" onclick="toggle('daily')"
+      class="relative w-11 h-6 rounded-full transition-colors focus:outline-none bg-gray-200">
+      <span id="knob-daily"
+        class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"></span>
+    </button>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-5 flex items-center justify-between">
+    <div>
+      <p class="font-medium text-gray-800 text-sm">Apenas carteiras com identificador de consumo</p>
+      <p class="text-xs text-gray-400 mt-0.5">Filtra somente carteiras com <code class="bg-gray-100 px-1 rounded">consumptionIdentifiers</code> não vazio</p>
+    </div>
+    <button id="toggle-consumption" onclick="toggle('consumption')"
+      class="relative w-11 h-6 rounded-full transition-colors focus:outline-none bg-gray-200">
+      <span id="knob-consumption"
+        class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"></span>
+    </button>
+  </div>
+
+  <!-- Company filter (global, not mode-dependent) -->
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <p class="font-medium text-gray-800 text-sm">Filtro de empresas</p>
+        <p class="text-xs text-gray-400 mt-0.5">Selecione quais empresas aparecem em todas as páginas. Deixe todas marcadas para exibir todas.</p>
+      </div>
+      <div class="flex gap-2 shrink-0 ml-4">
+        <button onclick="selectAllCompanies(true)"
+          class="px-3 py-1 text-xs rounded border border-gray-200 text-gray-600 hover:bg-gray-50">Todas</button>
+        <button onclick="selectAllCompanies(false)"
+          class="px-3 py-1 text-xs rounded border border-gray-200 text-gray-600 hover:bg-gray-50">Nenhuma</button>
+      </div>
+    </div>
+    <div id="company-list" class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+      <p class="text-xs text-gray-300 italic">Carregando...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _mode = new URLSearchParams(location.search).get('mode') || 'cargas';
+  const state = { daily: false, consumption: false };
+
+  // company filter state: map of id -> { name, visible }
+  let _companies = [];
+
+  const APIS = {
+    cargas: { load: '/api/settings/load',     save: '/api/settings/save' },
+    nav:    { load: '/api/nav/settings/load', save: '/api/nav/settings/save' },
+  };
+
+  // ── Toggle switches ────────────────────────────────────────────────────────
+
+  function setMode(mode) {
+    _mode = mode;
+    const active   = 'bg-gray-800 text-white';
+    const inactive = 'bg-white text-gray-500 hover:bg-gray-50';
+    document.getElementById('btn-cargas').className = `px-4 py-1.5 font-medium transition-colors ${mode === 'cargas' ? active : inactive}`;
+    document.getElementById('btn-nav').className    = `px-4 py-1.5 font-medium transition-colors ${mode === 'nav'    ? active : inactive}`;
+    fetch(APIS[_mode].load).then(r => r.json()).then(s => {
+      state.daily       = !!s.only_daily_position;
+      state.consumption = !!s.only_with_consumption;
+      applyState();
+    });
+  }
+
+  function applyState() {
+    ['daily', 'consumption'].forEach(key => {
+      const btn  = document.getElementById(`toggle-${key}`);
+      const knob = document.getElementById(`knob-${key}`);
+      btn.classList.toggle('bg-blue-600', state[key]);
+      btn.classList.toggle('bg-gray-200', !state[key]);
+      knob.classList.toggle('translate-x-5', state[key]);
+    });
+  }
+
+  function toggle(key) {
+    state[key] = !state[key];
+    applyState();
+  }
+
+  // ── Company filter ─────────────────────────────────────────────────────────
+
+  function renderCompanies() {
+    const el = document.getElementById('company-list');
+    if (!_companies.length) {
+      el.innerHTML = '<p class="text-xs text-gray-400 italic">Nenhuma empresa encontrada.</p>';
+      return;
+    }
+    el.innerHTML = _companies.map(c => `
+      <label class="flex items-center gap-2.5 cursor-pointer group">
+        <input type="checkbox" data-id="${c.id}" ${c.visible ? 'checked' : ''}
+          onchange="toggleCompany('${c.id}', this.checked)"
+          class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"/>
+        <span class="text-sm text-gray-700 group-hover:text-gray-900">${escHtml(c.name)}</span>
+      </label>`).join('');
+  }
+
+  function toggleCompany(id, checked) {
+    const co = _companies.find(c => c.id === id);
+    if (co) co.visible = checked;
+  }
+
+  function selectAllCompanies(visible) {
+    _companies.forEach(c => c.visible = visible);
+    renderCompanies();
+  }
+
+  function escHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function loadCompanies() {
+    fetch('/api/settings/companies').then(r => r.json()).then(({ companies }) => {
+      _companies = companies;
+      renderCompanies();
+    });
+  }
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+
+  function save() {
+    const allVisible = _companies.every(c => c.visible);
+    const companyFilter = allVisible ? [] : _companies.filter(c => c.visible).map(c => c.id);
+
+    Promise.all([
+      fetch(APIS[_mode].save, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          only_daily_position:   state.daily,
+          only_with_consumption: state.consumption,
+        })
+      }),
+      fetch('/api/settings/save', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company_filter: companyFilter })
+      }),
+    ]).then(() => window.location.href = "/");
+  }
+
+  document.addEventListener("keydown", e => { if (e.key === "Escape") history.back(); });
+  setMode(_mode);
+  loadCompanies();
+</script>
+{% endblock %}

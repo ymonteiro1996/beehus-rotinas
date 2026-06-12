@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ambiente virtual Python
+.venv/
+venv/
+env/
+
+# Configurações locais do Claude Code
+.claude/
+
+# Variáveis de ambiente (contém senhas)
+.env
+
+# MongoDB URI salvo localmente por usuário Windows — nunca subir
+data/user_connections.json
+
+# Arquivos temporários e binários
+*.exe
+*.tmp
+
+# Arquivos Excel e planilhas locais
+*.xlsx
+*.xls
+
+# Logs de sessão do Claude
+*.jsonl
+
+# OS files
+.DS_Store
+Thumbs.db

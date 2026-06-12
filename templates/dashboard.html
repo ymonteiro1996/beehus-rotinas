@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Controle Cargas{% endblock %}
+
+{% block head %}
+<style>
+  .table-wrap { overflow: auto; max-height: calc(100vh - 160px); position: relative; }
+  #table { border-collapse: separate; border-spacing: 0; }
+  #table td, #table th { border-bottom: 1px solid #f3f4f6; }
+  /* Freeze header row vertically */
+  #table thead th { position: sticky; top: 0; z-index: 4; background: #f9fafb; }
+  /* Freeze first two columns horizontally */
+  .sticky-company { position: sticky; left: 0;     min-width: 180px; z-index: 2; }
+  .sticky-entity  { position: sticky; left: 180px; min-width: 180px; z-index: 2; }
+  /* Body sticky cells need background to cover content behind */
+  td.sticky-company, td.sticky-entity { background: #fff; }
+  tr:hover td.sticky-company, tr:hover td.sticky-entity { background: #f9fafb; }
+  /* Corner cells: frozen both horizontally and vertically */
+  th.sticky-company, th.sticky-entity { z-index: 5; background: #f9fafb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="bg-white shadow px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center gap-4">
+    <h1 class="font-semibold text-gray-700">Controle Cargas</h1>
+    <!-- Mode toggle -->
+    <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+      <button id="btn-cargas" onclick="setMode('cargas')"
+        class="px-4 py-1.5 font-medium transition-colors bg-gray-800 text-white">Cargas</button>
+      <button id="btn-processed" onclick="setMode('processed')"
+        class="px-4 py-1.5 font-medium transition-colors bg-white text-gray-500 hover:bg-gray-50">Posição</button>
+      <button id="btn-nav" onclick="setMode('nav')"
+        class="px-4 py-1.5 font-medium transition-colors bg-white text-gray-500 hover:bg-gray-50">NAV</button>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <label class="text-gray-500 text-xs">Dias úteis:</label>
+    <select id="limitSelect" onchange="load()"
+      class="border rounded px-3 py-1.5 bg-white text-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+    </select>
+    <a id="btn-selecao" href="/config" class="flex items-center gap-1.5 border rounded px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      Seleção
+    </a>
+    <a id="btn-config" href="/settings" class="flex items-center gap-1.5 border rounded px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Config
+    </a>
+  </div>
+</header>
+
+<div id="filter-default" class="px-6 pt-4 flex gap-3">
+  <input id="companyFilter" type="text" placeholder="Filtrar empresa..."   oninput="filterRows()" class="border rounded px-3 py-1.5 w-56 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400" />
+  <input id="entityFilter"  type="text" placeholder="Filtrar entidade..." oninput="filterRows()" class="border rounded px-3 py-1.5 w-56 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400" />
+</div>
+
+<div class="p-6">
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="table-wrap">
+      <table class="w-max min-w-full text-xs" id="table" style="display:none">
+        <thead id="thead" class="bg-gray-50 text-gray-500 uppercase sticky top-0"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p id="msg" class="text-center text-gray-400 py-10">Carregando...</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div id="modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" style="display:none!important">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-[90vw] max-h-[80vh] flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b">
+      <div>
+        <p id="modal-title"    class="font-bold text-gray-800 text-base"></p>
+        <p id="modal-subtitle" class="text-gray-500 text-xs"></p>
+      </div>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+    <div class="overflow-auto flex-1 px-2 py-3">
+      <table class="text-xs border-collapse w-max min-w-full">
+        <thead class="bg-gray-50 text-gray-500 uppercase sticky top-0">
+          <tr id="modal-thead-row"></tr>
+        </thead>
+        <tbody id="modal-tbody"></tbody>
+      </table>
+      <p id="modal-msg" class="text-center text-gray-400 py-6 px-4"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _dates = [], _sel = {}, _mode = 'cargas';
+
+  const RESP_CLS = {
+    'Beehus':   'bg-yellow-100 text-yellow-700',
+    'Parceiro': 'bg-sky-100 text-sky-700',
+  };
+
+  const METHOD_CLS = {
+    'API':          'bg-blue-100 text-blue-700',
+    'scraping':     'bg-orange-100 text-orange-700',
+    'XML':          'bg-purple-100 text-purple-700',
+    'SFTP':         'bg-teal-100 text-teal-700',
+    'pdf':          'bg-red-100 text-red-700',
+    'excel':        'bg-green-100 text-green-700',
+    'open finance': 'bg-indigo-100 text-indigo-700',
+    'other':        'bg-gray-100 text-gray-500',
+  };
+
+  const _gridHeaders = dates =>
+    `<th class="px-3 py-2 text-left sticky left-0 bg-gray-50 z-10">Carteira</th>
+     <th class="px-3 py-2 text-left">Código</th>
+     ${dates.map(d => `<th class="px-3 py-2 text-center min-w-[90px]">${d}</th>`).join('')}`;
+
+  const _gridRow = w =>
+    `<td class="px-3 py-2 text-gray-700 sticky left-0 bg-white">${w.name}</td>
+     <td class="px-3 py-2 text-gray-500">${w.accountCode}</td>
+     ${w.cells.map(c => `<td class="px-3 py-2 text-center font-medium ${c.cls}">${c.label}</td>`).join('')}`;
+
+  const MODES = {
+    cargas: {
+      rowsApi:       limit => `/api/rows?limit=${limit}`,
+      detailGridApi: (cid, eid, limit) => `/api/detail-grid?companyId=${cid}&entityId=${eid}&limit=${limit}`,
+      selecao:       '/config',
+      config:        '/settings',
+    },
+    nav: {
+      rowsApi:       limit => `/api/nav/rows?limit=${limit}`,
+      detailGridApi: (cid, eid, limit) => `/api/nav/detail-grid?companyId=${cid}&entityId=${eid}&limit=${limit}`,
+      selecao:       '/config',
+      config:        '/settings?mode=nav',
+    },
+    processed: {
+      rowsApi:       limit => `/api/processed/rows?limit=${limit}`,
+      detailGridApi: (cid, eid, limit) => `/api/processed/detail-grid?companyId=${cid}&entityId=${eid}&limit=${limit}`,
+      selecao:       '/config',
+      config:        '/settings',
+    },
+  };
+
+  function setMode(mode) {
+    _mode = mode;
+    const active   = 'bg-gray-800 text-white';
+    const inactive = 'bg-white text-gray-500 hover:bg-gray-50';
+    ['cargas', 'nav', 'processed'].forEach(m => {
+      document.getElementById(`btn-${m}`).className =
+        `px-4 py-1.5 font-medium transition-colors ${mode === m ? active : inactive}`;
+    });
+    document.getElementById('btn-selecao').href = MODES[mode].selecao;
+    document.getElementById('btn-config').href  = MODES[mode].config;
+    load();
+  }
+
+  function load() {
+    const limit = document.getElementById('limitSelect').value;
+    const m = MODES[_mode];
+    document.getElementById('msg').textContent     = 'Carregando...';
+    document.getElementById('msg').style.display   = 'block';
+    document.getElementById('table').style.display = 'none';
+
+    fetch(m.rowsApi(limit)).then(r => r.json()).then(({ rows, dates }) => {
+      _dates = dates;
+      document.getElementById('thead').innerHTML =
+        `<tr>
+          <th class="sticky-company bg-gray-50 px-4 py-3 text-left">Empresa</th>
+          <th class="sticky-entity  bg-gray-50 px-4 py-3 text-left">Entidade</th>
+          <th class="px-3 py-3 text-center min-w-[100px]">Método</th>
+          <th class="px-3 py-3 text-center min-w-[90px]">Responsável</th>
+          <th class="px-3 py-3 text-center min-w-[60px]">Delay</th>
+          ${dates.map(d => `<th class="px-3 py-3 text-center min-w-[110px]">${d}</th>`).join('')}
+        </tr>`;
+
+      document.getElementById('tbody').innerHTML = rows.map(r =>
+        `<tr class="border-t border-gray-100 hover:bg-gray-50"
+             data-company="${r.company.toLowerCase()}" data-entity="${r.entity.toLowerCase()}">
+          <td class="sticky-company bg-white px-4 py-2 font-medium">
+            <span class="cursor-pointer text-blue-600 hover:underline"
+              onclick="openModal('${r.companyId}','${r.entityId}','${r.company}','${r.entity}')">${r.company}</span>
+          </td>
+          <td class="sticky-entity bg-white px-4 py-2 text-gray-600">
+            <span class="cursor-pointer text-blue-600 hover:underline"
+              onclick="openModal('${r.companyId}','${r.entityId}','${r.company}','${r.entity}')">${r.entity}</span>
+          </td>
+          <td class="px-3 py-2 text-center">
+            ${r.method ? `<span class="px-2 py-0.5 rounded text-[10px] font-medium ${METHOD_CLS[r.method] || 'bg-gray-100 text-gray-500'}">${r.method}</span>` : '<span class="text-gray-300">—</span>'}
+          </td>
+          <td class="px-3 py-2 text-center">
+            ${r.responsible ? `<span class="px-2 py-0.5 rounded text-[10px] font-medium ${RESP_CLS[r.responsible] || 'bg-gray-100 text-gray-500'}">${r.responsible}</span>` : '<span class="text-gray-300">—</span>'}
+          </td>
+          <td class="px-3 py-2 text-center text-gray-400 font-medium">${r.delay > 0 ? r.delay + 'd' : '—'}</td>
+          ${r.cells.map(c => `<td class="px-3 py-2 text-center font-medium ${c.cls}">${c.label}</td>`).join('')}
+        </tr>`).join('');
+
+      document.getElementById('msg').style.display   = 'none';
+      document.getElementById('table').style.display = '';
+      filterRows();
+    });
+  }
+
+  function filterRows() {
+    const qc = document.getElementById('companyFilter').value.toLowerCase();
+    const qe = document.getElementById('entityFilter').value.toLowerCase();
+    document.querySelectorAll('#tbody tr').forEach(tr =>
+      tr.style.display = tr.dataset.company.includes(qc) && tr.dataset.entity.includes(qe) ? '' : 'none'
+    );
+  }
+
+  function openModal(companyId, entityId, company, entity) {
+    _sel = { companyId, entityId };
+    document.getElementById('modal-title').textContent    = company;
+    document.getElementById('modal-subtitle').textContent = entity;
+    document.getElementById('modal').style.display = 'flex';
+    loadDetail();
+  }
+
+  function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+  function loadDetail() {
+    const limit = document.getElementById('limitSelect').value;
+    const m     = MODES[_mode];
+    document.getElementById('modal-msg').textContent    = 'Carregando...';
+    document.getElementById('modal-msg').style.display  = 'block';
+    document.getElementById('modal-thead-row').innerHTML = '';
+    document.getElementById('modal-tbody').innerHTML     = '';
+
+    fetch(m.detailGridApi(_sel.companyId, _sel.entityId, limit))
+      .then(r => r.json()).then(({ rows, dates }) => {
+        document.getElementById('modal-thead-row').innerHTML = _gridHeaders(dates);
+        document.getElementById('modal-tbody').innerHTML = rows.map(w =>
+          `<tr class="border-t border-gray-100 hover:bg-gray-50">${_gridRow(w)}</tr>`
+        ).join('');
+        document.getElementById('modal-msg').style.display = rows.length ? 'none' : 'block';
+        if (!rows.length) document.getElementById('modal-msg').textContent = 'Sem carteiras para este par.';
+      });
+  }
+
+  document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  load();
+</script>
+{% endblock %}

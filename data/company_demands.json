@@ -1,0 +1,55 @@
+{
+  "Blue3": [
+    {
+      "id": "20260611152605229125",
+      "title": "Inclusão de 200 novas carteiras",
+      "sla": "2026-06-17",
+      "created_at": "2026-06-11",
+      "closed": false
+    },
+    {
+      "id": "20260611152625438574",
+      "title": "Inclusão XP US",
+      "sla": "2026-06-24",
+      "created_at": "2026-06-11",
+      "closed": false
+    }
+  ],
+  "Blue3 Wealth": [
+    {
+      "id": "20260611152719621921",
+      "title": "Publicação de todas as carteiras de 30/05/2025 á 29/05/2026",
+      "sla": "2026-06-16",
+      "created_at": "2026-06-11",
+      "closed": false
+    }
+  ],
+  "Mira": [
+    {
+      "id": "20260611152735949583",
+      "title": "Ajuste de posições e carteiras Mariano",
+      "sla": "2026-06-15",
+      "created_at": "2026-06-11",
+      "closed": false
+    }
+  ],
+  "Next Wealth - RTS": [
+    {
+      "id": "20260611152813269757",
+      "title": "Onboarding - Cadastro de carteira",
+      "sla": "2026-06-08",
+      "created_at": "2026-06-11",
+      "closed": true,
+      "closed_at": "2026-06-11"
+    }
+  ],
+  "Eté": [
+    {
+      "id": "20260611152900295654",
+      "title": "Onboarding",
+      "sla": "2026-06-17",
+      "created_at": "2026-06-11",
+      "closed": false
+    }
+  ]
+}

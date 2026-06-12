@@ -1,0 +1,2620 @@
+[
+  {
+    "id": "9cbe75e5-1e35-497e-8d5c-d947381aded5",
+    "name": "TF8 - Rentabilidade dos ativos",
+    "created_at": "2026-04-02T14:07:31.450659",
+    "config": {
+      "derivatives": false,
+      "company_id": "54577402000182",
+      "entity_id": "",
+      "wallet_ids": [
+        "68769c89957ca1276cf72bf2",
+        "68769c74957ca1276cf72be6",
+        "6887ef05957ca1276cf79af9",
+        "69a88fdb05a3d1817fff39ca",
+        "685f030bbf483394d2ca14fe",
+        "68bb34089a9a11e087ee839b",
+        "685f030bbf483394d2ca1505",
+        "68f63232903b363e53b3aee9",
+        "690ccd30d74519546d088e63",
+        "690ccd4fd74519546d088e92",
+        "68f286b2e2e2be118020d205",
+        "68f286a3e2e2be118020d1dd",
+        "68f2867ae2e2be118020d1b5",
+        "68f286d7e2e2be118020d255",
+        "68f789a842ac68c6ac3fc122",
+        "691787999fcfc8840709fb92",
+        "68f286c5e2e2be118020d22d",
+        "6908ec9c1af74056c8ba6d7f",
+        "6908ec7b1af74056c8ba6d4c",
+        "696e356f182474a02a2c57e7",
+        "692ece6c81016d8fa1afb109",
+        "698b9c83b2900dbc6397ed99",
+        "698ba00cb2900dbc6397eef8",
+        "6978b4a5e2f881f155954e4c",
+        "69851393b2900dbc638e2676",
+        "6978b4bce2f881f155954e82",
+        "68923454ca01ff56af7f5942",
+        "685f030dbf483394d2ca15c2",
+        "688cd199ca01ff56af7f4bad",
+        "685f030dbf483394d2ca15a6",
+        "685f030dbf483394d2ca159f",
+        "685f030dbf483394d2ca15bb",
+        "688cd69eca01ff56af7f4ca9",
+        "685f030dbf483394d2ca15b4",
+        "685f030dbf483394d2ca1598",
+        "698b321fb2900dbc639694bc",
+        "698b31f1b2900dbc6396947f",
+        "685f030cbf483394d2ca156e",
+        "68769aff957ca1276cf72b52",
+        "68d2e58962a3c4412e9338b0",
+        "68d2e54a62a3c4412e933888",
+        "68d2e5d162a3c4412e9338d8",
+        "68d2e5fb62a3c4412e933900",
+        "69726ee3e9a0331e3f5d5e7d",
+        "68d2e61b62a3c4412e93392a",
+        "68d2e63862a3c4412e933952",
+        "68d2e65462a3c4412e93397a",
+        "68d2e6e462a3c4412e9339ca",
+        "68d2e67662a3c4412e9339a2",
+        "69bc52e74f5bf9c29f65f1a5",
+        "691481df3fd60625bc250aa0",
+        "685f030cbf483394d2ca1538",
+        "68c8668193b1ff687e7161ef",
+        "685f030bbf483394d2ca150c",
+        "685f030cbf483394d2ca1522",
+        "685f030cbf483394d2ca1529",
+        "685f030cbf483394d2ca1513",
+        "685f030cbf483394d2ca151b",
+        "6876990e957ca1276cf72b09",
+        "6953d161795bf8293598d4eb",
+        "6931dfe03cb026c5483d3767",
+        "6931dec83cb026c5483d3734",
+        "6931de7f3cb026c5483d3701",
+        "69a58c941b6fd599c1cec45b",
+        "69c3ea444f5bf9c29f68bcaf",
+        "69c14ecc4f5bf9c29f66bd29",
+        "69c14e8e4f5bf9c29f66bcf2",
+        "69aac095012a75d1a847d9a6",
+        "69c3ea7e4f5bf9c29f68bce6",
+        "68769b5a957ca1276cf72b78",
+        "6929e3a8f4a36dbbf4059069",
+        "6929e3f1f4a36dbbf4059098",
+        "6925ff42984375b9fed25ebd",
+        "698b7884b2900dbc639768da",
+        "6925fef6984375b9fed25e59",
+        "6929e412f4a36dbbf40590c7",
+        "6929e435f4a36dbbf40590f6",
+        "6925ff12984375b9fed25e8b",
+        "6929e457f4a36dbbf4059125",
+        "69bc2c374f5bf9c29f65c426",
+        "68769b76957ca1276cf72b84",
+        "685f030bbf483394d2ca14da",
+        "685f030bbf483394d2ca14e1",
+        "685f030cbf483394d2ca1530",
+        "687697ea957ca1276cf72ae0",
+        "685f030bbf483394d2ca14d2",
+        "69970c3baeffa667bcf24f47",
+        "68769868957ca1276cf72aec",
+        "687697bf957ca1276cf72ad4",
+        "68769b40957ca1276cf72b6c",
+        "6952ee36795bf829359776f3",
+        "6953ebf3795bf8293598e547",
+        "68769c59957ca1276cf72bda",
+        "68769c3b957ca1276cf72bce",
+        "69bc32114f5bf9c29f65d5c1",
+        "69cd48758a7b97f700190d54",
+        "696946cb182474a02a2b6389",
+        "690b5c95d74519546d082e9a",
+        "690b5cabd74519546d082ecb",
+        "6876995c957ca1276cf72b15",
+        "685f030cbf483394d2ca1540",
+        "69668d849c9a4a61f61df6f4",
+        "685f030cbf483394d2ca1550",
+        "68f27a33e2e2be1180209ed0",
+        "68769bc3957ca1276cf72b9c",
+        "68769b9b957ca1276cf72b90",
+        "685f030cbf483394d2ca1558",
+        "68fb7a0547170dafb2f69ef8",
+        "685f030bbf483394d2ca14e8",
+        "685f030bbf483394d2ca14ef",
+        "685f030bbf483394d2ca14f7",
+        "68769896957ca1276cf72af8",
+        "68c3432993b1ff687e6f2692",
+        "68c342ed93b1ff687e6f261a",
+        "68c3430593b1ff687e6f2642",
+        "68c3433c93b1ff687e6f26ba",
+        "68c3431993b1ff687e6f266a",
+        "68c3434e93b1ff687e6f26e2",
+        "69cbda058a7b97f700162a76",
+        "68769be8957ca1276cf72ba8",
+        "685f030cbf483394d2ca1567",
+        "685f030cbf483394d2ca1560",
+        "68769a7d957ca1276cf72b23",
+        "68769a98957ca1276cf72b2f",
+        "685f030dbf483394d2ca1591",
+        "685f030cbf483394d2ca1575",
+        "685f030cbf483394d2ca157c",
+        "685f030cbf483394d2ca158a",
+        "685f030dbf483394d2ca15ad",
+        "685f030cbf483394d2ca1583",
+        "68769bfe957ca1276cf72bb4",
+        "685f030cbf483394d2ca1548",
+        "68793977957ca1276cf7510f",
+        "68769c14957ca1276cf72bc0"
+      ],
+      "wallets": [
+        {
+          "id": "68769c89957ca1276cf72bf2",
+          "name": "AL - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769c74957ca1276cf72be6",
+          "name": "AL - XP PF",
+          "accountCode": "488305"
+        },
+        {
+          "id": "6887ef05957ca1276cf79af9",
+          "name": "AL - XP PF II",
+          "accountCode": "13220280"
+        },
+        {
+          "id": "69a88fdb05a3d1817fff39ca",
+          "name": "ASR - PF XP",
+          "accountCode": "4278737"
+        },
+        {
+          "id": "685f030bbf483394d2ca14fe",
+          "name": "BNF - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "68bb34089a9a11e087ee839b",
+          "name": "BNF - PF ITAU",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030bbf483394d2ca1505",
+          "name": "BNF - PF XP",
+          "accountCode": "123"
+        },
+        {
+          "id": "68f63232903b363e53b3aee9",
+          "name": "CHC - C - Itaú Off",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "690ccd30d74519546d088e63",
+          "name": "CHC - C - Itaú PJ",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "690ccd4fd74519546d088e92",
+          "name": "CHC - C - Itaú PJ II",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286b2e2e2be118020d205",
+          "name": "CHC - C - PF BTG",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286a3e2e2be118020d1dd",
+          "name": "CHC - C - PF Itaú",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f2867ae2e2be118020d1b5",
+          "name": "CHC - C - PF XP",
+          "accountCode": "3432489"
+        },
+        {
+          "id": "68f286d7e2e2be118020d255",
+          "name": "CHC - M - PF BTG",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f789a842ac68c6ac3fc122",
+          "name": "CHC - M - PF Itaú",
+          "accountCode": "70XX/XXX82-0"
+        },
+        {
+          "id": "691787999fcfc8840709fb92",
+          "name": "CHC - M - PF Itaú Prev",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286c5e2e2be118020d22d",
+          "name": "CHC - M - PF XP",
+          "accountCode": "3431896"
+        },
+        {
+          "id": "6908ec9c1af74056c8ba6d7f",
+          "name": "CHC - Patrimonial - Offshore",
+          "accountCode": "0****00"
+        },
+        {
+          "id": "6908ec7b1af74056c8ba6d4c",
+          "name": "CHC - Patrimonial - Onshore",
+          "accountCode": "0000***"
+        },
+        {
+          "id": "696e356f182474a02a2c57e7",
+          "name": "CHC Dorata - Jefferies",
+          "accountCode": "JW3171196"
+        },
+        {
+          "id": "692ece6c81016d8fa1afb109",
+          "name": "CHC PF - Jefferies",
+          "accountCode": "JW3170362"
+        },
+        {
+          "id": "698b9c83b2900dbc6397ed99",
+          "name": "CP - BTG",
+          "accountCode": "0000000000000000000"
+        },
+        {
+          "id": "698ba00cb2900dbc6397eef8",
+          "name": "CP - Itaú",
+          "accountCode": "00000000000000"
+        },
+        {
+          "id": "6978b4a5e2f881f155954e4c",
+          "name": "CP - PF XP",
+          "accountCode": "349074"
+        },
+        {
+          "id": "69851393b2900dbc638e2676",
+          "name": "CP - PF XP - Offshore",
+          "accountCode": "018"
+        },
+        {
+          "id": "6978b4bce2f881f155954e82",
+          "name": "CP - PF XP II",
+          "accountCode": "17650610"
+        },
+        {
+          "id": "68923454ca01ff56af7f5942",
+          "name": "CR - BMG",
+          "accountCode": ".."
+        },
+        {
+          "id": "685f030dbf483394d2ca15c2",
+          "name": "CR - BMG Apagar",
+          "accountCode": "123"
+        },
+        {
+          "id": "688cd199ca01ff56af7f4bad",
+          "name": "CR - Jefferies",
+          "accountCode": "JW3-163763"
+        },
+        {
+          "id": "685f030dbf483394d2ca15a6",
+          "name": "CR - MR - XP PF",
+          "accountCode": "15204556"
+        },
+        {
+          "id": "685f030dbf483394d2ca159f",
+          "name": "CR - NR - XP PF",
+          "accountCode": "15197246"
+        },
+        {
+          "id": "685f030dbf483394d2ca15bb",
+          "name": "CR - Patrimonial",
+          "accountCode": "123"
+        },
+        {
+          "id": "688cd69eca01ff56af7f4ca9",
+          "name": "CR - Santocha - Jefferies",
+          "accountCode": "118965"
+        },
+        {
+          "id": "685f030dbf483394d2ca15b4",
+          "name": "CR - Santocha - Jefferies Apagar",
+          "accountCode": "118965"
+        },
+        {
+          "id": "685f030dbf483394d2ca1598",
+          "name": "CR - XP PF",
+          "accountCode": "3199049"
+        },
+        {
+          "id": "698b321fb2900dbc639694bc",
+          "name": "Carteira Base  - Arrojado - Offshore",
+          "accountCode": "00000000000000000000000"
+        },
+        {
+          "id": "698b31f1b2900dbc6396947f",
+          "name": "Carteira Base  - Arrojado - Onshore",
+          "accountCode": "0000000000000000000000"
+        },
+        {
+          "id": "685f030cbf483394d2ca156e",
+          "name": "DSF - PF XP",
+          "accountCode": "297007"
+        },
+        {
+          "id": "68769aff957ca1276cf72b52",
+          "name": "DSF - XP OFF",
+          "accountCode": "01"
+        },
+        {
+          "id": "68d2e58962a3c4412e9338b0",
+          "name": "DSIC - BTG Onshore",
+          "accountCode": "2048484"
+        },
+        {
+          "id": "68d2e54a62a3c4412e933888",
+          "name": "DSIC - Bradesco",
+          "accountCode": "****83-0"
+        },
+        {
+          "id": "68d2e5d162a3c4412e9338d8",
+          "name": "DSIC - Galapagos",
+          "accountCode": "8206239"
+        },
+        {
+          "id": "68d2e5fb62a3c4412e933900",
+          "name": "DSIC - Itaú",
+          "accountCode": "11100-0"
+        },
+        {
+          "id": "69726ee3e9a0331e3f5d5e7d",
+          "name": "DSIC - Jefferies",
+          "accountCode": "JW3169646"
+        },
+        {
+          "id": "68d2e61b62a3c4412e93392a",
+          "name": "DSIC - Safra",
+          "accountCode": "XXX06-2"
+        },
+        {
+          "id": "68d2e63862a3c4412e933952",
+          "name": "DSIC - Santander I",
+          "accountCode": "290294768"
+        },
+        {
+          "id": "68d2e65462a3c4412e93397a",
+          "name": "DSIC - Santander II",
+          "accountCode": "01002055-7"
+        },
+        {
+          "id": "68d2e6e462a3c4412e9339ca",
+          "name": "DSIC - XP I",
+          "accountCode": "7439051"
+        },
+        {
+          "id": "68d2e67662a3c4412e9339a2",
+          "name": "DSIC - XP II",
+          "accountCode": "3833625"
+        },
+        {
+          "id": "69bc52e74f5bf9c29f65f1a5",
+          "name": "EAM - PF XP",
+          "accountCode": "18723544"
+        },
+        {
+          "id": "691481df3fd60625bc250aa0",
+          "name": "EPED - Malbec - MS",
+          "accountCode": "093-020863-608"
+        },
+        {
+          "id": "685f030cbf483394d2ca1538",
+          "name": "EPED - PF XP",
+          "accountCode": "17574549xx"
+        },
+        {
+          "id": "68c8668193b1ff687e7161ef",
+          "name": "EPED - PF XP II",
+          "accountCode": "18369773"
+        },
+        {
+          "id": "685f030bbf483394d2ca150c",
+          "name": "FNS - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1522",
+          "name": "FNS - PF ITAU",
+          "accountCode": "1234"
+        },
+        {
+          "id": "685f030cbf483394d2ca1529",
+          "name": "FNS - PF ITAU FAMA",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1513",
+          "name": "FNS - PF XP",
+          "accountCode": "13591105"
+        },
+        {
+          "id": "685f030cbf483394d2ca151b",
+          "name": "FNS - PF XP II",
+          "accountCode": "123"
+        },
+        {
+          "id": "6876990e957ca1276cf72b09",
+          "name": "FNS - Vortx",
+          "accountCode": "01"
+        },
+        {
+          "id": "6953d161795bf8293598d4eb",
+          "name": "GCC - PF XP",
+          "accountCode": "5633314"
+        },
+        {
+          "id": "6931dfe03cb026c5483d3767",
+          "name": "GCC - Payoneer PJ - Offshore",
+          "accountCode": "*0*0"
+        },
+        {
+          "id": "6931dec83cb026c5483d3734",
+          "name": "GCC - Relay PJ - Offshore",
+          "accountCode": "0*000*000"
+        },
+        {
+          "id": "6931de7f3cb026c5483d3701",
+          "name": "GCC - Santander PF - Onshore",
+          "accountCode": "00*00****"
+        },
+        {
+          "id": "69a58c941b6fd599c1cec45b",
+          "name": "GIK - PJ XP",
+          "accountCode": "3693352"
+        },
+        {
+          "id": "69c3ea444f5bf9c29f68bcaf",
+          "name": "GOP - Avenue",
+          "accountCode": "209313958"
+        },
+        {
+          "id": "69c14ecc4f5bf9c29f66bd29",
+          "name": "GOP - CS",
+          "accountCode": "51121"
+        },
+        {
+          "id": "69c14e8e4f5bf9c29f66bcf2",
+          "name": "GOP - Itaú",
+          "accountCode": "375727915-7"
+        },
+        {
+          "id": "69aac095012a75d1a847d9a6",
+          "name": "GOP - PF XP",
+          "accountCode": "2824074"
+        },
+        {
+          "id": "69c3ea7e4f5bf9c29f68bce6",
+          "name": "GOP - XP Off",
+          "accountCode": "310467"
+        },
+        {
+          "id": "68769b5a957ca1276cf72b78",
+          "name": "IDALL - XP PF",
+          "accountCode": "17882343"
+        },
+        {
+          "id": "6929e3a8f4a36dbbf4059069",
+          "name": "JPAM C - BTG Onshore",
+          "accountCode": "004564315"
+        },
+        {
+          "id": "6929e3f1f4a36dbbf4059098",
+          "name": "JPAM C - Santander",
+          "accountCode": "00******"
+        },
+        {
+          "id": "6925ff42984375b9fed25ebd",
+          "name": "JPAM CL - PF XP",
+          "accountCode": "4024962"
+        },
+        {
+          "id": "698b7884b2900dbc639768da",
+          "name": "JPAM CPA - PF XP",
+          "accountCode": "7445154"
+        },
+        {
+          "id": "6925fef6984375b9fed25e59",
+          "name": "JPAM J - PF XP",
+          "accountCode": "2090086"
+        },
+        {
+          "id": "6929e412f4a36dbbf40590c7",
+          "name": "JPAM J - Santander",
+          "accountCode": "0**"
+        },
+        {
+          "id": "6929e435f4a36dbbf40590f6",
+          "name": "JPAM M - BTG Onshore",
+          "accountCode": "004506016"
+        },
+        {
+          "id": "6925ff12984375b9fed25e8b",
+          "name": "JPAM M - PF XP",
+          "accountCode": "2068458"
+        },
+        {
+          "id": "6929e457f4a36dbbf4059125",
+          "name": "JPAM M - Santander",
+          "accountCode": "0*00"
+        },
+        {
+          "id": "69bc2c374f5bf9c29f65c426",
+          "name": "LAR - PF XP",
+          "accountCode": "7974135"
+        },
+        {
+          "id": "68769b76957ca1276cf72b84",
+          "name": "LDALL - XP PF",
+          "accountCode": "6831953"
+        },
+        {
+          "id": "685f030bbf483394d2ca14da",
+          "name": "LHM - BTC",
+          "accountCode": "00"
+        },
+        {
+          "id": "685f030bbf483394d2ca14e1",
+          "name": "LHM - Jefferies",
+          "accountCode": "JW3-154861"
+        },
+        {
+          "id": "685f030cbf483394d2ca1530",
+          "name": "LHM - PF XP",
+          "accountCode": "221110"
+        },
+        {
+          "id": "687697ea957ca1276cf72ae0",
+          "name": "LHM - PF XP - Remanescente",
+          "accountCode": "02"
+        },
+        {
+          "id": "685f030bbf483394d2ca14d2",
+          "name": "LHM - PJ XP - Convex",
+          "accountCode": "16732280"
+        },
+        {
+          "id": "69970c3baeffa667bcf24f47",
+          "name": "LHM - PJ XP - Convex II",
+          "accountCode": "18687272"
+        },
+        {
+          "id": "68769868957ca1276cf72aec",
+          "name": "LHM - Vortx",
+          "accountCode": "03"
+        },
+        {
+          "id": "687697bf957ca1276cf72ad4",
+          "name": "LHM - XP Previdência",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769b40957ca1276cf72b6c",
+          "name": "LMF - XP PF",
+          "accountCode": "12173777"
+        },
+        {
+          "id": "6952ee36795bf829359776f3",
+          "name": "MLM - Itaú",
+          "accountCode": "13705-0"
+        },
+        {
+          "id": "6953ebf3795bf8293598e547",
+          "name": "MLM - PF XP",
+          "accountCode": "18522644"
+        },
+        {
+          "id": "68769c59957ca1276cf72bda",
+          "name": "MPU - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769c3b957ca1276cf72bce",
+          "name": "MPU - XP PF",
+          "accountCode": "18089376"
+        },
+        {
+          "id": "69bc32114f5bf9c29f65d5c1",
+          "name": "MV - PF XP",
+          "accountCode": "024_MV_XP"
+        },
+        {
+          "id": "69cd48758a7b97f700190d54",
+          "name": "MV - XP",
+          "accountCode": "19325464"
+        },
+        {
+          "id": "696946cb182474a02a2b6389",
+          "name": "OMN - Jefferies",
+          "accountCode": "2336"
+        },
+        {
+          "id": "690b5c95d74519546d082e9a",
+          "name": "OMN - PF XP I",
+          "accountCode": "4225631"
+        },
+        {
+          "id": "690b5cabd74519546d082ecb",
+          "name": "OMN - PF XP II",
+          "accountCode": "11439570"
+        },
+        {
+          "id": "6876995c957ca1276cf72b15",
+          "name": "PDP - JB",
+          "accountCode": "01"
+        },
+        {
+          "id": "685f030cbf483394d2ca1540",
+          "name": "PDP - PF XP",
+          "accountCode": "17571305"
+        },
+        {
+          "id": "69668d849c9a4a61f61df6f4",
+          "name": "PPED - MS",
+          "accountCode": "093-021184-608"
+        },
+        {
+          "id": "685f030cbf483394d2ca1550",
+          "name": "PROTESTADO - PF XP",
+          "accountCode": "16054043"
+        },
+        {
+          "id": "68f27a33e2e2be1180209ed0",
+          "name": "PROTESTADO - PF XP II",
+          "accountCode": "18413026"
+        },
+        {
+          "id": "68769bc3957ca1276cf72b9c",
+          "name": "RDALL - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769b9b957ca1276cf72b90",
+          "name": "RDALL - XP PF",
+          "accountCode": "12420497"
+        },
+        {
+          "id": "685f030cbf483394d2ca1558",
+          "name": "RECUPERI - PF XP",
+          "accountCode": "12487728"
+        },
+        {
+          "id": "68fb7a0547170dafb2f69ef8",
+          "name": "RM - Itaú Off",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "685f030bbf483394d2ca14e8",
+          "name": "RM - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030bbf483394d2ca14ef",
+          "name": "RM - PF XP",
+          "accountCode": "14278863"
+        },
+        {
+          "id": "685f030bbf483394d2ca14f7",
+          "name": "RM - PF XP II",
+          "accountCode": "321"
+        },
+        {
+          "id": "68769896957ca1276cf72af8",
+          "name": "RM - Vortx",
+          "accountCode": "01"
+        },
+        {
+          "id": "68c3432993b1ff687e6f2692",
+          "name": "SP - BTG",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c342ed93b1ff687e6f261a",
+          "name": "SP - Bradesco",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3430593b1ff687e6f2642",
+          "name": "SP - Daycoval",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3433c93b1ff687e6f26ba",
+          "name": "SP - Safra",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3431993b1ff687e6f266a",
+          "name": "SP - Safra Offshore",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3434e93b1ff687e6f26e2",
+          "name": "SP - XP",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "69cbda058a7b97f700162a76",
+          "name": "SRG - PF XP",
+          "accountCode": "4012043"
+        },
+        {
+          "id": "68769be8957ca1276cf72ba8",
+          "name": "TDALL - XP PF",
+          "accountCode": "11645174"
+        },
+        {
+          "id": "685f030cbf483394d2ca1567",
+          "name": "TG - JPM",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "685f030cbf483394d2ca1560",
+          "name": "TG - PF ITAU",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68769a7d957ca1276cf72b23",
+          "name": "TG - Safra",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769a98957ca1276cf72b2f",
+          "name": "TG - XP",
+          "accountCode": "17825816"
+        },
+        {
+          "id": "685f030dbf483394d2ca1591",
+          "name": "TP - Bulltrader",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1575",
+          "name": "TP - Citi - C61-093883",
+          "accountCode": "C61-093883"
+        },
+        {
+          "id": "685f030cbf483394d2ca157c",
+          "name": "TP - Citi - C61-195753",
+          "accountCode": "C61-195753"
+        },
+        {
+          "id": "685f030cbf483394d2ca158a",
+          "name": "TP - PF Safra Offshore",
+          "accountCode": "PAA0774"
+        },
+        {
+          "id": "685f030dbf483394d2ca15ad",
+          "name": "TP - Patrimonial",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1583",
+          "name": "TP - Safra Offshore",
+          "accountCode": "TAA0767"
+        },
+        {
+          "id": "68769bfe957ca1276cf72bb4",
+          "name": "VDALL - XP PF",
+          "accountCode": "17918446"
+        },
+        {
+          "id": "685f030cbf483394d2ca1548",
+          "name": "VLSP - PF XP",
+          "accountCode": "17612259"
+        },
+        {
+          "id": "68793977957ca1276cf7510f",
+          "name": "VTI - Jefferies",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68769c14957ca1276cf72bc0",
+          "name": "VTI - XP PF",
+          "accountCode": "01"
+        }
+      ],
+      "security_types": [
+        "benchmark",
+        "bond",
+        "brazilianFund",
+        "brazilianGovernmentBond",
+        "brazilianRepo",
+        "fund",
+        "futures",
+        "options",
+        "otc",
+        "poc",
+        "privateMarket",
+        "realAssets",
+        "sovereignBonds",
+        "stockEtf"
+      ],
+      "collections": {
+        "processedPosition": {
+          "fields": [
+            "positionDate",
+            "companyId",
+            "companyId__name",
+            "entityId",
+            "entityId__name",
+            "walletId",
+            "walletId__name",
+            "beehusName",
+            "quantity",
+            "pu",
+            "amount",
+            "pricingType",
+            "variable1",
+            "variable2",
+            "dailyContribution",
+            "sec_mainId",
+            "sec_maturityDate",
+            "sec_yield",
+            "sec_indexer",
+            "sec_indexerPercentual",
+            "sec_securityType",
+            "sec_type"
+          ],
+          "calcs": [],
+          "date_mode": "fixed",
+          "date": "2026-03-27"
+        }
+      },
+      "nav_periods": [
+        "day",
+        "month",
+        "3m",
+        "6m",
+        "12m",
+        "24m",
+        "36m",
+        "year",
+        "since_inception"
+      ],
+      "rent_methods": [
+        "pu"
+      ]
+    }
+  },
+  {
+    "id": "572dada4-25fc-4b5f-a8b9-19e0a279b05d",
+    "name": "TF8 - Derivativos",
+    "created_at": "2026-04-02T14:13:29.947701",
+    "config": {
+      "derivatives": true,
+      "company_id": "54577402000182",
+      "wallet_ids": [
+        "685f030bbf483394d2ca14fe"
+      ],
+      "wallets": [
+        {
+          "id": "685f030bbf483394d2ca14fe",
+          "name": "BNF - Jefferies",
+          "accountCode": "123"
+        }
+      ],
+      "security_types": [
+        "options"
+      ],
+      "date": "2026-03-20"
+    }
+  },
+  {
+    "id": "3bc0e1c8-6c61-484d-bb23-2061cd955f04",
+    "name": "TF8 - Unprocessed - D1 - Diário",
+    "created_at": "2026-04-06T10:50:18.365285",
+    "config": {
+      "derivatives": false,
+      "company_id": "54577402000182",
+      "entity_id": "",
+      "wallet_ids": [
+        "68769c89957ca1276cf72bf2",
+        "68769c74957ca1276cf72be6",
+        "6887ef05957ca1276cf79af9",
+        "69a88fdb05a3d1817fff39ca",
+        "685f030bbf483394d2ca14fe",
+        "68bb34089a9a11e087ee839b",
+        "685f030bbf483394d2ca1505",
+        "68f63232903b363e53b3aee9",
+        "690ccd30d74519546d088e63",
+        "690ccd4fd74519546d088e92",
+        "68f286b2e2e2be118020d205",
+        "68f286a3e2e2be118020d1dd",
+        "68f2867ae2e2be118020d1b5",
+        "68f286d7e2e2be118020d255",
+        "68f789a842ac68c6ac3fc122",
+        "691787999fcfc8840709fb92",
+        "68f286c5e2e2be118020d22d",
+        "6908ec9c1af74056c8ba6d7f",
+        "6908ec7b1af74056c8ba6d4c",
+        "696e356f182474a02a2c57e7",
+        "692ece6c81016d8fa1afb109",
+        "698b9c83b2900dbc6397ed99",
+        "698ba00cb2900dbc6397eef8",
+        "6978b4a5e2f881f155954e4c",
+        "69851393b2900dbc638e2676",
+        "6978b4bce2f881f155954e82",
+        "68923454ca01ff56af7f5942",
+        "685f030dbf483394d2ca15c2",
+        "688cd199ca01ff56af7f4bad",
+        "685f030dbf483394d2ca15a6",
+        "685f030dbf483394d2ca159f",
+        "685f030dbf483394d2ca15bb",
+        "688cd69eca01ff56af7f4ca9",
+        "685f030dbf483394d2ca15b4",
+        "685f030dbf483394d2ca1598",
+        "698b321fb2900dbc639694bc",
+        "698b31f1b2900dbc6396947f",
+        "685f030cbf483394d2ca156e",
+        "68769aff957ca1276cf72b52",
+        "68d2e58962a3c4412e9338b0",
+        "68d2e54a62a3c4412e933888",
+        "68d2e5d162a3c4412e9338d8",
+        "68d2e5fb62a3c4412e933900",
+        "69726ee3e9a0331e3f5d5e7d",
+        "68d2e61b62a3c4412e93392a",
+        "68d2e63862a3c4412e933952",
+        "68d2e65462a3c4412e93397a",
+        "68d2e6e462a3c4412e9339ca",
+        "68d2e67662a3c4412e9339a2",
+        "69bc52e74f5bf9c29f65f1a5",
+        "691481df3fd60625bc250aa0",
+        "685f030cbf483394d2ca1538",
+        "68c8668193b1ff687e7161ef",
+        "685f030bbf483394d2ca150c",
+        "685f030cbf483394d2ca1522",
+        "685f030cbf483394d2ca1529",
+        "685f030cbf483394d2ca1513",
+        "685f030cbf483394d2ca151b",
+        "6876990e957ca1276cf72b09",
+        "6953d161795bf8293598d4eb",
+        "6931dfe03cb026c5483d3767",
+        "6931dec83cb026c5483d3734",
+        "6931de7f3cb026c5483d3701",
+        "69a58c941b6fd599c1cec45b",
+        "69c3ea444f5bf9c29f68bcaf",
+        "69c14ecc4f5bf9c29f66bd29",
+        "69c14e8e4f5bf9c29f66bcf2",
+        "69aac095012a75d1a847d9a6",
+        "69c3ea7e4f5bf9c29f68bce6",
+        "68769b5a957ca1276cf72b78",
+        "6929e3a8f4a36dbbf4059069",
+        "6929e3f1f4a36dbbf4059098",
+        "6925ff42984375b9fed25ebd",
+        "698b7884b2900dbc639768da",
+        "6925fef6984375b9fed25e59",
+        "6929e412f4a36dbbf40590c7",
+        "6929e435f4a36dbbf40590f6",
+        "6925ff12984375b9fed25e8b",
+        "6929e457f4a36dbbf4059125",
+        "69bc2c374f5bf9c29f65c426",
+        "68769b76957ca1276cf72b84",
+        "685f030bbf483394d2ca14da",
+        "685f030bbf483394d2ca14e1",
+        "685f030cbf483394d2ca1530",
+        "687697ea957ca1276cf72ae0",
+        "685f030bbf483394d2ca14d2",
+        "69970c3baeffa667bcf24f47",
+        "68769868957ca1276cf72aec",
+        "687697bf957ca1276cf72ad4",
+        "68769b40957ca1276cf72b6c",
+        "6952ee36795bf829359776f3",
+        "6953ebf3795bf8293598e547",
+        "68769c59957ca1276cf72bda",
+        "68769c3b957ca1276cf72bce",
+        "69bc32114f5bf9c29f65d5c1",
+        "69cd48758a7b97f700190d54",
+        "696946cb182474a02a2b6389",
+        "690b5c95d74519546d082e9a",
+        "690b5cabd74519546d082ecb",
+        "6876995c957ca1276cf72b15",
+        "685f030cbf483394d2ca1540",
+        "69668d849c9a4a61f61df6f4",
+        "685f030cbf483394d2ca1550",
+        "68f27a33e2e2be1180209ed0",
+        "68769bc3957ca1276cf72b9c",
+        "68769b9b957ca1276cf72b90",
+        "685f030cbf483394d2ca1558",
+        "68fb7a0547170dafb2f69ef8",
+        "685f030bbf483394d2ca14e8",
+        "685f030bbf483394d2ca14ef",
+        "685f030bbf483394d2ca14f7",
+        "68769896957ca1276cf72af8",
+        "68c3432993b1ff687e6f2692",
+        "68c342ed93b1ff687e6f261a",
+        "68c3430593b1ff687e6f2642",
+        "68c3433c93b1ff687e6f26ba",
+        "68c3431993b1ff687e6f266a",
+        "68c3434e93b1ff687e6f26e2",
+        "69cbda058a7b97f700162a76",
+        "68769be8957ca1276cf72ba8",
+        "685f030cbf483394d2ca1567",
+        "685f030cbf483394d2ca1560",
+        "68769a7d957ca1276cf72b23",
+        "68769a98957ca1276cf72b2f",
+        "685f030dbf483394d2ca1591",
+        "685f030cbf483394d2ca1575",
+        "685f030cbf483394d2ca157c",
+        "685f030cbf483394d2ca158a",
+        "685f030dbf483394d2ca15ad",
+        "685f030cbf483394d2ca1583",
+        "68769bfe957ca1276cf72bb4",
+        "685f030cbf483394d2ca1548",
+        "68793977957ca1276cf7510f",
+        "68769c14957ca1276cf72bc0"
+      ],
+      "wallets": [
+        {
+          "id": "68769c89957ca1276cf72bf2",
+          "name": "AL - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769c74957ca1276cf72be6",
+          "name": "AL - XP PF",
+          "accountCode": "488305"
+        },
+        {
+          "id": "6887ef05957ca1276cf79af9",
+          "name": "AL - XP PF II",
+          "accountCode": "13220280"
+        },
+        {
+          "id": "69a88fdb05a3d1817fff39ca",
+          "name": "ASR - PF XP",
+          "accountCode": "4278737"
+        },
+        {
+          "id": "685f030bbf483394d2ca14fe",
+          "name": "BNF - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "68bb34089a9a11e087ee839b",
+          "name": "BNF - PF ITAU",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030bbf483394d2ca1505",
+          "name": "BNF - PF XP",
+          "accountCode": "123"
+        },
+        {
+          "id": "68f63232903b363e53b3aee9",
+          "name": "CHC - C - Itaú Off",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "690ccd30d74519546d088e63",
+          "name": "CHC - C - Itaú PJ",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "690ccd4fd74519546d088e92",
+          "name": "CHC - C - Itaú PJ II",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286b2e2e2be118020d205",
+          "name": "CHC - C - PF BTG",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286a3e2e2be118020d1dd",
+          "name": "CHC - C - PF Itaú",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f2867ae2e2be118020d1b5",
+          "name": "CHC - C - PF XP",
+          "accountCode": "3432489"
+        },
+        {
+          "id": "68f286d7e2e2be118020d255",
+          "name": "CHC - M - PF BTG",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f789a842ac68c6ac3fc122",
+          "name": "CHC - M - PF Itaú",
+          "accountCode": "70XX/XXX82-0"
+        },
+        {
+          "id": "691787999fcfc8840709fb92",
+          "name": "CHC - M - PF Itaú Prev",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286c5e2e2be118020d22d",
+          "name": "CHC - M - PF XP",
+          "accountCode": "3431896"
+        },
+        {
+          "id": "6908ec9c1af74056c8ba6d7f",
+          "name": "CHC - Patrimonial - Offshore",
+          "accountCode": "0****00"
+        },
+        {
+          "id": "6908ec7b1af74056c8ba6d4c",
+          "name": "CHC - Patrimonial - Onshore",
+          "accountCode": "0000***"
+        },
+        {
+          "id": "696e356f182474a02a2c57e7",
+          "name": "CHC Dorata - Jefferies",
+          "accountCode": "JW3171196"
+        },
+        {
+          "id": "692ece6c81016d8fa1afb109",
+          "name": "CHC PF - Jefferies",
+          "accountCode": "JW3170362"
+        },
+        {
+          "id": "698b9c83b2900dbc6397ed99",
+          "name": "CP - BTG",
+          "accountCode": "0000000000000000000"
+        },
+        {
+          "id": "698ba00cb2900dbc6397eef8",
+          "name": "CP - Itaú",
+          "accountCode": "00000000000000"
+        },
+        {
+          "id": "6978b4a5e2f881f155954e4c",
+          "name": "CP - PF XP",
+          "accountCode": "349074"
+        },
+        {
+          "id": "69851393b2900dbc638e2676",
+          "name": "CP - PF XP - Offshore",
+          "accountCode": "018"
+        },
+        {
+          "id": "6978b4bce2f881f155954e82",
+          "name": "CP - PF XP II",
+          "accountCode": "17650610"
+        },
+        {
+          "id": "68923454ca01ff56af7f5942",
+          "name": "CR - BMG",
+          "accountCode": ".."
+        },
+        {
+          "id": "685f030dbf483394d2ca15c2",
+          "name": "CR - BMG Apagar",
+          "accountCode": "123"
+        },
+        {
+          "id": "688cd199ca01ff56af7f4bad",
+          "name": "CR - Jefferies",
+          "accountCode": "JW3-163763"
+        },
+        {
+          "id": "685f030dbf483394d2ca15a6",
+          "name": "CR - MR - XP PF",
+          "accountCode": "15204556"
+        },
+        {
+          "id": "685f030dbf483394d2ca159f",
+          "name": "CR - NR - XP PF",
+          "accountCode": "15197246"
+        },
+        {
+          "id": "685f030dbf483394d2ca15bb",
+          "name": "CR - Patrimonial",
+          "accountCode": "123"
+        },
+        {
+          "id": "688cd69eca01ff56af7f4ca9",
+          "name": "CR - Santocha - Jefferies",
+          "accountCode": "118965"
+        },
+        {
+          "id": "685f030dbf483394d2ca15b4",
+          "name": "CR - Santocha - Jefferies Apagar",
+          "accountCode": "118965"
+        },
+        {
+          "id": "685f030dbf483394d2ca1598",
+          "name": "CR - XP PF",
+          "accountCode": "3199049"
+        },
+        {
+          "id": "698b321fb2900dbc639694bc",
+          "name": "Carteira Base  - Arrojado - Offshore",
+          "accountCode": "00000000000000000000000"
+        },
+        {
+          "id": "698b31f1b2900dbc6396947f",
+          "name": "Carteira Base  - Arrojado - Onshore",
+          "accountCode": "0000000000000000000000"
+        },
+        {
+          "id": "685f030cbf483394d2ca156e",
+          "name": "DSF - PF XP",
+          "accountCode": "297007"
+        },
+        {
+          "id": "68769aff957ca1276cf72b52",
+          "name": "DSF - XP OFF",
+          "accountCode": "01"
+        },
+        {
+          "id": "68d2e58962a3c4412e9338b0",
+          "name": "DSIC - BTG Onshore",
+          "accountCode": "2048484"
+        },
+        {
+          "id": "68d2e54a62a3c4412e933888",
+          "name": "DSIC - Bradesco",
+          "accountCode": "****83-0"
+        },
+        {
+          "id": "68d2e5d162a3c4412e9338d8",
+          "name": "DSIC - Galapagos",
+          "accountCode": "8206239"
+        },
+        {
+          "id": "68d2e5fb62a3c4412e933900",
+          "name": "DSIC - Itaú",
+          "accountCode": "11100-0"
+        },
+        {
+          "id": "69726ee3e9a0331e3f5d5e7d",
+          "name": "DSIC - Jefferies",
+          "accountCode": "JW3169646"
+        },
+        {
+          "id": "68d2e61b62a3c4412e93392a",
+          "name": "DSIC - Safra",
+          "accountCode": "XXX06-2"
+        },
+        {
+          "id": "68d2e63862a3c4412e933952",
+          "name": "DSIC - Santander I",
+          "accountCode": "290294768"
+        },
+        {
+          "id": "68d2e65462a3c4412e93397a",
+          "name": "DSIC - Santander II",
+          "accountCode": "01002055-7"
+        },
+        {
+          "id": "68d2e6e462a3c4412e9339ca",
+          "name": "DSIC - XP I",
+          "accountCode": "7439051"
+        },
+        {
+          "id": "68d2e67662a3c4412e9339a2",
+          "name": "DSIC - XP II",
+          "accountCode": "3833625"
+        },
+        {
+          "id": "69bc52e74f5bf9c29f65f1a5",
+          "name": "EAM - PF XP",
+          "accountCode": "18723544"
+        },
+        {
+          "id": "691481df3fd60625bc250aa0",
+          "name": "EPED - Malbec - MS",
+          "accountCode": "093-020863-608"
+        },
+        {
+          "id": "685f030cbf483394d2ca1538",
+          "name": "EPED - PF XP",
+          "accountCode": "17574549xx"
+        },
+        {
+          "id": "68c8668193b1ff687e7161ef",
+          "name": "EPED - PF XP II",
+          "accountCode": "18369773"
+        },
+        {
+          "id": "685f030bbf483394d2ca150c",
+          "name": "FNS - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1522",
+          "name": "FNS - PF ITAU",
+          "accountCode": "1234"
+        },
+        {
+          "id": "685f030cbf483394d2ca1529",
+          "name": "FNS - PF ITAU FAMA",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1513",
+          "name": "FNS - PF XP",
+          "accountCode": "13591105"
+        },
+        {
+          "id": "685f030cbf483394d2ca151b",
+          "name": "FNS - PF XP II",
+          "accountCode": "123"
+        },
+        {
+          "id": "6876990e957ca1276cf72b09",
+          "name": "FNS - Vortx",
+          "accountCode": "01"
+        },
+        {
+          "id": "6953d161795bf8293598d4eb",
+          "name": "GCC - PF XP",
+          "accountCode": "5633314"
+        },
+        {
+          "id": "6931dfe03cb026c5483d3767",
+          "name": "GCC - Payoneer PJ - Offshore",
+          "accountCode": "*0*0"
+        },
+        {
+          "id": "6931dec83cb026c5483d3734",
+          "name": "GCC - Relay PJ - Offshore",
+          "accountCode": "0*000*000"
+        },
+        {
+          "id": "6931de7f3cb026c5483d3701",
+          "name": "GCC - Santander PF - Onshore",
+          "accountCode": "00*00****"
+        },
+        {
+          "id": "69a58c941b6fd599c1cec45b",
+          "name": "GIK - PJ XP",
+          "accountCode": "3693352"
+        },
+        {
+          "id": "69c3ea444f5bf9c29f68bcaf",
+          "name": "GOP - Avenue",
+          "accountCode": "209313958"
+        },
+        {
+          "id": "69c14ecc4f5bf9c29f66bd29",
+          "name": "GOP - CS",
+          "accountCode": "51121"
+        },
+        {
+          "id": "69c14e8e4f5bf9c29f66bcf2",
+          "name": "GOP - Itaú",
+          "accountCode": "375727915-7"
+        },
+        {
+          "id": "69aac095012a75d1a847d9a6",
+          "name": "GOP - PF XP",
+          "accountCode": "2824074"
+        },
+        {
+          "id": "69c3ea7e4f5bf9c29f68bce6",
+          "name": "GOP - XP Off",
+          "accountCode": "310467"
+        },
+        {
+          "id": "68769b5a957ca1276cf72b78",
+          "name": "IDALL - XP PF",
+          "accountCode": "17882343"
+        },
+        {
+          "id": "6929e3a8f4a36dbbf4059069",
+          "name": "JPAM C - BTG Onshore",
+          "accountCode": "004564315"
+        },
+        {
+          "id": "6929e3f1f4a36dbbf4059098",
+          "name": "JPAM C - Santander",
+          "accountCode": "00******"
+        },
+        {
+          "id": "6925ff42984375b9fed25ebd",
+          "name": "JPAM CL - PF XP",
+          "accountCode": "4024962"
+        },
+        {
+          "id": "698b7884b2900dbc639768da",
+          "name": "JPAM CPA - PF XP",
+          "accountCode": "7445154"
+        },
+        {
+          "id": "6925fef6984375b9fed25e59",
+          "name": "JPAM J - PF XP",
+          "accountCode": "2090086"
+        },
+        {
+          "id": "6929e412f4a36dbbf40590c7",
+          "name": "JPAM J - Santander",
+          "accountCode": "0**"
+        },
+        {
+          "id": "6929e435f4a36dbbf40590f6",
+          "name": "JPAM M - BTG Onshore",
+          "accountCode": "004506016"
+        },
+        {
+          "id": "6925ff12984375b9fed25e8b",
+          "name": "JPAM M - PF XP",
+          "accountCode": "2068458"
+        },
+        {
+          "id": "6929e457f4a36dbbf4059125",
+          "name": "JPAM M - Santander",
+          "accountCode": "0*00"
+        },
+        {
+          "id": "69bc2c374f5bf9c29f65c426",
+          "name": "LAR - PF XP",
+          "accountCode": "7974135"
+        },
+        {
+          "id": "68769b76957ca1276cf72b84",
+          "name": "LDALL - XP PF",
+          "accountCode": "6831953"
+        },
+        {
+          "id": "685f030bbf483394d2ca14da",
+          "name": "LHM - BTC",
+          "accountCode": "00"
+        },
+        {
+          "id": "685f030bbf483394d2ca14e1",
+          "name": "LHM - Jefferies",
+          "accountCode": "JW3-154861"
+        },
+        {
+          "id": "685f030cbf483394d2ca1530",
+          "name": "LHM - PF XP",
+          "accountCode": "221110"
+        },
+        {
+          "id": "687697ea957ca1276cf72ae0",
+          "name": "LHM - PF XP - Remanescente",
+          "accountCode": "02"
+        },
+        {
+          "id": "685f030bbf483394d2ca14d2",
+          "name": "LHM - PJ XP - Convex",
+          "accountCode": "16732280"
+        },
+        {
+          "id": "69970c3baeffa667bcf24f47",
+          "name": "LHM - PJ XP - Convex II",
+          "accountCode": "18687272"
+        },
+        {
+          "id": "68769868957ca1276cf72aec",
+          "name": "LHM - Vortx",
+          "accountCode": "03"
+        },
+        {
+          "id": "687697bf957ca1276cf72ad4",
+          "name": "LHM - XP Previdência",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769b40957ca1276cf72b6c",
+          "name": "LMF - XP PF",
+          "accountCode": "12173777"
+        },
+        {
+          "id": "6952ee36795bf829359776f3",
+          "name": "MLM - Itaú",
+          "accountCode": "13705-0"
+        },
+        {
+          "id": "6953ebf3795bf8293598e547",
+          "name": "MLM - PF XP",
+          "accountCode": "18522644"
+        },
+        {
+          "id": "68769c59957ca1276cf72bda",
+          "name": "MPU - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769c3b957ca1276cf72bce",
+          "name": "MPU - XP PF",
+          "accountCode": "18089376"
+        },
+        {
+          "id": "69bc32114f5bf9c29f65d5c1",
+          "name": "MV - PF XP",
+          "accountCode": "024_MV_XP"
+        },
+        {
+          "id": "69cd48758a7b97f700190d54",
+          "name": "MV - XP",
+          "accountCode": "19325464"
+        },
+        {
+          "id": "696946cb182474a02a2b6389",
+          "name": "OMN - Jefferies",
+          "accountCode": "2336"
+        },
+        {
+          "id": "690b5c95d74519546d082e9a",
+          "name": "OMN - PF XP I",
+          "accountCode": "4225631"
+        },
+        {
+          "id": "690b5cabd74519546d082ecb",
+          "name": "OMN - PF XP II",
+          "accountCode": "11439570"
+        },
+        {
+          "id": "6876995c957ca1276cf72b15",
+          "name": "PDP - JB",
+          "accountCode": "01"
+        },
+        {
+          "id": "685f030cbf483394d2ca1540",
+          "name": "PDP - PF XP",
+          "accountCode": "17571305"
+        },
+        {
+          "id": "69668d849c9a4a61f61df6f4",
+          "name": "PPED - MS",
+          "accountCode": "093-021184-608"
+        },
+        {
+          "id": "685f030cbf483394d2ca1550",
+          "name": "PROTESTADO - PF XP",
+          "accountCode": "16054043"
+        },
+        {
+          "id": "68f27a33e2e2be1180209ed0",
+          "name": "PROTESTADO - PF XP II",
+          "accountCode": "18413026"
+        },
+        {
+          "id": "68769bc3957ca1276cf72b9c",
+          "name": "RDALL - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769b9b957ca1276cf72b90",
+          "name": "RDALL - XP PF",
+          "accountCode": "12420497"
+        },
+        {
+          "id": "685f030cbf483394d2ca1558",
+          "name": "RECUPERI - PF XP",
+          "accountCode": "12487728"
+        },
+        {
+          "id": "68fb7a0547170dafb2f69ef8",
+          "name": "RM - Itaú Off",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "685f030bbf483394d2ca14e8",
+          "name": "RM - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030bbf483394d2ca14ef",
+          "name": "RM - PF XP",
+          "accountCode": "14278863"
+        },
+        {
+          "id": "685f030bbf483394d2ca14f7",
+          "name": "RM - PF XP II",
+          "accountCode": "321"
+        },
+        {
+          "id": "68769896957ca1276cf72af8",
+          "name": "RM - Vortx",
+          "accountCode": "01"
+        },
+        {
+          "id": "68c3432993b1ff687e6f2692",
+          "name": "SP - BTG",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c342ed93b1ff687e6f261a",
+          "name": "SP - Bradesco",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3430593b1ff687e6f2642",
+          "name": "SP - Daycoval",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3433c93b1ff687e6f26ba",
+          "name": "SP - Safra",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3431993b1ff687e6f266a",
+          "name": "SP - Safra Offshore",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3434e93b1ff687e6f26e2",
+          "name": "SP - XP",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "69cbda058a7b97f700162a76",
+          "name": "SRG - PF XP",
+          "accountCode": "4012043"
+        },
+        {
+          "id": "68769be8957ca1276cf72ba8",
+          "name": "TDALL - XP PF",
+          "accountCode": "11645174"
+        },
+        {
+          "id": "685f030cbf483394d2ca1567",
+          "name": "TG - JPM",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "685f030cbf483394d2ca1560",
+          "name": "TG - PF ITAU",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68769a7d957ca1276cf72b23",
+          "name": "TG - Safra",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769a98957ca1276cf72b2f",
+          "name": "TG - XP",
+          "accountCode": "17825816"
+        },
+        {
+          "id": "685f030dbf483394d2ca1591",
+          "name": "TP - Bulltrader",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1575",
+          "name": "TP - Citi - C61-093883",
+          "accountCode": "C61-093883"
+        },
+        {
+          "id": "685f030cbf483394d2ca157c",
+          "name": "TP - Citi - C61-195753",
+          "accountCode": "C61-195753"
+        },
+        {
+          "id": "685f030cbf483394d2ca158a",
+          "name": "TP - PF Safra Offshore",
+          "accountCode": "PAA0774"
+        },
+        {
+          "id": "685f030dbf483394d2ca15ad",
+          "name": "TP - Patrimonial",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1583",
+          "name": "TP - Safra Offshore",
+          "accountCode": "TAA0767"
+        },
+        {
+          "id": "68769bfe957ca1276cf72bb4",
+          "name": "VDALL - XP PF",
+          "accountCode": "17918446"
+        },
+        {
+          "id": "685f030cbf483394d2ca1548",
+          "name": "VLSP - PF XP",
+          "accountCode": "17612259"
+        },
+        {
+          "id": "68793977957ca1276cf7510f",
+          "name": "VTI - Jefferies",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68769c14957ca1276cf72bc0",
+          "name": "VTI - XP PF",
+          "accountCode": "01"
+        }
+      ],
+      "security_types": [
+        "benchmark",
+        "bond",
+        "brazilianFund",
+        "brazilianGovernmentBond",
+        "brazilianRepo",
+        "fund",
+        "futures",
+        "options",
+        "otc",
+        "poc",
+        "privateMarket",
+        "realAssets",
+        "sovereignBonds",
+        "stockEtf"
+      ],
+      "collections": {
+        "unprocessedSecurityPositions": {
+          "fields": [
+            "positionDate",
+            "walletId",
+            "walletId__name",
+            "securityId",
+            "securityId__name",
+            "quantity",
+            "pu",
+            "amount",
+            "sec_mainId",
+            "sec_maturityDate",
+            "sec_yield",
+            "sec_indexer",
+            "sec_indexerPercentual",
+            "sec_securityType",
+            "sec_type"
+          ],
+          "calcs": [],
+          "date_mode": "relative",
+          "date_days": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "5c4ed545-eebc-4ee0-aab0-4ab650e18f83",
+    "name": "TF8 - Unprocessed - D3 - Diário",
+    "created_at": "2026-04-08T11:30:04.338144",
+    "config": {
+      "derivatives": false,
+      "company_id": "54577402000182",
+      "entity_id": "",
+      "wallet_ids": [
+        "68769c89957ca1276cf72bf2",
+        "68769c74957ca1276cf72be6",
+        "6887ef05957ca1276cf79af9",
+        "69a88fdb05a3d1817fff39ca",
+        "685f030bbf483394d2ca14fe",
+        "68bb34089a9a11e087ee839b",
+        "685f030bbf483394d2ca1505",
+        "68f63232903b363e53b3aee9",
+        "690ccd30d74519546d088e63",
+        "690ccd4fd74519546d088e92",
+        "68f286b2e2e2be118020d205",
+        "68f286a3e2e2be118020d1dd",
+        "68f2867ae2e2be118020d1b5",
+        "68f286d7e2e2be118020d255",
+        "68f789a842ac68c6ac3fc122",
+        "691787999fcfc8840709fb92",
+        "68f286c5e2e2be118020d22d",
+        "6908ec9c1af74056c8ba6d7f",
+        "6908ec7b1af74056c8ba6d4c",
+        "696e356f182474a02a2c57e7",
+        "692ece6c81016d8fa1afb109",
+        "698b9c83b2900dbc6397ed99",
+        "698ba00cb2900dbc6397eef8",
+        "6978b4a5e2f881f155954e4c",
+        "69851393b2900dbc638e2676",
+        "6978b4bce2f881f155954e82",
+        "68923454ca01ff56af7f5942",
+        "685f030dbf483394d2ca15c2",
+        "688cd199ca01ff56af7f4bad",
+        "685f030dbf483394d2ca15a6",
+        "685f030dbf483394d2ca159f",
+        "685f030dbf483394d2ca15bb",
+        "688cd69eca01ff56af7f4ca9",
+        "685f030dbf483394d2ca15b4",
+        "685f030dbf483394d2ca1598",
+        "698b321fb2900dbc639694bc",
+        "698b31f1b2900dbc6396947f",
+        "685f030cbf483394d2ca156e",
+        "68769aff957ca1276cf72b52",
+        "68d2e58962a3c4412e9338b0",
+        "68d2e54a62a3c4412e933888",
+        "68d2e5d162a3c4412e9338d8",
+        "68d2e5fb62a3c4412e933900",
+        "69726ee3e9a0331e3f5d5e7d",
+        "68d2e61b62a3c4412e93392a",
+        "68d2e63862a3c4412e933952",
+        "68d2e65462a3c4412e93397a",
+        "68d2e6e462a3c4412e9339ca",
+        "68d2e67662a3c4412e9339a2",
+        "69bc52e74f5bf9c29f65f1a5",
+        "691481df3fd60625bc250aa0",
+        "685f030cbf483394d2ca1538",
+        "68c8668193b1ff687e7161ef",
+        "685f030bbf483394d2ca150c",
+        "685f030cbf483394d2ca1522",
+        "685f030cbf483394d2ca1529",
+        "685f030cbf483394d2ca1513",
+        "685f030cbf483394d2ca151b",
+        "6876990e957ca1276cf72b09",
+        "6953d161795bf8293598d4eb",
+        "6931dfe03cb026c5483d3767",
+        "6931dec83cb026c5483d3734",
+        "6931de7f3cb026c5483d3701",
+        "69a58c941b6fd599c1cec45b",
+        "69c3ea444f5bf9c29f68bcaf",
+        "69c14ecc4f5bf9c29f66bd29",
+        "69c14e8e4f5bf9c29f66bcf2",
+        "69aac095012a75d1a847d9a6",
+        "69c3ea7e4f5bf9c29f68bce6",
+        "68769b5a957ca1276cf72b78",
+        "6929e3a8f4a36dbbf4059069",
+        "6929e3f1f4a36dbbf4059098",
+        "6925ff42984375b9fed25ebd",
+        "698b7884b2900dbc639768da",
+        "6925fef6984375b9fed25e59",
+        "6929e412f4a36dbbf40590c7",
+        "6929e435f4a36dbbf40590f6",
+        "6925ff12984375b9fed25e8b",
+        "6929e457f4a36dbbf4059125",
+        "69bc2c374f5bf9c29f65c426",
+        "68769b76957ca1276cf72b84",
+        "685f030bbf483394d2ca14da",
+        "685f030bbf483394d2ca14e1",
+        "685f030cbf483394d2ca1530",
+        "687697ea957ca1276cf72ae0",
+        "685f030bbf483394d2ca14d2",
+        "69970c3baeffa667bcf24f47",
+        "68769868957ca1276cf72aec",
+        "687697bf957ca1276cf72ad4",
+        "68769b40957ca1276cf72b6c",
+        "6952ee36795bf829359776f3",
+        "6953ebf3795bf8293598e547",
+        "68769c59957ca1276cf72bda",
+        "68769c3b957ca1276cf72bce",
+        "69bc32114f5bf9c29f65d5c1",
+        "69cd48758a7b97f700190d54",
+        "696946cb182474a02a2b6389",
+        "690b5c95d74519546d082e9a",
+        "690b5cabd74519546d082ecb",
+        "6876995c957ca1276cf72b15",
+        "685f030cbf483394d2ca1540",
+        "69668d849c9a4a61f61df6f4",
+        "685f030cbf483394d2ca1550",
+        "68f27a33e2e2be1180209ed0",
+        "68769bc3957ca1276cf72b9c",
+        "68769b9b957ca1276cf72b90",
+        "685f030cbf483394d2ca1558",
+        "68fb7a0547170dafb2f69ef8",
+        "685f030bbf483394d2ca14e8",
+        "685f030bbf483394d2ca14ef",
+        "685f030bbf483394d2ca14f7",
+        "68769896957ca1276cf72af8",
+        "68c3432993b1ff687e6f2692",
+        "68c342ed93b1ff687e6f261a",
+        "68c3430593b1ff687e6f2642",
+        "68c3433c93b1ff687e6f26ba",
+        "68c3431993b1ff687e6f266a",
+        "68c3434e93b1ff687e6f26e2",
+        "69cbda058a7b97f700162a76",
+        "68769be8957ca1276cf72ba8",
+        "685f030cbf483394d2ca1567",
+        "685f030cbf483394d2ca1560",
+        "68769a7d957ca1276cf72b23",
+        "68769a98957ca1276cf72b2f",
+        "685f030dbf483394d2ca1591",
+        "685f030cbf483394d2ca1575",
+        "685f030cbf483394d2ca157c",
+        "685f030cbf483394d2ca158a",
+        "685f030dbf483394d2ca15ad",
+        "685f030cbf483394d2ca1583",
+        "68769bfe957ca1276cf72bb4",
+        "685f030cbf483394d2ca1548",
+        "68793977957ca1276cf7510f",
+        "68769c14957ca1276cf72bc0"
+      ],
+      "wallets": [
+        {
+          "id": "68769c89957ca1276cf72bf2",
+          "name": "AL - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769c74957ca1276cf72be6",
+          "name": "AL - XP PF",
+          "accountCode": "488305"
+        },
+        {
+          "id": "6887ef05957ca1276cf79af9",
+          "name": "AL - XP PF II",
+          "accountCode": "13220280"
+        },
+        {
+          "id": "69a88fdb05a3d1817fff39ca",
+          "name": "ASR - PF XP",
+          "accountCode": "4278737"
+        },
+        {
+          "id": "685f030bbf483394d2ca14fe",
+          "name": "BNF - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "68bb34089a9a11e087ee839b",
+          "name": "BNF - PF ITAU",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030bbf483394d2ca1505",
+          "name": "BNF - PF XP",
+          "accountCode": "123"
+        },
+        {
+          "id": "68f63232903b363e53b3aee9",
+          "name": "CHC - C - Itaú Off",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "690ccd30d74519546d088e63",
+          "name": "CHC - C - Itaú PJ",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "690ccd4fd74519546d088e92",
+          "name": "CHC - C - Itaú PJ II",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286b2e2e2be118020d205",
+          "name": "CHC - C - PF BTG",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286a3e2e2be118020d1dd",
+          "name": "CHC - C - PF Itaú",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f2867ae2e2be118020d1b5",
+          "name": "CHC - C - PF XP",
+          "accountCode": "3432489"
+        },
+        {
+          "id": "68f286d7e2e2be118020d255",
+          "name": "CHC - M - PF BTG",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f789a842ac68c6ac3fc122",
+          "name": "CHC - M - PF Itaú",
+          "accountCode": "70XX/XXX82-0"
+        },
+        {
+          "id": "691787999fcfc8840709fb92",
+          "name": "CHC - M - PF Itaú Prev",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68f286c5e2e2be118020d22d",
+          "name": "CHC - M - PF XP",
+          "accountCode": "3431896"
+        },
+        {
+          "id": "6908ec9c1af74056c8ba6d7f",
+          "name": "CHC - Patrimonial - Offshore",
+          "accountCode": "0****00"
+        },
+        {
+          "id": "6908ec7b1af74056c8ba6d4c",
+          "name": "CHC - Patrimonial - Onshore",
+          "accountCode": "0000***"
+        },
+        {
+          "id": "696e356f182474a02a2c57e7",
+          "name": "CHC Dorata - Jefferies",
+          "accountCode": "JW3171196"
+        },
+        {
+          "id": "692ece6c81016d8fa1afb109",
+          "name": "CHC PF - Jefferies",
+          "accountCode": "JW3170362"
+        },
+        {
+          "id": "698b9c83b2900dbc6397ed99",
+          "name": "CP - BTG",
+          "accountCode": "0000000000000000000"
+        },
+        {
+          "id": "698ba00cb2900dbc6397eef8",
+          "name": "CP - Itaú",
+          "accountCode": "00000000000000"
+        },
+        {
+          "id": "6978b4a5e2f881f155954e4c",
+          "name": "CP - PF XP",
+          "accountCode": "349074"
+        },
+        {
+          "id": "69851393b2900dbc638e2676",
+          "name": "CP - PF XP - Offshore",
+          "accountCode": "018"
+        },
+        {
+          "id": "6978b4bce2f881f155954e82",
+          "name": "CP - PF XP II",
+          "accountCode": "17650610"
+        },
+        {
+          "id": "68923454ca01ff56af7f5942",
+          "name": "CR - BMG",
+          "accountCode": ".."
+        },
+        {
+          "id": "685f030dbf483394d2ca15c2",
+          "name": "CR - BMG Apagar",
+          "accountCode": "123"
+        },
+        {
+          "id": "688cd199ca01ff56af7f4bad",
+          "name": "CR - Jefferies",
+          "accountCode": "JW3-163763"
+        },
+        {
+          "id": "685f030dbf483394d2ca15a6",
+          "name": "CR - MR - XP PF",
+          "accountCode": "15204556"
+        },
+        {
+          "id": "685f030dbf483394d2ca159f",
+          "name": "CR - NR - XP PF",
+          "accountCode": "15197246"
+        },
+        {
+          "id": "685f030dbf483394d2ca15bb",
+          "name": "CR - Patrimonial",
+          "accountCode": "123"
+        },
+        {
+          "id": "688cd69eca01ff56af7f4ca9",
+          "name": "CR - Santocha - Jefferies",
+          "accountCode": "118965"
+        },
+        {
+          "id": "685f030dbf483394d2ca15b4",
+          "name": "CR - Santocha - Jefferies Apagar",
+          "accountCode": "118965"
+        },
+        {
+          "id": "685f030dbf483394d2ca1598",
+          "name": "CR - XP PF",
+          "accountCode": "3199049"
+        },
+        {
+          "id": "698b321fb2900dbc639694bc",
+          "name": "Carteira Base  - Arrojado - Offshore",
+          "accountCode": "00000000000000000000000"
+        },
+        {
+          "id": "698b31f1b2900dbc6396947f",
+          "name": "Carteira Base  - Arrojado - Onshore",
+          "accountCode": "0000000000000000000000"
+        },
+        {
+          "id": "685f030cbf483394d2ca156e",
+          "name": "DSF - PF XP",
+          "accountCode": "297007"
+        },
+        {
+          "id": "68769aff957ca1276cf72b52",
+          "name": "DSF - XP OFF",
+          "accountCode": "01"
+        },
+        {
+          "id": "68d2e58962a3c4412e9338b0",
+          "name": "DSIC - BTG Onshore",
+          "accountCode": "2048484"
+        },
+        {
+          "id": "68d2e54a62a3c4412e933888",
+          "name": "DSIC - Bradesco",
+          "accountCode": "****83-0"
+        },
+        {
+          "id": "68d2e5d162a3c4412e9338d8",
+          "name": "DSIC - Galapagos",
+          "accountCode": "8206239"
+        },
+        {
+          "id": "68d2e5fb62a3c4412e933900",
+          "name": "DSIC - Itaú",
+          "accountCode": "11100-0"
+        },
+        {
+          "id": "69726ee3e9a0331e3f5d5e7d",
+          "name": "DSIC - Jefferies",
+          "accountCode": "JW3169646"
+        },
+        {
+          "id": "68d2e61b62a3c4412e93392a",
+          "name": "DSIC - Safra",
+          "accountCode": "XXX06-2"
+        },
+        {
+          "id": "68d2e63862a3c4412e933952",
+          "name": "DSIC - Santander I",
+          "accountCode": "290294768"
+        },
+        {
+          "id": "68d2e65462a3c4412e93397a",
+          "name": "DSIC - Santander II",
+          "accountCode": "01002055-7"
+        },
+        {
+          "id": "68d2e6e462a3c4412e9339ca",
+          "name": "DSIC - XP I",
+          "accountCode": "7439051"
+        },
+        {
+          "id": "68d2e67662a3c4412e9339a2",
+          "name": "DSIC - XP II",
+          "accountCode": "3833625"
+        },
+        {
+          "id": "69bc52e74f5bf9c29f65f1a5",
+          "name": "EAM - PF XP",
+          "accountCode": "18723544"
+        },
+        {
+          "id": "691481df3fd60625bc250aa0",
+          "name": "EPED - Malbec - MS",
+          "accountCode": "093-020863-608"
+        },
+        {
+          "id": "685f030cbf483394d2ca1538",
+          "name": "EPED - PF XP",
+          "accountCode": "17574549xx"
+        },
+        {
+          "id": "68c8668193b1ff687e7161ef",
+          "name": "EPED - PF XP II",
+          "accountCode": "18369773"
+        },
+        {
+          "id": "685f030bbf483394d2ca150c",
+          "name": "FNS - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1522",
+          "name": "FNS - PF ITAU",
+          "accountCode": "1234"
+        },
+        {
+          "id": "685f030cbf483394d2ca1529",
+          "name": "FNS - PF ITAU FAMA",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1513",
+          "name": "FNS - PF XP",
+          "accountCode": "13591105"
+        },
+        {
+          "id": "685f030cbf483394d2ca151b",
+          "name": "FNS - PF XP II",
+          "accountCode": "123"
+        },
+        {
+          "id": "6876990e957ca1276cf72b09",
+          "name": "FNS - Vortx",
+          "accountCode": "01"
+        },
+        {
+          "id": "6953d161795bf8293598d4eb",
+          "name": "GCC - PF XP",
+          "accountCode": "5633314"
+        },
+        {
+          "id": "6931dfe03cb026c5483d3767",
+          "name": "GCC - Payoneer PJ - Offshore",
+          "accountCode": "*0*0"
+        },
+        {
+          "id": "6931dec83cb026c5483d3734",
+          "name": "GCC - Relay PJ - Offshore",
+          "accountCode": "0*000*000"
+        },
+        {
+          "id": "6931de7f3cb026c5483d3701",
+          "name": "GCC - Santander PF - Onshore",
+          "accountCode": "00*00****"
+        },
+        {
+          "id": "69a58c941b6fd599c1cec45b",
+          "name": "GIK - PJ XP",
+          "accountCode": "3693352"
+        },
+        {
+          "id": "69c3ea444f5bf9c29f68bcaf",
+          "name": "GOP - Avenue",
+          "accountCode": "209313958"
+        },
+        {
+          "id": "69c14ecc4f5bf9c29f66bd29",
+          "name": "GOP - CS",
+          "accountCode": "51121"
+        },
+        {
+          "id": "69c14e8e4f5bf9c29f66bcf2",
+          "name": "GOP - Itaú",
+          "accountCode": "375727915-7"
+        },
+        {
+          "id": "69aac095012a75d1a847d9a6",
+          "name": "GOP - PF XP",
+          "accountCode": "2824074"
+        },
+        {
+          "id": "69c3ea7e4f5bf9c29f68bce6",
+          "name": "GOP - XP Off",
+          "accountCode": "310467"
+        },
+        {
+          "id": "68769b5a957ca1276cf72b78",
+          "name": "IDALL - XP PF",
+          "accountCode": "17882343"
+        },
+        {
+          "id": "6929e3a8f4a36dbbf4059069",
+          "name": "JPAM C - BTG Onshore",
+          "accountCode": "004564315"
+        },
+        {
+          "id": "6929e3f1f4a36dbbf4059098",
+          "name": "JPAM C - Santander",
+          "accountCode": "00******"
+        },
+        {
+          "id": "6925ff42984375b9fed25ebd",
+          "name": "JPAM CL - PF XP",
+          "accountCode": "4024962"
+        },
+        {
+          "id": "698b7884b2900dbc639768da",
+          "name": "JPAM CPA - PF XP",
+          "accountCode": "7445154"
+        },
+        {
+          "id": "6925fef6984375b9fed25e59",
+          "name": "JPAM J - PF XP",
+          "accountCode": "2090086"
+        },
+        {
+          "id": "6929e412f4a36dbbf40590c7",
+          "name": "JPAM J - Santander",
+          "accountCode": "0**"
+        },
+        {
+          "id": "6929e435f4a36dbbf40590f6",
+          "name": "JPAM M - BTG Onshore",
+          "accountCode": "004506016"
+        },
+        {
+          "id": "6925ff12984375b9fed25e8b",
+          "name": "JPAM M - PF XP",
+          "accountCode": "2068458"
+        },
+        {
+          "id": "6929e457f4a36dbbf4059125",
+          "name": "JPAM M - Santander",
+          "accountCode": "0*00"
+        },
+        {
+          "id": "69bc2c374f5bf9c29f65c426",
+          "name": "LAR - PF XP",
+          "accountCode": "7974135"
+        },
+        {
+          "id": "68769b76957ca1276cf72b84",
+          "name": "LDALL - XP PF",
+          "accountCode": "6831953"
+        },
+        {
+          "id": "685f030bbf483394d2ca14da",
+          "name": "LHM - BTC",
+          "accountCode": "00"
+        },
+        {
+          "id": "685f030bbf483394d2ca14e1",
+          "name": "LHM - Jefferies",
+          "accountCode": "JW3-154861"
+        },
+        {
+          "id": "685f030cbf483394d2ca1530",
+          "name": "LHM - PF XP",
+          "accountCode": "221110"
+        },
+        {
+          "id": "687697ea957ca1276cf72ae0",
+          "name": "LHM - PF XP - Remanescente",
+          "accountCode": "02"
+        },
+        {
+          "id": "685f030bbf483394d2ca14d2",
+          "name": "LHM - PJ XP - Convex",
+          "accountCode": "16732280"
+        },
+        {
+          "id": "69970c3baeffa667bcf24f47",
+          "name": "LHM - PJ XP - Convex II",
+          "accountCode": "18687272"
+        },
+        {
+          "id": "68769868957ca1276cf72aec",
+          "name": "LHM - Vortx",
+          "accountCode": "03"
+        },
+        {
+          "id": "687697bf957ca1276cf72ad4",
+          "name": "LHM - XP Previdência",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769b40957ca1276cf72b6c",
+          "name": "LMF - XP PF",
+          "accountCode": "12173777"
+        },
+        {
+          "id": "6952ee36795bf829359776f3",
+          "name": "MLM - Itaú",
+          "accountCode": "13705-0"
+        },
+        {
+          "id": "6953ebf3795bf8293598e547",
+          "name": "MLM - PF XP",
+          "accountCode": "18522644"
+        },
+        {
+          "id": "68769c59957ca1276cf72bda",
+          "name": "MPU - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769c3b957ca1276cf72bce",
+          "name": "MPU - XP PF",
+          "accountCode": "18089376"
+        },
+        {
+          "id": "69bc32114f5bf9c29f65d5c1",
+          "name": "MV - PF XP",
+          "accountCode": "024_MV_XP"
+        },
+        {
+          "id": "69cd48758a7b97f700190d54",
+          "name": "MV - XP",
+          "accountCode": "19325464"
+        },
+        {
+          "id": "696946cb182474a02a2b6389",
+          "name": "OMN - Jefferies",
+          "accountCode": "2336"
+        },
+        {
+          "id": "690b5c95d74519546d082e9a",
+          "name": "OMN - PF XP I",
+          "accountCode": "4225631"
+        },
+        {
+          "id": "690b5cabd74519546d082ecb",
+          "name": "OMN - PF XP II",
+          "accountCode": "11439570"
+        },
+        {
+          "id": "6876995c957ca1276cf72b15",
+          "name": "PDP - JB",
+          "accountCode": "01"
+        },
+        {
+          "id": "685f030cbf483394d2ca1540",
+          "name": "PDP - PF XP",
+          "accountCode": "17571305"
+        },
+        {
+          "id": "69668d849c9a4a61f61df6f4",
+          "name": "PPED - MS",
+          "accountCode": "093-021184-608"
+        },
+        {
+          "id": "685f030cbf483394d2ca1550",
+          "name": "PROTESTADO - PF XP",
+          "accountCode": "16054043"
+        },
+        {
+          "id": "68f27a33e2e2be1180209ed0",
+          "name": "PROTESTADO - PF XP II",
+          "accountCode": "18413026"
+        },
+        {
+          "id": "68769bc3957ca1276cf72b9c",
+          "name": "RDALL - Jefferies",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769b9b957ca1276cf72b90",
+          "name": "RDALL - XP PF",
+          "accountCode": "12420497"
+        },
+        {
+          "id": "685f030cbf483394d2ca1558",
+          "name": "RECUPERI - PF XP",
+          "accountCode": "12487728"
+        },
+        {
+          "id": "68fb7a0547170dafb2f69ef8",
+          "name": "RM - Itaú Off",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "685f030bbf483394d2ca14e8",
+          "name": "RM - Jefferies",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030bbf483394d2ca14ef",
+          "name": "RM - PF XP",
+          "accountCode": "14278863"
+        },
+        {
+          "id": "685f030bbf483394d2ca14f7",
+          "name": "RM - PF XP II",
+          "accountCode": "321"
+        },
+        {
+          "id": "68769896957ca1276cf72af8",
+          "name": "RM - Vortx",
+          "accountCode": "01"
+        },
+        {
+          "id": "68c3432993b1ff687e6f2692",
+          "name": "SP - BTG",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c342ed93b1ff687e6f261a",
+          "name": "SP - Bradesco",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3430593b1ff687e6f2642",
+          "name": "SP - Daycoval",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3433c93b1ff687e6f26ba",
+          "name": "SP - Safra",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3431993b1ff687e6f266a",
+          "name": "SP - Safra Offshore",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68c3434e93b1ff687e6f26e2",
+          "name": "SP - XP",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "69cbda058a7b97f700162a76",
+          "name": "SRG - PF XP",
+          "accountCode": "4012043"
+        },
+        {
+          "id": "68769be8957ca1276cf72ba8",
+          "name": "TDALL - XP PF",
+          "accountCode": "11645174"
+        },
+        {
+          "id": "685f030cbf483394d2ca1567",
+          "name": "TG - JPM",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "685f030cbf483394d2ca1560",
+          "name": "TG - PF ITAU",
+          "accountCode": "N/A"
+        },
+        {
+          "id": "68769a7d957ca1276cf72b23",
+          "name": "TG - Safra",
+          "accountCode": "01"
+        },
+        {
+          "id": "68769a98957ca1276cf72b2f",
+          "name": "TG - XP",
+          "accountCode": "17825816"
+        },
+        {
+          "id": "685f030dbf483394d2ca1591",
+          "name": "TP - Bulltrader",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1575",
+          "name": "TP - Citi - C61-093883",
+          "accountCode": "C61-093883"
+        },
+        {
+          "id": "685f030cbf483394d2ca157c",
+          "name": "TP - Citi - C61-195753",
+          "accountCode": "C61-195753"
+        },
+        {
+          "id": "685f030cbf483394d2ca158a",
+          "name": "TP - PF Safra Offshore",
+          "accountCode": "PAA0774"
+        },
+        {
+          "id": "685f030dbf483394d2ca15ad",
+          "name": "TP - Patrimonial",
+          "accountCode": "123"
+        },
+        {
+          "id": "685f030cbf483394d2ca1583",
+          "name": "TP - Safra Offshore",
+          "accountCode": "TAA0767"
+        },
+        {
+          "id": "68769bfe957ca1276cf72bb4",
+          "name": "VDALL - XP PF",
+          "accountCode": "17918446"
+        },
+        {
+          "id": "685f030cbf483394d2ca1548",
+          "name": "VLSP - PF XP",
+          "accountCode": "17612259"
+        },
+        {
+          "id": "68793977957ca1276cf7510f",
+          "name": "VTI - Jefferies",
+          "accountCode": "n/a"
+        },
+        {
+          "id": "68769c14957ca1276cf72bc0",
+          "name": "VTI - XP PF",
+          "accountCode": "01"
+        }
+      ],
+      "security_types": [
+        "benchmark",
+        "bond",
+        "brazilianFund",
+        "brazilianGovernmentBond",
+        "brazilianRepo",
+        "fund",
+        "futures",
+        "options",
+        "otc",
+        "poc",
+        "privateMarket",
+        "realAssets",
+        "sovereignBonds",
+        "stockEtf"
+      ],
+      "collections": {
+        "unprocessedSecurityPositions": {
+          "fields": [
+            "positionDate",
+            "walletId",
+            "walletId__name",
+            "securityId",
+            "securityId__name",
+            "quantity",
+            "pu",
+            "amount",
+            "sec_mainId",
+            "sec_maturityDate",
+            "sec_yield",
+            "sec_indexer",
+            "sec_indexerPercentual",
+            "sec_securityType",
+            "sec_type"
+          ],
+          "calcs": [],
+          "date_mode": "relative",
+          "date_days": 3
+        }
+      }
+    }
+  }
+]

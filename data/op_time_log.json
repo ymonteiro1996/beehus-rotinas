@@ -1,0 +1,152 @@
+[
+  {
+    "id": "20260515171816896093",
+    "date": "2026-05-14",
+    "minutes": 65,
+    "pessoa": "Yuri",
+    "notes": "Cadastro de Ativos",
+    "additions": [
+      {
+        "minutes": 45,
+        "timestamp": "2026-05-15T17:18:16.896093",
+        "pessoa": "Yuri"
+      },
+      {
+        "minutes": 20,
+        "timestamp": "2026-05-15T17:18:31.935051",
+        "pessoa": "Yuri"
+      }
+    ],
+    "updated_at": "2026-05-15T17:18:31.935051"
+  },
+  {
+    "id": "20260515174206026473",
+    "date": "2026-05-15",
+    "minutes": 55,
+    "pessoa": "Yuri",
+    "notes": "Corrigindo classificações de transações",
+    "additions": [
+      {
+        "minutes": 25,
+        "timestamp": "2026-05-15T17:42:06.026473",
+        "pessoa": "Yuri"
+      },
+      {
+        "minutes": 30,
+        "timestamp": "2026-05-18T17:15:45.438932",
+        "pessoa": "Yuri"
+      }
+    ],
+    "updated_at": "2026-05-18T17:15:45.438932"
+  },
+  {
+    "id": "20260518171605551806",
+    "date": "2026-05-18",
+    "minutes": 75,
+    "pessoa": "Yuri",
+    "notes": "Carga Blue3 AAI",
+    "additions": [
+      {
+        "minutes": 60,
+        "timestamp": "2026-05-18T17:16:05.551806",
+        "pessoa": "Yuri"
+      },
+      {
+        "minutes": 15,
+        "timestamp": "2026-05-20T17:28:00.577100",
+        "pessoa": "Yuri"
+      }
+    ],
+    "updated_at": "2026-05-20T17:28:00.577100"
+  },
+  {
+    "id": "20260518171658278947",
+    "date": "2026-05-18",
+    "minutes": 10,
+    "pessoa": "Adzo",
+    "notes": "Coleta de posição Itaú Miami - SMIG",
+    "additions": [
+      {
+        "minutes": 10,
+        "timestamp": "2026-05-18T17:16:58.278947",
+        "pessoa": "Adzo"
+      }
+    ],
+    "updated_at": "2026-05-18T17:16:58.278947"
+  },
+  {
+    "id": "20260518171750980791",
+    "date": "2026-05-18",
+    "minutes": 900,
+    "pessoa": "Evair",
+    "notes": "Organização de dados onboarding",
+    "additions": [
+      {
+        "minutes": 300,
+        "timestamp": "2026-05-18T17:17:50.980791",
+        "pessoa": "Evair"
+      },
+      {
+        "minutes": 600,
+        "timestamp": "2026-05-22T17:29:36.280070",
+        "pessoa": "Evair"
+      }
+    ],
+    "updated_at": "2026-05-22T17:29:36.280070"
+  },
+  {
+    "id": "20260520172742704063",
+    "date": "2026-05-20",
+    "minutes": 10,
+    "pessoa": "Adzo",
+    "notes": "Coleta de posição Itaú Asset - SMIG",
+    "additions": [
+      {
+        "minutes": 10,
+        "timestamp": "2026-05-20T17:27:42.698043",
+        "pessoa": "Adzo"
+      }
+    ],
+    "updated_at": "2026-05-20T17:27:42.698043"
+  },
+  {
+    "id": "20260522172619255532",
+    "date": "2026-05-21",
+    "minutes": 240,
+    "pessoa": "Yuri",
+    "notes": "Carga de alternativos Mira - Geraldo/Mariano",
+    "additions": [
+      {
+        "minutes": 120,
+        "timestamp": "2026-05-22T17:26:19.253518",
+        "pessoa": "Yuri"
+      },
+      {
+        "minutes": 60,
+        "timestamp": "2026-05-22T17:26:31.853476",
+        "pessoa": "Yuri"
+      },
+      {
+        "minutes": 60,
+        "timestamp": "2026-05-22T17:27:22.786184",
+        "pessoa": "Evair"
+      }
+    ],
+    "updated_at": "2026-05-22T17:27:22.786184"
+  },
+  {
+    "id": "20260522172714573385",
+    "date": "2026-05-21",
+    "minutes": 60,
+    "pessoa": "Evair",
+    "notes": "Ajuste na carga da API XP (TF8)",
+    "additions": [
+      {
+        "minutes": 60,
+        "timestamp": "2026-05-22T17:27:14.573385",
+        "pessoa": "Evair"
+      }
+    ],
+    "updated_at": "2026-05-22T17:27:14.573385"
+  }
+]

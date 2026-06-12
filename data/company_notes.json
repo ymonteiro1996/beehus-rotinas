@@ -1,0 +1,103 @@
+{
+  "2026-05": {
+    "Blue3": {
+      "demandas": "Processamento das 423 carteiras diariamente\n\nAjustar fluxo de envio de dados para a Blue3",
+      "pendencias": "",
+      "status_operacional": "red",
+      "status_sentimento": "yellow",
+      "override_overall": "yellow"
+    },
+    "Blue3 Wealth": {
+      "demandas": "Onboarding:\nCadastro de ativos XP\nMapeamento ativos XP\nColetar posições e transações históricas Adepar",
+      "pendencias": "Daniel enviar posições Avenue",
+      "status_operacional": "green",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "Fincere": {
+      "demandas": "Publicar as carteiras passadas no onboarding\nAlterar identidade visual\nSubir PL histórico com rent",
+      "pendencias": "",
+      "status_operacional": "yellow",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "SMig": {
+      "demandas": "Checar pontos levantados pelo João\nCriar processo para revisar tela do cliente pós publicação",
+      "pendencias": "",
+      "status_operacional": "green",
+      "status_sentimento": "yellow"
+    },
+    "Mira": {
+      "demandas": "Onboarding Mariano",
+      "pendencias": "Aguardando posição de alternativos\nAguardando posição esposa Mariano",
+      "status_operacional": "green",
+      "status_sentimento": "red",
+      "override_overall": ""
+    },
+    "Oikos": {
+      "demandas": "Organização cargas diárias em Maio (Kim/Adzo)\nOnboarding ALMP, AGN e LAP",
+      "pendencias": "",
+      "status_operacional": "red",
+      "status_sentimento": "yellow",
+      "override_overall": ""
+    }
+  },
+  "2026-06": {
+    "SMig": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "green",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "Blue3": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "yellow",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "Blue3 Wealth": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "green",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "Mira": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "red",
+      "status_sentimento": "red",
+      "override_overall": "red"
+    },
+    "Next Wealth - RTS": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "green",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "Eté": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "green",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "XP Family Office (POC)": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "green",
+      "status_sentimento": "green",
+      "override_overall": "green"
+    },
+    "Oikos": {
+      "demandas": "",
+      "pendencias": "",
+      "status_operacional": "yellow",
+      "status_sentimento": "yellow",
+      "override_overall": "yellow"
+    }
+  }
+}

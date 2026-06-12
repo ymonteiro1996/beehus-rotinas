@@ -1,0 +1,162 @@
+{
+  "$schema": "API Contract for Controle de Cargas",
+  "version": "1.0.0",
+  "baseUrl": "http://localhost:5000",
+
+  "modules": {
+    "setup": {
+      "pages": [{"method": "GET", "path": "/setup"}],
+      "endpoints": [
+        {"method": "POST", "path": "/api/setup/test-connection", "body": {"uri": "string"}, "response": {"ok": true}},
+        {"method": "POST", "path": "/api/setup/save-connection", "body": {"uri": "string"}, "response": {"ok": true}}
+      ]
+    },
+
+    "config": {
+      "pages": [{"method": "GET", "path": "/config"}, {"method": "GET", "path": "/settings"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/config/entities", "response": {"companyId": "str", "companyName": "str", "entities": [{"entityId": "str", "entityName": "str", "selected": false, "delay": 0, "method": "", "responsible": ""}]}},
+        {"method": "POST", "path": "/api/config/save", "body": {"selected": [{"companyId": "str", "entityId": "str", "delay": 0, "method": "", "responsible": ""}]}, "response": {"saved": 0}},
+        {"method": "GET", "path": "/api/settings/load", "response": {"only_daily_position": false, "only_with_consumption": false, "wizard_blacklist": [], "company_filter": []}},
+        {"method": "POST", "path": "/api/settings/save", "body": {"only_daily_position": false}, "response": {"ok": true}},
+        {"method": "GET", "path": "/api/settings/companies", "response": {"companies": [{"id": "str", "name": "str", "visible": true}], "filterActive": false}}
+      ]
+    },
+
+    "dashboard": {
+      "pages": [{"method": "GET", "path": "/"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/rows", "params": {"limit": 10}, "response": {"rows": [{"companyId": "str", "entityId": "str", "company": "str", "entity": "str", "delay": 0, "method": "", "responsible": "", "cells": [{"label": "str", "cls": "str"}]}], "dates": []}},
+        {"method": "GET", "path": "/api/detail", "params": {"companyId": "str", "entityId": "str", "date": "str"}, "response": {"detail": [{"walletId": "str", "name": "str", "accountCode": "str", "count": 0, "cls": "str"}], "date": "str"}},
+        {"method": "GET", "path": "/api/detail-grid", "params": {"companyId": "str", "entityId": "str", "limit": 10}, "response": {"rows": [{"walletId": "str", "name": "str", "accountCode": "str", "cells": [{"label": "str", "cls": "str"}]}], "dates": []}},
+        {"method": "GET", "path": "/api/wallet/list", "params": {"companyId": "str"}, "response": [{"walletId": "str", "name": "str", "accountCode": "str"}]},
+        {"method": "GET", "path": "/api/wallet/companies", "response": [{"id": "str", "name": "str"}]},
+        {"method": "GET", "path": "/api/wallet/rows", "params": {"companyId": "str", "limit": 10, "mode": "cargas"}, "response": {"rows": [{"walletId": "str", "name": "str", "accountCode": "str", "entity": "str", "cells": [{"label": "str", "cls": "str"}]}], "dates": []}},
+        {"method": "GET", "path": "/api/wallet/templates", "response": [{"name": "str", "wallets": [], "difRentThreshold": 0}]},
+        {"method": "POST", "path": "/api/wallet/templates", "body": {"name": "str", "wallets": []}, "response": {"ok": true}},
+        {"method": "DELETE", "path": "/api/wallet/templates/<name>", "response": {"ok": true}},
+        {"method": "GET", "path": "/api/wallet/template-rows", "params": {"name": "str", "limit": 10, "mode": "cargas"}, "response": {"rows": [], "dates": []}},
+        {"method": "GET", "path": "/api/wallet/template-detail", "params": {"name": "str", "date": "str"}, "response": {"rows": [], "date": "str"}}
+      ]
+    },
+
+    "issues": {
+      "pages": [{"method": "GET", "path": "/issues"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/issues/rows", "params": {"date": "str"}, "response": {"rows": [{"companyId": "str", "company": "str", "cells": [{"type": "str", "count": 0, "label": "str", "cls": "str"}]}], "date": "str"}},
+        {"method": "GET", "path": "/api/issues/detail", "params": {"companyId": "str", "date": "str", "type": "str"}, "response": {"issues": [{"type": "str", "description": "str", "walletId": "str", "securityId": "str", "walletName": "str"}], "date": "str", "type": "str"}},
+        {"method": "GET", "path": "/api/issues/wizard", "params": {"externalId": "str"}, "response": {"results": [{"id": "str", "beehusName": "str", "ticker": "str", "score": 0}], "tokens": [], "term": "str"}}
+      ]
+    },
+
+    "conciliacao": {
+      "pages": [{"method": "GET", "path": "/conciliacao"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/conciliacao/dates", "params": {"companyId": "str", "endDate": "str?"}, "response": {"cards": [{"date": "2026-04-03", "total": 5}]}},
+        {"method": "GET", "path": "/api/conciliacao/rows", "params": {"companyId": "str", "date": "str"}, "response": {"rows": [{"walletId": "str", "walletName": "str", "nav": 0, "navPerShare": 0, "amount": 0, "inAndOutFlows": 0, "returnNavPerShare": 0, "returnContribution": 0}], "date": "str"}},
+        {"method": "GET", "path": "/api/conciliacao/wallet-detail", "params": {"walletId": "str", "date": "str"}, "response": {"securities": [{"securityId": "str", "beehusName": "str", "pu": 0, "quantity": 0, "balance": 0, "totalContribution": 0, "formerPu": 0, "formerQuantity": 0, "formerBalance": 0, "amountDifference": 0, "returnPU": 0, "returnContrib": 0, "diffRent": 0, "transactionBalance": 0}], "formerDate": "str", "formerCash": 0, "totalTransactions": 0, "projectedCash": 0, "currentCash": 0, "cashDifference": 0, "alerts": []}},
+        {"method": "GET", "path": "/api/conciliacao/transactions", "params": {"walletId": "str", "date": "str"}, "response": {"transactions": [{"operationDate": "str", "liquidationDate": "str", "securityId": "str", "securityName": "str", "beehusTransactionType": "str", "quantity": 0, "price": 0, "balance": 0, "description": "str"}], "date": "str"}},
+        {"method": "GET", "path": "/api/conciliacao/provisions", "params": {"walletId": "str", "date": "str"}, "response": {"provisions": [{"securityId": "str", "securityName": "str", "initialDate": "str", "liquidationDate": "str", "amount": 0, "provisionType": "str", "description": "str"}], "total": 0}},
+        {"method": "GET", "path": "/api/conciliacao/diagnose", "params": {"walletId": "str", "date": "str"}, "response": {"walletId": "str", "date": "str", "step1": {"status": "gap", "returnNavPerShare": 0, "returnContribution": 0, "gapPct": 0, "gapCash": 0, "formerNav": 0}, "step2": {"status": "done", "eliminatedCount": 0, "suspectCount": 0, "suspects": []}, "step3": {"status": "done", "securities": []}, "step4": {"status": "done", "unclassified": [], "wrongSecurity": []}, "step5": {"status": "ok", "formerCash": 0, "currentCash": 0, "totalTransactions": 0, "projectedCash": 0, "cashDiff": 0, "diagnosis": "consistent"}, "step6": {"status": "ok", "walletAnomaly": null, "securityAnomalies": []}}},
+        {"method": "POST", "path": "/api/conciliacao/diagnose/feedback", "body": {"walletId": "str", "date": "str", "gapCash": 0, "confirmed": true}, "response": {"ok": true}},
+        {"method": "POST", "path": "/api/conciliacao/generate-transactions", "body": {"walletId": "str", "date": "str", "items": []}, "response": {"companyId": "str", "transactions": []}},
+        {"method": "POST", "path": "/api/conciliacao/generate-provisions", "body": {"walletId": "str", "date": "str", "items": []}, "response": {"provisions": []}},
+        {"method": "POST", "path": "/api/conciliacao/replicate-scenario", "body": {"sourceWalletId": "str", "sourceDate": "str", "targetCompanyId": "str", "targetWalletId": "str", "targetDate": "str"}, "response": {"wallet": [], "positions": {}, "transactions": {}}}
+      ]
+    },
+
+    "validacao_rentabilidades": {
+      "pages": [{"method": "GET", "path": "/validacao-rentabilidades"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/validacao-rentabilidades/dates", "params": {"companyId": "str", "endDate": "str?"}, "response": {"cards": [{"date": "str", "total": 0}]}},
+        {"method": "GET", "path": "/api/validacao-rentabilidades/securities", "params": {"companyId": "str", "date": "str"}, "response": {"securities": [{"walletId": "str", "securityId": "str", "beehusName": "str", "mainId": "str", "pricingType": "str", "formerDate": "str", "eventContribution": 0, "rentabPU": 0, "rentabContribution": 0, "threshold": null, "isAnomaly": false}], "thresholdsAvailable": false}},
+        {"method": "GET", "path": "/api/validacao-rentabilidades/security-detail", "params": {"walletId": "str", "securityId": "str", "date": "str"}, "response": {"current": {}, "former": {}, "puHistory": []}},
+        {"method": "POST", "path": "/api/validacao-rentabilidades/calculate-thresholds", "body": {"companyId": "str", "numDays": 60}, "response": {"ok": true, "count": 0}}
+      ]
+    },
+
+    "nav": {
+      "pages": [{"method": "GET", "path": "/nav"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/nav/rows", "params": {"limit": 10}, "response": {"rows": [], "dates": []}},
+        {"method": "GET", "path": "/api/nav/detail", "params": {"companyId": "str", "entityId": "str", "date": "str"}, "response": {"detail": [], "date": "str"}},
+        {"method": "GET", "path": "/api/nav/settings/load", "response": {"only_daily_position": false, "only_with_consumption": false}},
+        {"method": "POST", "path": "/api/nav/settings/save", "body": {}, "response": {"ok": true}}
+      ]
+    },
+
+    "precificacao": {
+      "pages": [{"method": "GET", "path": "/precificacao"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/precificacao/companies", "response": [{"id": "str", "name": "str"}]},
+        {"method": "GET", "path": "/api/precificacao/wallets", "params": {"companyId": "str"}, "response": [{"id": "str", "name": "str", "accountCode": "str"}]},
+        {"method": "GET", "path": "/api/precificacao/wallet-securities", "params": {"walletId": "str", "positionDate": "str?"}, "response": {"securities": [], "positionDate": "str"}},
+        {"method": "GET", "path": "/api/precificacao/security/<sec_id>", "response": {"id": "str", "beehusName": "str", "mainId": "str", "securityType": "str", "pricingType": "str"}},
+        {"method": "GET", "path": "/api/precificacao/search", "params": {"q": "str"}, "response": {"results": []}},
+        {"method": "POST", "path": "/api/precificacao/calcular", "body": {"securities": []}, "response": {"results": []}},
+        {"method": "GET", "path": "/api/precificacao/lists", "response": []},
+        {"method": "POST", "path": "/api/precificacao/lists", "body": {"name": "str", "securities": []}, "response": {"ok": true}},
+        {"method": "DELETE", "path": "/api/precificacao/lists/<name>", "response": {"ok": true}}
+      ]
+    },
+
+    "precos": {
+      "pages": [{"method": "GET", "path": "/precos"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/precos/search", "params": {"q": "str"}, "response": {"results": []}},
+        {"method": "GET", "path": "/api/precos/filters", "response": {"securityTypes": [], "currencies": []}},
+        {"method": "GET", "path": "/api/precos/price-sources", "params": {"securityId": "str"}, "response": {"sources": []}},
+        {"method": "GET", "path": "/api/precos/history", "params": {"docId": "str[]"}, "response": {"series": [], "dates": []}}
+      ]
+    },
+
+    "impostos": {
+      "pages": [{"method": "GET", "path": "/impostos"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/impostos/companies", "response": [{"id": "str", "name": "str"}]},
+        {"method": "GET", "path": "/api/impostos/wallets", "params": {"companyId": "str"}, "response": [{"id": "str", "name": "str"}]},
+        {"method": "GET", "path": "/api/impostos/wallet-securities", "params": {"walletId": "str"}, "response": {"securities": [], "positionDate": "str"}}
+      ]
+    },
+
+    "repeticao": {
+      "pages": [{"method": "GET", "path": "/repeticao"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/repeticao/companies", "response": [{"id": "str", "name": "str"}]},
+        {"method": "GET", "path": "/api/repeticao/wallets", "params": {"companyId": "str"}, "response": [{"id": "str", "name": "str", "accountCode": "str", "currency": "str"}]},
+        {"method": "GET", "path": "/api/repeticao/templates", "response": []},
+        {"method": "POST", "path": "/api/repeticao/templates", "body": {"name": "str", "wallets": []}, "response": {"ok": true}},
+        {"method": "DELETE", "path": "/api/repeticao/templates/<name>", "response": {"ok": true}},
+        {"method": "POST", "path": "/api/repeticao/date-cards", "body": {"walletIds": [], "limit": 10}, "response": {"cards": []}},
+        {"method": "POST", "path": "/api/repeticao/generate", "body": {"walletIds": [], "dateFrom": "str", "dateTo": "str"}, "response": {"rows": []}}
+      ]
+    },
+
+    "report_builder": {
+      "pages": [{"method": "GET", "path": "/report-builder"}],
+      "endpoints": [
+        {"method": "GET", "path": "/api/report-builder/wallets", "params": {"companyId": "str"}, "response": {"wallets": []}},
+        {"method": "GET", "path": "/api/report-builder/wallet-templates", "response": []},
+        {"method": "POST", "path": "/api/report-builder/wallet-templates", "body": {"name": "str", "wallets": []}, "response": {"ok": true}},
+        {"method": "POST", "path": "/api/report-builder/preview", "body": {"collectionKey": "str", "companyId": "str"}, "response": {"headers": [], "rows": []}},
+        {"method": "POST", "path": "/api/report-builder/generate", "body": {"collectionKey": "str", "companyId": "str"}, "response": "binary"},
+        {"method": "POST", "path": "/api/report-builder/nav-rentability", "body": {"walletIds": [], "periodKey": "str"}, "response": {"rows": []}},
+        {"method": "POST", "path": "/api/report-builder/deriv/transactions", "body": {"walletId": "str"}, "response": {"transactions": []}},
+        {"method": "POST", "path": "/api/report-builder/deriv/positions", "body": {"walletId": "str"}, "response": {"positions": []}},
+        {"method": "POST", "path": "/api/report-builder/deriv/mappings", "body": {"rows": []}, "response": {"ok": true}},
+        {"method": "GET", "path": "/api/report-builder/deriv/mappings", "response": []},
+        {"method": "GET", "path": "/api/report-builder/saved-reports", "response": []},
+        {"method": "POST", "path": "/api/report-builder/saved-reports", "body": {"name": "str"}, "response": {"ok": true}}
+      ]
+    }
+  },
+
+  "summary": {
+    "totalModules": 12,
+    "totalEndpoints": "100+",
+    "database": "MongoDB Atlas (Beehus)",
+    "backend": "Python Flask",
+    "frontend": "HTML + Tailwind CSS + vanilla JS",
+    "auth": "Per-user MongoDB connection via /setup"
+  }
+}

@@ -1,0 +1,959 @@
+{% extends "base.html" %}
+{% set active = "controle_carteiras" %}
+{% block title %}Controle Carteiras{% endblock %}
+
+{% block head %}
+<style>
+  .table-wrap { overflow: auto; max-height: calc(100vh - 160px); position: relative; }
+  #table { border-collapse: separate; border-spacing: 0; }
+  #table td, #table th { border-bottom: 1px solid #f3f4f6; }
+  /* Freeze header row vertically */
+  #table thead th { position: sticky; top: 0; z-index: 4; background: #f9fafb; }
+  /* Freeze first two columns horizontally */
+  .sticky-company { position: sticky; left: 0;     min-width: 180px; z-index: 2; }
+  .sticky-entity  { position: sticky; left: 180px; min-width: 180px; z-index: 2; }
+  /* Body sticky cells need background to cover content behind */
+  td.sticky-company, td.sticky-entity { background: #fff; }
+  tr:hover td.sticky-company, tr:hover td.sticky-entity { background: #f9fafb; }
+  /* Corner cells: frozen both horizontally and vertically */
+  th.sticky-company, th.sticky-entity { z-index: 5; background: #f9fafb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="bg-white shadow px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center gap-4">
+    <h1 class="font-semibold text-gray-700">Controle Carteiras</h1>
+    <!-- Mode toggle -->
+    <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+      <button id="btn-cargas" onclick="setMode('cargas')"
+        class="px-4 py-1.5 font-medium transition-colors bg-gray-800 text-white">Cargas</button>
+      <button id="btn-processed" onclick="setMode('processed')"
+        class="px-4 py-1.5 font-medium transition-colors bg-white text-gray-500 hover:bg-gray-50">Posição</button>
+      <button id="btn-nav" onclick="setMode('nav')"
+        class="px-4 py-1.5 font-medium transition-colors bg-white text-gray-500 hover:bg-gray-50">NAV</button>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 flex-wrap">
+    <label class="text-gray-500 text-xs">Dias úteis:</label>
+    <select id="limitSelect" onchange="onLimitChange()"
+      class="border rounded px-3 py-1.5 bg-white text-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+    </select>
+    <span class="text-gray-300 text-xs">|</span>
+    <label class="text-gray-500 text-xs">De:</label>
+    <input id="rangeStart" type="date"
+      class="border rounded px-2 py-1.5 bg-white text-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+      onchange="onRangeChange()" />
+    <label class="text-gray-500 text-xs">Até:</label>
+    <input id="rangeEnd" type="date"
+      class="border rounded px-2 py-1.5 bg-white text-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+      onchange="onRangeChange()" />
+    <button id="rangeClearBtn" onclick="clearRange()"
+      class="hidden text-xs text-gray-400 hover:text-red-500 border rounded px-2 py-1.5 transition-colors">
+      ✕ Limpar
+    </button>
+  </div>
+</header>
+
+<div id="filter-wallets" class="px-6 pt-4 space-y-3">
+  <div class="flex items-end gap-3 flex-wrap">
+    <div>
+      <label class="block text-[10px] text-gray-400 mb-1">Empresa</label>
+      <select id="wv-company" onchange="onWvCompanyChange()"
+        class="border rounded px-3 py-1.5 w-56 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option value="">— selecione —</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-[10px] text-gray-400 mb-1">Entidade (opcional)</label>
+      <select id="wv-entity" onchange="loadWalletView()"
+        class="border rounded px-3 py-1.5 w-56 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option value="">— todas —</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-[10px] text-gray-400 mb-1">Filtrar carteira</label>
+      <input id="wv-wallet-filter" type="text" placeholder="Nome ou código..."
+        oninput="filterWalletRows()"
+        class="border rounded px-3 py-1.5 w-56 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="block text-[10px] text-gray-400 mb-1">Instituição Financeira</label>
+      <input id="wv-institution-filter" type="text" placeholder="Filtrar por instituição..."
+        oninput="filterWalletRows()"
+        class="border rounded px-3 py-1.5 w-48 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="block text-[10px] text-gray-400 mb-1">Responsável</label>
+      <input id="wv-responsible-filter" type="text" placeholder="Filtrar por responsável..."
+        oninput="filterWalletRows()"
+        class="border rounded px-3 py-1.5 w-44 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <button id="btn-pending" onclick="togglePending()"
+      class="flex items-center gap-1 border rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors">
+      <span class="w-2 h-2 rounded-full bg-red-400 inline-block shrink-0"></span>
+      Pendentes
+    </button>
+    <div class="relative" id="col-picker-wrap">
+      <button onclick="toggleColMenu()"
+        class="flex items-center gap-1 border rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+        </svg>
+        Colunas
+      </button>
+      <div id="col-picker" class="hidden absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-30 min-w-[160px]">
+        <p class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold mb-2">Colunas visíveis</p>
+        <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded"><input type="checkbox" id="col-chk-walletId" onchange="setColVisible('walletId',this.checked)" checked> Wallet ID</label>
+        <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded"><input type="checkbox" id="col-chk-entity" onchange="setColVisible('entity',this.checked)" checked> Entidade</label>
+        <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded"><input type="checkbox" id="col-chk-institution" onchange="setColVisible('institution',this.checked)" checked> Instituição Financeira</label>
+        <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded"><input type="checkbox" id="col-chk-responsible" onchange="setColVisible('responsible',this.checked)" checked> Responsável</label>
+        <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded"><input type="checkbox" id="col-chk-periodicity" onchange="setColVisible('periodicity',this.checked)"> Periodicidade</label>
+        <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded"><input type="checkbox" id="col-chk-delay" onchange="setColVisible('delay',this.checked)"> Delay</label>
+      </div>
+    </div>
+    <button onclick="openSaveTemplateModal()"
+      class="flex items-center gap-1 border rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+      </svg>
+      Criar Template
+    </button>
+  </div>
+  <div id="wv-templates-bar" class="flex items-center gap-2 flex-wrap">
+    <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">Templates:</span>
+    <div id="wv-templates-list" class="flex flex-wrap gap-1.5"></div>
+  </div>
+</div>
+
+<!-- Save Template Modal -->
+<div id="save-tmpl-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col" style="max-height:85vh">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b shrink-0">
+      <div class="flex items-center gap-4">
+        <h2 class="font-semibold text-gray-800 text-sm">Salvar Template de Carteiras</h2>
+        <input id="tmpl-name" type="text" placeholder="Nome do template..."
+          class="border rounded-lg px-3 py-1.5 text-xs bg-white text-gray-700 w-56 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <div class="flex items-center gap-1">
+          <label class="text-[10px] text-gray-400 whitespace-nowrap">Dif Rent threshold:</label>
+          <input id="tmpl-threshold" type="number" value="0.0005" step="0.0001" min="0"
+            class="border rounded px-2 py-1.5 text-xs bg-white text-gray-700 w-24 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+      </div>
+      <button onclick="closeSaveTemplateModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+    <!-- Two-panel body -->
+    <div class="flex flex-1 overflow-hidden min-h-0">
+      <!-- Left: available wallets -->
+      <div class="w-1/2 border-r flex flex-col">
+        <div class="px-4 py-3 space-y-2 shrink-0 border-b bg-gray-50">
+          <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">Carteiras Disponíveis</p>
+          <div class="flex gap-2">
+            <select id="tmpl-company" onchange="onTmplCompanyChange()"
+              class="border rounded px-2 py-1 text-xs bg-white flex-1 focus:outline-none focus:ring-1 focus:ring-blue-400">
+              <option value="">— empresa —</option>
+            </select>
+            <select id="tmpl-entity" onchange="loadTmplWallets()"
+              class="border rounded px-2 py-1 text-xs bg-white flex-1 focus:outline-none focus:ring-1 focus:ring-blue-400">
+              <option value="">— todas —</option>
+            </select>
+          </div>
+          <input id="tmpl-search" type="text" placeholder="Buscar por nome ou código..."
+            oninput="filterAvailableWallets()"
+            class="w-full border rounded px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400" />
+        </div>
+        <div class="flex-1 overflow-y-auto" id="tmpl-available-list">
+          <p class="text-xs text-gray-300 italic py-4 text-center">Selecione uma empresa.</p>
+        </div>
+        <div class="px-4 py-2 border-t shrink-0 flex items-center justify-between bg-gray-50">
+          <div class="flex gap-1">
+            <button onclick="tmplCheckAll(true)"  class="text-[10px] border rounded px-2 py-0.5 text-gray-600 hover:bg-gray-50">Todas</button>
+            <button onclick="tmplCheckAll(false)" class="text-[10px] border rounded px-2 py-0.5 text-gray-600 hover:bg-gray-50">Nenhuma</button>
+          </div>
+          <button onclick="addSelectedWallets()"
+            class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+            Adicionar &rarr;
+          </button>
+        </div>
+      </div>
+      <!-- Right: selected wallets -->
+      <div class="w-1/2 flex flex-col">
+        <div class="px-4 py-3 shrink-0 border-b bg-gray-50 flex items-center justify-between">
+          <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">Carteiras no Template</p>
+          <span id="tmpl-sel-count" class="text-[10px] text-gray-400"></span>
+        </div>
+        <div class="flex-1 overflow-y-auto" id="tmpl-selected-list">
+          <p class="text-xs text-gray-300 italic py-4 text-center" id="tmpl-selected-empty">Nenhuma carteira adicionada.</p>
+          <table class="w-full text-xs border-collapse table-fixed hidden" id="tmpl-selected-table">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr class="text-[10px] uppercase text-gray-400 border-b">
+                <th class="text-left py-1.5 px-2 font-normal">Carteira</th>
+                <th class="text-left py-1.5 px-1 font-normal w-20">Periodicidade</th>
+                <th class="text-left py-1.5 px-1 font-normal w-16">Delay</th>
+                <th class="text-left py-1.5 px-1 font-normal w-24">Responsável</th>
+                <th class="text-left py-1.5 px-1 font-normal w-28">Observação</th>
+                <th class="w-6"></th>
+              </tr>
+            </thead>
+            <tbody id="tmpl-selected-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="flex gap-2 justify-end px-6 py-3 border-t shrink-0">
+      <button onclick="closeSaveTemplateModal()" class="px-4 py-2 text-xs text-gray-500 border rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button onclick="confirmSaveTemplate()" class="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template Detail Modal -->
+<div id="tmpl-detail-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] flex flex-col" style="max-height:85vh">
+    <div class="flex items-center justify-between px-6 py-4 border-b shrink-0">
+      <div>
+        <p id="tmpl-detail-title" class="font-bold text-gray-800 text-sm"></p>
+        <p id="tmpl-detail-subtitle" class="text-gray-500 text-xs"></p>
+      </div>
+      <button onclick="closeTmplDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+    <div class="overflow-auto flex-1 px-2 py-3">
+      <table class="text-xs border-collapse w-max min-w-full" id="tmpl-detail-table">
+        <thead class="bg-gray-50 text-gray-500 uppercase sticky top-0 text-[10px]">
+          <tr id="tmpl-detail-thead"></tr>
+        </thead>
+        <tbody id="tmpl-detail-tbody"></tbody>
+      </table>
+      <p id="tmpl-detail-msg" class="text-center text-gray-400 py-6"></p>
+    </div>
+  </div>
+</div>
+
+<div class="p-6">
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="table-wrap">
+      <table class="w-max min-w-full text-xs" id="table" style="display:none">
+        <thead id="thead" class="bg-gray-50 text-gray-500 uppercase sticky top-0"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p id="msg" class="text-center text-gray-400 py-10">Selecione uma empresa ou carregue um template.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<script>
+  let _dates = [], _mode = 'cargas';
+  let _wvTemplates = [];
+  let _lastWalletRows = [];
+  let _activeTemplateName = null;
+  let _filterPending = false;
+  let _sortState = null;
+  let _comments = {};
+  const _colVisible = { entity: true, institution: true, walletId: true, responsible: true, periodicity: false, delay: false };
+
+  function setMode(mode) {
+    _mode = mode;
+    const active   = 'bg-gray-800 text-white';
+    const inactive = 'bg-white text-gray-500 hover:bg-gray-50';
+    ['cargas', 'nav', 'processed'].forEach(m => {
+      document.getElementById(`btn-${m}`).className =
+        `px-4 py-1.5 font-medium transition-colors ${mode === m ? active : inactive}`;
+    });
+    load();
+  }
+
+  function _dateRange() {
+    const s = document.getElementById('rangeStart').value;
+    const e = document.getElementById('rangeEnd').value;
+    return (s && e && s <= e) ? { startDate: s, endDate: e } : null;
+  }
+
+  function onLimitChange() {
+    // Clear range when limit is changed manually
+    document.getElementById('rangeStart').value = '';
+    document.getElementById('rangeEnd').value = '';
+    document.getElementById('rangeClearBtn').classList.add('hidden');
+    load();
+  }
+
+  function onRangeChange() {
+    const range = _dateRange();
+    document.getElementById('rangeClearBtn').classList.toggle('hidden', !range);
+    if (range) load();
+  }
+
+  function clearRange() {
+    document.getElementById('rangeStart').value = '';
+    document.getElementById('rangeEnd').value = '';
+    document.getElementById('rangeClearBtn').classList.add('hidden');
+    load();
+  }
+
+  function load() {
+    loadWalletView();
+  }
+
+  // ── Wallet view ──────────────────────────────────────────────────────────
+  function loadWvCompanies() {
+    fetch('/api/wallet/companies').then(r => r.json()).then(companies => {
+      const sel = document.getElementById('wv-company');
+      sel.innerHTML = '<option value="">— selecione —</option>' +
+        companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    });
+  }
+
+  function onWvCompanyChange() {
+    const cid = document.getElementById('wv-company').value;
+    const eSel = document.getElementById('wv-entity');
+    eSel.innerHTML = '<option value="">— todas —</option>';
+    if (!cid) {
+      document.getElementById('msg').textContent = 'Selecione uma empresa para visualizar carteiras.';
+      document.getElementById('msg').style.display = 'block';
+      document.getElementById('table').style.display = 'none';
+      return;
+    }
+    fetch(`/api/wallet/entities?companyId=${encodeURIComponent(cid)}`).then(r => r.json()).then(entities => {
+      eSel.innerHTML = '<option value="">— todas —</option>' +
+        entities.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+    });
+    loadWalletView();
+  }
+
+  function loadWalletView() {
+    const cid = document.getElementById('wv-company').value;
+    if (!cid) {
+      // If a template is active, reload it instead
+      if (_activeTemplateName) { loadTemplateView(_activeTemplateName); return; }
+      return;
+    }
+    const eid   = document.getElementById('wv-entity').value;
+    const limit = document.getElementById('limitSelect').value;
+
+    document.getElementById('msg').textContent = 'Carregando...';
+    document.getElementById('msg').style.display = 'block';
+    document.getElementById('table').style.display = 'none';
+
+    const apiMode = _mode === 'processed' ? 'processed' : (_mode === 'nav' ? 'nav' : 'cargas');
+    const range = _dateRange();
+    let url = `/api/wallet/rows?companyId=${encodeURIComponent(cid)}&limit=${limit}&mode=${apiMode}`;
+    if (eid) url += `&entityId=${encodeURIComponent(eid)}`;
+    if (range) url += `&startDate=${range.startDate}&endDate=${range.endDate}`;
+
+    fetch(url).then(r => r.json()).then(({ rows, dates }) => {
+      _lastWalletRows = rows;
+      _activeTemplateName = null;
+      _dates = dates;
+      _sortState = null;
+      document.getElementById('thead').innerHTML =
+        `<tr>
+          <th class="sticky-company bg-gray-50 px-4 py-3 text-left">Carteira</th>
+          <th class="sticky-entity  bg-gray-50 px-4 py-3 text-left">Código</th>
+          <th class="px-3 py-3 text-left min-w-[140px]" data-col="entity">Entidade</th>
+          <th class="px-3 py-3 text-left min-w-[150px]" data-col="institution">Instituição Financeira</th>
+          <th class="px-3 py-3 text-left min-w-[120px] text-[10px]" data-col="walletId">Wallet ID</th>
+          ${dates.map(d => `<th class="px-3 py-3 text-center min-w-[90px]" data-date="${d}"><div class="flex items-center justify-center gap-1"><span>${d}</span><button class="sort-btn text-gray-300 hover:text-gray-600 leading-none select-none text-sm" data-date="${d}" onclick="sortByDate('${d}',event)">⇅</button></div></th>`).join('')}
+        </tr>`;
+
+      document.getElementById('tbody').innerHTML = rows.map(r =>
+        `<tr class="border-t border-gray-100 hover:bg-gray-50"
+             data-wallet="${(r.name || '').toLowerCase()}" data-wcode="${(r.accountCode || '').toLowerCase()}"
+             data-company="${(r.name || '').toLowerCase()}" data-entity="${(r.entity || '').toLowerCase()}"
+             data-institution="${(r.institution || '').toLowerCase()}"
+             data-responsible=""
+             data-wallet-id="${r.walletId || ''}"
+             data-has-pending="${r.cells.some(c => c.cls.includes('bg-red-100')) ? '1' : '0'}">
+          <td class="sticky-company bg-white px-4 py-2 font-medium text-gray-700">${r.name}</td>
+          <td class="sticky-entity bg-white px-4 py-2 text-gray-500">${r.accountCode || '—'}</td>
+          <td class="px-3 py-2 text-gray-500 text-[10px]" data-col="entity">${r.entity || '—'}</td>
+          <td class="px-3 py-2 text-gray-500 text-xs" data-col="institution">${r.institution || '—'}</td>
+          <td class="px-3 py-2 text-gray-400 font-mono text-[10px]" data-col="walletId">${r.walletId || '—'}</td>
+          ${r.cells.map((c, ci) => { const d = dates[ci]; const rc = c.label === '✓' ? 1 : (c.label === '—' ? 0 : (parseInt(c.label) || 0)); const bc = `px-3 py-2 text-center font-medium ${c.cls}`; return `<td class="${bc}" data-date="${d}" data-has-data="${rc > 0 ? '1' : '0'}" data-count="${rc}" data-base-cls="${bc}" ondblclick="openCommentEditor(this,'${r.walletId || ''}','${d}')" style="cursor:default">${c.label}</td>`; }).join('')}
+        </tr>`).join('');
+
+      document.getElementById('msg').style.display = rows.length ? 'none' : 'block';
+      if (!rows.length) document.getElementById('msg').textContent = 'Nenhuma carteira encontrada.';
+      document.getElementById('table').style.display = '';
+      filterWalletRows();
+      _applyColVisibility();
+      _loadAndApplyComments(rows.map(r => r.walletId).filter(Boolean), dates);
+    });
+  }
+
+  function filterWalletRows() {
+    const q  = (document.getElementById('wv-wallet-filter').value || '').toLowerCase();
+    const qr = (document.getElementById('wv-responsible-filter')?.value || '').toLowerCase();
+    const qi = (document.getElementById('wv-institution-filter')?.value || '').toLowerCase();
+    document.querySelectorAll('#tbody tr').forEach(tr => {
+      if (!tr.dataset.wallet) return;
+      const walletOk      = !q  || tr.dataset.wallet.includes(q) || tr.dataset.wcode.includes(q);
+      const responsibleOk = !qr || (tr.dataset.responsible || '').includes(qr);
+      const institutionOk = !qi || (tr.dataset.institution || '').includes(qi);
+      const pendingOk     = !_filterPending || tr.dataset.hasPending === '1';
+      tr.style.display = walletOk && responsibleOk && institutionOk && pendingOk ? '' : 'none';
+    });
+  }
+
+  // ── Wallet templates ─────────────────────────────────────────────────────
+  function loadWvTemplates() {
+    fetch('/api/wallet/templates').then(r => r.json()).then(templates => {
+      _wvTemplates = templates;
+      renderWvTemplates();
+    });
+  }
+
+  function renderWvTemplates() {
+    const el = document.getElementById('wv-templates-list');
+    if (!_wvTemplates.length) {
+      el.innerHTML = '<span class="text-xs text-gray-300 italic">Nenhum template salvo.</span>';
+      return;
+    }
+    el.innerHTML = _wvTemplates.map((t, i) => `
+      <div class="flex items-center gap-1 border rounded-lg px-3 py-1 bg-gray-50 hover:bg-blue-50 transition-colors">
+        <button class="load-tmpl-btn text-xs font-medium text-blue-600 hover:text-blue-800" data-idx="${i}">
+          ${t.name} <span class="text-[10px] text-gray-400 font-normal">(${t.wallets.length})</span>
+        </button>
+        <button class="edit-tmpl-btn text-gray-400 hover:text-orange-600 ml-1 text-sm px-1" data-idx="${i}" title="Editar">&#9998;</button>
+        <button class="delete-tmpl-btn text-gray-300 hover:text-red-500 ml-0.5 text-sm px-1" data-idx="${i}" title="Remover">&#10005;</button>
+      </div>`).join('');
+  }
+
+  document.getElementById('wv-templates-list').addEventListener('click', e => {
+    const loadBtn = e.target.closest('.load-tmpl-btn');
+    const editBtn = e.target.closest('.edit-tmpl-btn');
+    const delBtn  = e.target.closest('.delete-tmpl-btn');
+    if (loadBtn) {
+      const tmpl = _wvTemplates[loadBtn.dataset.idx];
+      if (tmpl) loadTemplateView(tmpl.name);
+    }
+    if (editBtn) {
+      const tmpl = _wvTemplates[editBtn.dataset.idx];
+      if (tmpl) editTemplate(tmpl);
+    }
+    if (delBtn) {
+      const tmpl = _wvTemplates[delBtn.dataset.idx];
+      if (tmpl && confirm(`Remover template "${tmpl.name}"?`)) {
+        fetch(`/api/wallet/templates/${encodeURIComponent(tmpl.name)}`, { method: 'DELETE' })
+          .then(() => loadWvTemplates());
+      }
+    }
+  });
+
+  function loadTemplateView(name) {
+    _activeTemplateName = name;
+    const limit = document.getElementById('limitSelect').value;
+    const apiMode = _mode === 'processed' ? 'processed' : (_mode === 'nav' ? 'nav' : 'cargas');
+    const range = _dateRange();
+
+    document.getElementById('msg').textContent = 'Carregando...';
+    document.getElementById('msg').style.display = 'block';
+    document.getElementById('table').style.display = 'none';
+
+    let tmplUrl = `/api/wallet/template-rows?name=${encodeURIComponent(name)}&limit=${limit}&mode=${apiMode}`;
+    if (range) tmplUrl += `&startDate=${range.startDate}&endDate=${range.endDate}`;
+    fetch(tmplUrl)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(({ rows, dates, error }) => {
+        if (error) throw new Error(error);
+        _dates = dates;
+        _lastWalletRows = rows;
+        _sortState = null;
+        document.getElementById('thead').innerHTML =
+          `<tr>
+            <th class="sticky-company bg-gray-50 px-4 py-3 text-left">Carteira</th>
+            <th class="sticky-entity  bg-gray-50 px-4 py-3 text-left">Código</th>
+            <th class="px-3 py-3 text-left min-w-[150px]" data-col="institution">Instituição Financeira</th>
+            <th class="px-3 py-3 text-left min-w-[120px] text-[10px]" data-col="walletId">Wallet ID</th>
+            <th class="px-3 py-3 text-left min-w-[90px]" data-col="responsible">Responsável</th>
+            <th class="px-3 py-3 text-left min-w-[90px]" data-col="periodicity">Periodicidade</th>
+            <th class="px-3 py-3 text-center min-w-[50px]" data-col="delay">Delay</th>
+            ${dates.map(d => `<th class="px-3 py-3 text-center min-w-[90px]" data-date="${d}"><div class="flex items-center justify-center gap-1"><span class="cursor-pointer hover:text-blue-600" onclick="openTmplDetail('${d}')">${d}</span><button class="sort-btn text-gray-300 hover:text-gray-600 leading-none select-none text-sm" data-date="${d}" onclick="sortByDate('${d}',event)">⇅</button></div></th>`).join('')}
+          </tr>`;
+
+        document.getElementById('tbody').innerHTML = rows.map(r =>
+          `<tr class="border-t border-gray-100 hover:bg-gray-50"
+               data-wallet="${(r.name || '').toLowerCase()}" data-wcode="${(r.accountCode || '').toLowerCase()}"
+               data-institution="${(r.institution || '').toLowerCase()}"
+               data-responsible="${(r.responsible || '').toLowerCase()}"
+               data-wallet-id="${r.walletId || ''}"
+               data-has-pending="${r.cells.some(c => c.cls.includes('bg-red-100')) ? '1' : '0'}">
+            <td class="sticky-company bg-white px-4 py-2 font-medium text-gray-700" ${r.note ? `title="${r.note.replace(/"/g, '&quot;')}"` : ''}>${r.name}${r.note ? ' <span class="text-gray-400 text-[10px]">ℹ</span>' : ''}</td>
+            <td class="sticky-entity bg-white px-4 py-2 text-gray-500">${r.accountCode || '—'}</td>
+            <td class="px-3 py-2 text-gray-500 text-xs" data-col="institution">${r.institution || '—'}</td>
+            <td class="px-3 py-2 text-gray-400 font-mono text-[10px]" data-col="walletId">${r.walletId || '—'}</td>
+            <td class="px-3 py-2 text-gray-600 text-[10px]" data-col="responsible">${r.responsible || '—'}</td>
+            <td class="px-3 py-2 text-gray-500 text-[10px]" data-col="periodicity">${r.periodicity || '—'}</td>
+            <td class="px-3 py-2 text-center text-gray-400 font-medium" data-col="delay">${r.delay > 0 ? r.delay + 'd' : '—'}</td>
+            ${r.cells.map((c, ci) => { const d = dates[ci]; const rc = c.label === '✓' ? 1 : (c.label === '—' ? 0 : (parseInt(c.label) || 0)); const bc = `px-3 py-2 text-center font-medium ${c.cls}`; return `<td class="${bc}" data-date="${d}" data-has-data="${rc > 0 ? '1' : '0'}" data-count="${rc}" data-base-cls="${bc}" ondblclick="openCommentEditor(this,'${r.walletId || ''}','${d}')" style="cursor:default">${c.label}</td>`; }).join('')}
+          </tr>`).join('');
+
+        document.getElementById('msg').style.display = rows.length ? 'none' : 'block';
+        if (!rows.length) document.getElementById('msg').textContent = 'Template vazio.';
+        document.getElementById('table').style.display = '';
+        filterWalletRows();
+        _applyColVisibility();
+        _loadAndApplyComments(rows.map(r => r.walletId).filter(Boolean), dates);
+      })
+      .catch(err => {
+        document.getElementById('msg').textContent = `Erro ao carregar template: ${err.message}`;
+        document.getElementById('msg').style.display = 'block';
+        console.error('[loadTemplateView]', err);
+      });
+  }
+
+  // ── Save template modal ────────────────────────────────────────────────────
+  let _tmplAvailable = [];   // wallets loaded from API (left panel)
+  let _tmplSelected  = [];   // wallets added to template (right panel)
+
+  function openSaveTemplateModal() {
+    document.getElementById('tmpl-name').value = '';
+    document.getElementById('tmpl-threshold').value = '0.0005';
+    document.getElementById('tmpl-search').value = '';
+    _tmplSelected = [];
+    renderSelectedPanel();
+    // Load companies into modal dropdown
+    fetch('/api/wallet/companies').then(r => r.json()).then(companies => {
+      const sel = document.getElementById('tmpl-company');
+      sel.innerHTML = '<option value="">— empresa —</option>' +
+        companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      // Pre-select current company if one is chosen on the page
+      const pageCid = document.getElementById('wv-company').value;
+      if (pageCid) { sel.value = pageCid; onTmplCompanyChange(); }
+    });
+    document.getElementById('tmpl-entity').innerHTML = '<option value="">— todas —</option>';
+    document.getElementById('tmpl-available-list').innerHTML =
+      '<p class="text-xs text-gray-300 italic py-4 text-center">Selecione uma empresa.</p>';
+    document.getElementById('save-tmpl-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('tmpl-name').focus(), 50);
+  }
+
+  function editTemplate(tmpl) {
+    document.getElementById('tmpl-name').value = tmpl.name;
+    document.getElementById('tmpl-threshold').value = tmpl.difRentThreshold ?? 0.0005;
+    document.getElementById('tmpl-search').value = '';
+    // Pre-populate right panel with template wallets
+    _tmplSelected = (tmpl.wallets || []).map(w => ({
+      walletId:    w.walletId,
+      name:        w.name || w.walletId,
+      accountCode: w.accountCode || '',
+      periodicity: w.periodicity || '',
+      delay:       w.delay || 0,
+      responsible: w.responsible || '',
+      note:        w.note || '',
+    }));
+    renderSelectedPanel();
+    // Load companies into modal dropdown
+    fetch('/api/wallet/companies').then(r => r.json()).then(companies => {
+      const sel = document.getElementById('tmpl-company');
+      sel.innerHTML = '<option value="">— empresa —</option>' +
+        companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      const pageCid = document.getElementById('wv-company').value;
+      if (pageCid) { sel.value = pageCid; onTmplCompanyChange(); }
+    });
+    document.getElementById('tmpl-entity').innerHTML = '<option value="">— todas —</option>';
+    document.getElementById('tmpl-available-list').innerHTML =
+      '<p class="text-xs text-gray-300 italic py-4 text-center">Selecione uma empresa.</p>';
+    document.getElementById('save-tmpl-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('tmpl-name').focus(), 50);
+  }
+
+  function closeSaveTemplateModal() { document.getElementById('save-tmpl-modal').classList.add('hidden'); }
+
+  function onTmplCompanyChange() {
+    const cid = document.getElementById('tmpl-company').value;
+    const eSel = document.getElementById('tmpl-entity');
+    eSel.innerHTML = '<option value="">— todas —</option>';
+    if (!cid) {
+      document.getElementById('tmpl-available-list').innerHTML =
+        '<p class="text-xs text-gray-300 italic py-4 text-center">Selecione uma empresa.</p>';
+      return;
+    }
+    fetch(`/api/wallet/entities?companyId=${encodeURIComponent(cid)}`).then(r => r.json()).then(entities => {
+      eSel.innerHTML = '<option value="">— todas —</option>' +
+        entities.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+    });
+    loadTmplWallets();
+  }
+
+  function loadTmplWallets() {
+    const cid = document.getElementById('tmpl-company').value;
+    if (!cid) return;
+    const eid = document.getElementById('tmpl-entity').value;
+    let url = `/api/wallet/list?companyId=${encodeURIComponent(cid)}`;
+    if (eid) url += `&entityId=${encodeURIComponent(eid)}`;
+    document.getElementById('tmpl-available-list').innerHTML =
+      '<p class="text-xs text-gray-300 italic py-4 text-center">Carregando...</p>';
+    fetch(url).then(r => r.json()).then(wallets => {
+      _tmplAvailable = wallets;
+      renderAvailablePanel();
+    });
+  }
+
+  function renderAvailablePanel() {
+    const el = document.getElementById('tmpl-available-list');
+    if (!_tmplAvailable.length) {
+      el.innerHTML = '<p class="text-xs text-gray-300 italic py-4 text-center">Nenhuma carteira encontrada.</p>';
+      return;
+    }
+    const selectedIds = new Set(_tmplSelected.map(w => w.walletId));
+    el.innerHTML = _tmplAvailable.map((w, i) => {
+      const already = selectedIds.has(w.walletId);
+      return `<label class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-50 tmpl-avail-row"
+                     data-name="${(w.name || '').toLowerCase()}" data-code="${(w.accountCode || '').toLowerCase()}" data-wid="${w.walletId}">
+        <input type="checkbox" class="tmpl-avail-check shrink-0" data-idx="${i}" ${already ? 'disabled checked' : ''} />
+        <span class="font-medium text-gray-700 truncate ${already ? 'line-through text-gray-400' : ''}">${w.name}</span>
+        <span class="text-gray-400 text-[10px] shrink-0">${w.accountCode || ''}</span>
+        ${already ? '<span class="text-[9px] text-green-600 shrink-0">adicionada</span>' : ''}
+      </label>`;
+    }).join('');
+    filterAvailableWallets();
+  }
+
+  function filterAvailableWallets() {
+    const q = (document.getElementById('tmpl-search').value || '').toLowerCase();
+    document.querySelectorAll('.tmpl-avail-row').forEach(el => {
+      const name = el.dataset.name || '';
+      const code = el.dataset.code || '';
+      const wid  = el.dataset.wid  || '';
+      el.style.display = name.includes(q) || code.includes(q) || wid.includes(q) ? '' : 'none';
+    });
+  }
+
+  function tmplCheckAll(checked) {
+    document.querySelectorAll('.tmpl-avail-check:not(:disabled)').forEach(cb => {
+      if (cb.closest('.tmpl-avail-row').style.display !== 'none') cb.checked = checked;
+    });
+  }
+
+  function addSelectedWallets() {
+    const selectedIds = new Set(_tmplSelected.map(w => w.walletId));
+    document.querySelectorAll('.tmpl-avail-check:checked:not(:disabled)').forEach(cb => {
+      const idx = Number(cb.dataset.idx);
+      const w = _tmplAvailable[idx];
+      if (w && !selectedIds.has(w.walletId)) {
+        _tmplSelected.push({
+          walletId:    w.walletId,
+          name:        w.name,
+          accountCode: w.accountCode || '',
+          periodicity: '',
+          delay:       0,
+          responsible: '',
+          note:        '',
+        });
+        selectedIds.add(w.walletId);
+      }
+    });
+    renderSelectedPanel();
+    renderAvailablePanel(); // refresh left panel to show "adicionada" badges
+  }
+
+  function renderSelectedPanel() {
+    const empty = document.getElementById('tmpl-selected-empty');
+    const table = document.getElementById('tmpl-selected-table');
+    const tbody = document.getElementById('tmpl-selected-tbody');
+    const count = document.getElementById('tmpl-sel-count');
+    count.textContent = _tmplSelected.length ? `${_tmplSelected.length} carteira(s)` : '';
+    if (!_tmplSelected.length) {
+      empty.style.display = ''; table.classList.add('hidden');
+      tbody.innerHTML = '';
+      return;
+    }
+    empty.style.display = 'none'; table.classList.remove('hidden');
+    tbody.innerHTML = _tmplSelected.map((w, i) =>
+      `<tr class="border-b border-gray-100 hover:bg-gray-50">
+        <td class="py-1.5 px-2">
+          <p class="font-medium text-gray-700 text-xs truncate" title="${w.name}">${w.name}</p>
+          <p class="text-[10px] text-gray-400">${w.accountCode || ''}</p>
+        </td>
+        <td class="py-1.5 px-1"><input type="text" class="tmpl-sel-period border rounded px-1.5 py-0.5 text-[10px] w-full" data-idx="${i}" value="${w.periodicity}" placeholder="diário" /></td>
+        <td class="py-1.5 px-1"><input type="number" class="tmpl-sel-delay border rounded px-1.5 py-0.5 text-[10px] w-full" data-idx="${i}" value="${w.delay}" min="0" placeholder="0" /></td>
+        <td class="py-1.5 px-1"><input type="text" class="tmpl-sel-responsible border rounded px-1.5 py-0.5 text-[10px] w-full" data-idx="${i}" value="${w.responsible || ''}" placeholder="responsável..." /></td>
+        <td class="py-1.5 px-1"><input type="text" class="tmpl-sel-note border rounded px-1.5 py-0.5 text-[10px] w-full" data-idx="${i}" value="${w.note}" placeholder="obs..." /></td>
+        <td class="py-1.5 px-1 text-center">
+          <button onclick="removeSelectedWallet(${i})" class="text-gray-300 hover:text-red-500 text-sm" title="Remover">&times;</button>
+        </td>
+      </tr>`
+    ).join('');
+  }
+
+  function removeSelectedWallet(idx) {
+    _tmplSelected.splice(idx, 1);
+    renderSelectedPanel();
+    renderAvailablePanel(); // refresh left panel badges
+  }
+
+  function confirmSaveTemplate() {
+    const name = document.getElementById('tmpl-name').value.trim();
+    if (!name) { alert('Informe um nome.'); return; }
+    // Read current input values from DOM before saving
+    _tmplSelected.forEach((w, i) => {
+      w.periodicity = document.querySelector(`.tmpl-sel-period[data-idx="${i}"]`)?.value || '';
+      w.delay       = parseInt(document.querySelector(`.tmpl-sel-delay[data-idx="${i}"]`)?.value || '0') || 0;
+      w.responsible = document.querySelector(`.tmpl-sel-responsible[data-idx="${i}"]`)?.value || '';
+      w.note        = document.querySelector(`.tmpl-sel-note[data-idx="${i}"]`)?.value || '';
+    });
+    if (!_tmplSelected.length) { alert('Adicione ao menos uma carteira.'); return; }
+    const difRentThreshold = parseFloat(document.getElementById('tmpl-threshold').value) || 0.0005;
+    const wallets = _tmplSelected.map(w => ({
+      walletId:    w.walletId,
+      name:        w.name,
+      accountCode: w.accountCode,
+      periodicity: w.periodicity,
+      delay:       w.delay,
+      responsible: w.responsible,
+      note:        w.note,
+    }));
+    fetch('/api/wallet/templates', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, wallets, difRentThreshold }),
+    }).then(r => r.json()).then(data => {
+      if (data.error) { alert(data.error); return; }
+      closeSaveTemplateModal();
+      loadWvTemplates();
+      if (_activeTemplateName === name) loadTemplateView(name);
+    });
+  }
+
+  // Modals close only via × button or Escape key (not by clicking backdrop)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!document.getElementById('tmpl-detail-modal').classList.contains('hidden')) closeTmplDetailModal();
+      else if (!document.getElementById('save-tmpl-modal').classList.contains('hidden')) closeSaveTemplateModal();
+    }
+  });
+
+  // ── Template detail modal ──────────────────────────────────────────────────
+  function openTmplDetail(date) {
+    if (!_activeTemplateName) return;
+    document.getElementById('tmpl-detail-title').textContent = _activeTemplateName;
+    document.getElementById('tmpl-detail-subtitle').textContent = `Detalhe de issues — ${date}`;
+    document.getElementById('tmpl-detail-msg').textContent = 'Carregando...';
+    document.getElementById('tmpl-detail-msg').style.display = 'block';
+    document.getElementById('tmpl-detail-thead').innerHTML = '';
+    document.getElementById('tmpl-detail-tbody').innerHTML = '';
+    document.getElementById('tmpl-detail-modal').classList.remove('hidden');
+
+    fetch(`/api/wallet/template-detail?name=${encodeURIComponent(_activeTemplateName)}&date=${encodeURIComponent(date)}`)
+      .then(r => r.json())
+      .then(({ rows }) => renderTmplDetail(rows));
+  }
+
+  function closeTmplDetailModal() { document.getElementById('tmpl-detail-modal').classList.add('hidden'); }
+
+  function _issueCls(count) {
+    if (count === 0) return 'bg-green-100 text-green-700';
+    if (count <= 3)  return 'bg-yellow-100 text-yellow-700';
+    if (count <= 10) return 'bg-orange-100 text-orange-700';
+    return 'bg-red-100 text-red-700';
+  }
+
+  function _boolCls(ok) {
+    return ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+  }
+
+  function renderTmplDetail(rows) {
+    document.getElementById('tmpl-detail-thead').innerHTML =
+      `<th class="px-3 py-2 text-left whitespace-nowrap">Carteira</th>
+       <th class="px-3 py-2 text-left whitespace-nowrap">Código</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap">Periodicidade</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap">Delay</th>
+       <th class="px-3 py-2 text-left whitespace-nowrap">Observação</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Mapeamento</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Classificação</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Registro de Preços</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Preço no Dia</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Erro Explosão</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Posição Explosão</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Transações Não Proc</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Posição Processada</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">NAV Calculado</th>
+       <th class="px-3 py-2 text-center whitespace-nowrap min-w-[80px]">Dif Rent.</th>`;
+
+    document.getElementById('tmpl-detail-tbody').innerHTML = rows.map(r =>
+      `<tr class="border-t border-gray-100 hover:bg-gray-50">
+        <td class="px-3 py-2 font-medium text-gray-700 whitespace-nowrap">${r.name}</td>
+        <td class="px-3 py-2 text-gray-500 whitespace-nowrap">${r.accountCode || '—'}</td>
+        <td class="px-3 py-2 text-center text-gray-500 whitespace-nowrap">${r.periodicity || '—'}</td>
+        <td class="px-3 py-2 text-center text-gray-500">${r.delay > 0 ? r.delay + 'd' : '—'}</td>
+        <td class="px-3 py-2 text-gray-400 text-[10px] max-w-[150px] truncate" title="${r.note || ''}">${r.note || '—'}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.unmapped)}">${r.unmapped}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.missingClassification)}">${r.missingClassification}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.missingHistoryPrice)}">${r.missingHistoryPrice}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.missingPrice)}">${r.missingPrice}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.explosionError)}">${r.explosionError}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.missingFundPosition)}">${r.missingFundPosition}</td>
+        <td class="px-3 py-2 text-center font-medium ${_issueCls(r.unidentifiedTxn)}">${r.unidentifiedTxn}</td>
+        <td class="px-3 py-2 text-center font-medium ${_boolCls(r.hasProcessedPosition)}">${r.hasProcessedPosition ? '✓' : '—'}</td>
+        <td class="px-3 py-2 text-center font-medium ${_boolCls(r.hasNav)}">${r.hasNav ? '✓' : '—'}</td>
+        <td class="px-3 py-2 text-center font-medium ${r.difRent == null ? 'text-gray-300' : (r.difRentAlert ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700')}">${r.difRent == null ? '—' : r.difRent.toFixed(6)}</td>
+      </tr>`
+    ).join('');
+
+    document.getElementById('tmpl-detail-msg').style.display = rows.length ? 'none' : 'block';
+    if (!rows.length) document.getElementById('tmpl-detail-msg').textContent = 'Nenhuma carteira no template.';
+  }
+
+  // ── Pending filter ───────────────────────────────────────────────────────────
+  function togglePending() {
+    _filterPending = !_filterPending;
+    const btn = document.getElementById('btn-pending');
+    btn.classList.toggle('bg-red-50',      _filterPending);
+    btn.classList.toggle('text-red-600',   _filterPending);
+    btn.classList.toggle('border-red-300', _filterPending);
+    filterWalletRows();
+  }
+
+  // ── Sort by date ──────────────────────────────────────────────────────────────
+  function sortByDate(date, evt) {
+    if (evt) evt.stopPropagation();
+    if (_sortState?.col === date) {
+      _sortState.asc = !_sortState.asc;
+    } else {
+      _sortState = { col: date, asc: true };
+    }
+    const tbody = document.getElementById('tbody');
+    const rows  = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+      const ca = parseInt(a.querySelector(`td[data-date="${date}"]`)?.dataset.count ?? '0') || 0;
+      const cb = parseInt(b.querySelector(`td[data-date="${date}"]`)?.dataset.count ?? '0') || 0;
+      return _sortState.asc ? ca - cb : cb - ca;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      const isActive = btn.dataset.date === date;
+      btn.textContent = isActive ? (_sortState.asc ? '↑' : '↓') : '⇅';
+      btn.classList.toggle('text-blue-500', isActive);
+      btn.classList.toggle('text-gray-300', !isActive);
+    });
+  }
+
+  // ── Comments ──────────────────────────────────────────────────────────────────
+  async function _loadAndApplyComments(wids, dates) {
+    if (!wids.length || !dates.length) return;
+    try {
+      const data = await fetch(
+        `/api/wallet/comments?walletIds=${wids.join(',')}&dates=${dates.join(',')}`
+      ).then(r => r.json());
+      _comments = data || {};
+    } catch(e) { _comments = {}; }
+    _applyComments();
+  }
+
+  function _applyComments() {
+    document.querySelectorAll('#tbody tr[data-wallet-id]').forEach(tr => {
+      const wid = tr.dataset.walletId;
+      if (!wid) return;
+      tr.querySelectorAll('td[data-date]').forEach(td => {
+        const d   = td.dataset.date;
+        const key = `${wid}_${d}`;
+        if (td.dataset.baseCls) td.className = td.dataset.baseCls;
+        td.removeAttribute('title');
+        const comment = _comments[key];
+        if (!comment) return;
+        const hasData = td.dataset.hasData === '1';
+        if (!hasData) {
+          td.className = (td.dataset.baseCls || td.className)
+            .replace(/\bbg-\S+/g, 'bg-yellow-100')
+            .replace(/\btext-(?:red|gray|orange|green|lime)-\S+/g, 'text-yellow-700');
+        }
+        td.title = `${comment.text}\n${comment.createdAt}`;
+      });
+    });
+  }
+
+  function openCommentEditor(td, walletId, date) {
+    if (!walletId) return;
+    document.getElementById('comment-editor')?.remove();
+    const existing = _comments[`${walletId}_${date}`] || {};
+    const rect = td.getBoundingClientRect();
+    const left = Math.min(rect.left, window.innerWidth - 272);
+
+    const div = document.createElement('div');
+    div.id = 'comment-editor';
+    div.className = 'fixed bg-white border border-gray-200 rounded-xl shadow-2xl p-3 w-64 z-[9999]';
+    div.style.cssText = `top:${rect.bottom + 4}px;left:${left}px;`;
+    div.innerHTML = `
+      <p class="text-[10px] text-gray-400 mb-1.5 font-semibold uppercase tracking-wider">Comentário · ${date}</p>
+      <textarea id="comment-ta" rows="3" placeholder="Escreva um comentário... (vazio = remover)"
+        class="w-full border rounded-lg p-2 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+      <div class="flex justify-between items-center mt-2">
+        <span class="text-[9px] text-gray-300">Ctrl+Enter salva · Esc fecha</span>
+        <div class="flex gap-2">
+          <button id="comment-cancel-btn" class="text-xs px-3 py-1 border rounded-lg text-gray-500 hover:bg-gray-50">Cancelar</button>
+          <button id="comment-save-btn" class="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+
+    const ta = div.querySelector('#comment-ta');
+    ta.value = existing.text || '';
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+
+    div.querySelector('#comment-save-btn').addEventListener('click', () => _commitComment(walletId, date, ta.value.trim()));
+    div.querySelector('#comment-cancel-btn').addEventListener('click', () => div.remove());
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Escape') div.remove();
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) _commitComment(walletId, date, ta.value.trim());
+    });
+    setTimeout(() => {
+      document.addEventListener('mousedown', function _outside(e) {
+        if (!div.contains(e.target)) {
+          document.removeEventListener('mousedown', _outside);
+          if (document.body.contains(div)) div.remove();
+        }
+      });
+    }, 200);
+  }
+
+  async function _commitComment(walletId, date, text) {
+    document.getElementById('comment-editor')?.remove();
+    const createdAt = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    fetch('/api/wallet/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId, date, text, createdAt }),
+    });
+    const key = `${walletId}_${date}`;
+    if (text) { _comments[key] = { text, createdAt }; } else { delete _comments[key]; }
+    _applyComments();
+  }
+
+  // ── Column visibility ─────────────────────────────────────────────────────────
+  function _applyColVisibility() {
+    Object.entries(_colVisible).forEach(([col, vis]) => {
+      document.querySelectorAll(`#table [data-col="${col}"]`).forEach(el => { el.style.display = vis ? '' : 'none'; });
+      const cb = document.getElementById(`col-chk-${col}`);
+      if (cb) cb.checked = vis;
+    });
+  }
+
+  function setColVisible(col, visible) {
+    _colVisible[col] = visible;
+    _applyColVisibility();
+  }
+
+  function toggleColMenu() {
+    document.getElementById('col-picker').classList.toggle('hidden');
+  }
+
+  document.addEventListener('mousedown', e => {
+    const wrap = document.getElementById('col-picker-wrap');
+    if (wrap && !wrap.contains(e.target)) document.getElementById('col-picker')?.classList.add('hidden');
+  });
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  loadWvCompanies();
+  loadWvTemplates();
+</script>
+{% endblock %}

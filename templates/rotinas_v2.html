@@ -1,0 +1,1720 @@
+{% extends "base.html" %}
+{% block title %}Rotinas v2 – Beehus{% endblock %}
+
+{% block head %}
+<style>
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.tbl-wrap   { overflow-x: auto; }
+.grid-table { border-collapse: collapse; width: 100%; }
+.grid-table th,
+.grid-table td { padding: 0; vertical-align: middle; white-space: nowrap; }
+
+/* ── Sticky left cols ────────────────────────────────────────────────── */
+/* widths: obs=200 | resp=80 | act=46 = 326px frozen */
+.sc   { position: sticky; z-index: 5; }
+.sc-bg        { background: #fff; }
+.sc-bg-alt    { background: #f9fafb; }
+html.dark .sc-bg     { background: #1f2937; }
+html.dark .sc-bg-alt { background: #161f2e; }
+
+.sc-0 { left:   0px; min-width:200px; max-width:200px; }
+.sc-1 { left: 200px; min-width: 80px; max-width: 80px; }
+.sc-2 { left: 280px; min-width: 46px; max-width: 46px; box-shadow: 3px 0 8px -3px rgba(0,0,0,.15); }
+
+/* ── Group header rows ───────────────────────────────────────────────── */
+.grp-co-row   { cursor: pointer; }
+.grp-co-row td   { background: #f1f5f9 !important; border-top: 2px solid #cbd5e1; }
+.grp-co-row:hover td { background: #e2e8f0 !important; }
+html.dark .grp-co-row td   { background: #1e293b !important; border-top-color: #334155; }
+html.dark .grp-co-row:hover td { background: #273548 !important; }
+
+.grp-inst-row { cursor: pointer; }
+.grp-inst-row td { background: #f8fafc !important; border-top: 1px solid #e5e7eb; }
+.grp-inst-row:hover td { background: #f0f4f8 !important; }
+html.dark .grp-inst-row td { background: #1a2332 !important; border-top-color: #2d3748; }
+html.dark .grp-inst-row:hover td { background: #1e2d3d !important; }
+
+/* ── Aggregate cells ─────────────────────────────────────────────────── */
+.agg-cell { text-align: center; vertical-align: middle; }
+.agg-num  { font-size: 11px; font-weight: 700; line-height: 1; }
+.agg-green  { background: #dcfce7 !important; color: #15803d; }
+.agg-yellow { background: #fef9c3 !important; color: #854d0e; }
+.agg-red    { background: #fee2e2 !important; color: #991b1b; }
+html.dark .agg-green  { background: #052e16 !important; color: #86efac; }
+html.dark .agg-yellow { background: #1c1a00 !important; color: #fde68a; }
+html.dark .agg-red    { background: #450a0a !important; color: #fca5a5; }
+
+/* ── Date cells ──────────────────────────────────────────────────────── */
+.dc   { min-width: 38px; text-align: center; }
+.cell { width: 30px; height: 28px; border-radius: 4px; margin: 3px auto;
+        cursor: pointer; position: relative; transition: transform .1s, opacity .1s; }
+.cell:hover { opacity: .75; transform: scale(1.08); }
+
+.c-done         { background: #16a34a; }
+.c-partial      { background: #eab308; }
+.c-missing      { background: #ef4444; }
+.c-future       { background: #e5e7eb; cursor: default; }
+.c-not-expected { background: #d1d5db; cursor: default; }
+.c-empty        { background: transparent; border: 1px dashed #d1d5db; }
+html.dark .c-future       { background: #374151; }
+html.dark .c-not-expected { background: #4b5563; }
+html.dark .c-empty        { border-color: #4b5563; }
+
+/* comment badge on cells */
+.cell-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #3b82f6; border: 1px solid #fff;
+  font-size: 0; display: none;
+}
+.cell-badge.show { display: block; }
+
+/* ── Category accent stripe ──────────────────────────────────────────── */
+.cat-carga     { border-left: 4px solid #3b82f6 !important; }
+.cat-proc-pos  { border-left: 4px solid #22c55e !important; }
+.cat-proc-tx   { border-left: 4px solid #14b8a6 !important; }
+.cat-check     { border-left: 4px solid #a855f7 !important; }
+.cat-envio     { border-left: 4px solid #f97316 !important; }
+
+/* ── Category separator ──────────────────────────────────────────────── */
+.cat-sep td { padding-top: 2px; }
+.cat-sep td:first-child { padding-left: 6px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+html.dark .cat-sep td:first-child { color: #9ca3af; }
+
+/* ── Row hover ───────────────────────────────────────────────────────── */
+.data-row:hover .sc-bg     { background: #f0f9ff !important; }
+.data-row:hover .sc-bg-alt { background: #e0f2fe !important; }
+html.dark .data-row:hover .sc-bg     { background: #1e3a5f !important; }
+html.dark .data-row:hover .sc-bg-alt { background: #1e3a5f !important; }
+
+/* ── Expand button ───────────────────────────────────────────────────── */
+.xbtn { cursor: pointer; font-size: 9px; color: #9ca3af;
+  border: 1px solid #d1d5db; border-radius: 3px; padding: 1px 4px;
+  transition: all .15s; user-select: none; }
+.xbtn:hover { background: #f3f4f6; color: #374151; }
+html.dark .xbtn { border-color: #4b5563; color: #6b7280; }
+html.dark .xbtn:hover { background: #374151; color: #d1d5db; }
+
+/* ── Child rows ──────────────────────────────────────────────────────── */
+.child-row .sc { font-size: 10px; color: #6b7280; }
+.child-row .cell { width: 24px; height: 20px; margin: 4px auto; border-radius: 2px; }
+
+/* ── Today highlight ─────────────────────────────────────────────────── */
+.today-col  { background: rgba(59,130,246,.08) !important; }
+html.dark .today-col { background: rgba(59,130,246,.12) !important; }
+.today-head { background: #1d4ed8 !important; color: #fff !important; }
+
+/* ── Inline editable ─────────────────────────────────────────────────── */
+.editable-resp {
+  cursor: pointer; padding: 1px 4px; border-radius: 3px;
+  border: 1px solid transparent; transition: border .15s;
+  display: inline-block; min-width: 30px; min-height: 14px;
+}
+.editable-resp:hover { border-color: #d1d5db; background: #f9fafb; }
+html.dark .editable-resp:hover { border-color: #4b5563; background: #374151; }
+
+
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+.tbl-wrap::-webkit-scrollbar { height: 6px; }
+.tbl-wrap::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+html.dark .tbl-wrap::-webkit-scrollbar-thumb { background: #4b5563; }
+
+/* ── Tab switcher ────────────────────────────────────────────────────── */
+.tab-btn {
+  padding: 6px 16px; font-size: 12px; font-weight: 500; border-radius: 6px;
+  border: none; cursor: pointer; transition: all .15s;
+  color: #6b7280; background: transparent;
+}
+.tab-btn:hover { background: #f3f4f6; color: #374151; }
+.tab-btn.tab-active { background: #1d4ed8; color: #fff; }
+html.dark .tab-btn { color: #9ca3af; }
+html.dark .tab-btn:hover { background: #374151; color: #d1d5db; }
+html.dark .tab-btn.tab-active { background: #1d4ed8; color: #fff; }
+
+/* ── Category filter tabs ────────────────────────────────────────────── */
+.cat-tab {
+  padding: 4px 13px; font-size: 11px; font-weight: 500; border-radius: 20px;
+  border: 1.5px solid #e5e7eb; cursor: pointer; transition: all .15s;
+  color: #6b7280; background: transparent;
+}
+.cat-tab:hover { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+.cat-tab.cat-active { background: #1f2937; color: #fff; border-color: #1f2937; }
+html.dark .cat-tab { color: #9ca3af; border-color: #374151; }
+html.dark .cat-tab:hover { background: #374151; color: #d1d5db; }
+html.dark .cat-tab.cat-active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+
+/* ── Day limit buttons ───────────────────────────────────────────────── */
+.dlim-btn { padding: 5px 10px; font-size: 11px; font-weight: 500; cursor: pointer;
+            background: #fff; color: #6b7280; border: none; transition: all .15s; }
+.dlim-btn:hover { background: #f3f4f6; }
+.dlim-btn.dlim-active { background: #1f2937; color: #fff; }
+html.dark .dlim-btn { background: #1f2937; color: #9ca3af; }
+html.dark .dlim-btn:hover { background: #374151; }
+html.dark .dlim-btn.dlim-active { background: #3b82f6; color: #fff; }
+
+/* ── Simple grid (weekly / monthly) ─────────────────────────────────── */
+.sgrid-table { border-collapse: collapse; width: 100%; }
+.sgrid-table th, .sgrid-table td { padding: 0; vertical-align: middle; white-space: nowrap; }
+.ssc   { position: sticky; z-index: 5; }
+.ssc-bg     { background: #fff; }
+.ssc-bg-alt { background: #f9fafb; }
+html.dark .ssc-bg     { background: #1f2937; }
+html.dark .ssc-bg-alt { background: #161f2e; }
+.ssc-0 { left:   0; min-width:130px; max-width:130px; }
+.ssc-1 { left: 130px; min-width:130px; max-width:130px; }
+.ssc-2 { left: 260px; min-width: 80px; max-width: 80px; }
+.ssc-3 { left: 340px; min-width: 46px; max-width: 46px; box-shadow: 3px 0 8px -3px rgba(0,0,0,.15); }
+.sdc { min-width: 60px; text-align: center; }
+.sdata-row:hover .ssc-bg     { background: #f0f9ff !important; }
+.sdata-row:hover .ssc-bg-alt { background: #e0f2fe !important; }
+
+/* ── Modal base ──────────────────────────────────────────────────────── */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 50; display: flex; align-items: center; justify-content: center;
+}
+.modal-box {
+  background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+}
+html.dark .modal-box { background: #1f2937; }
+
+/* status pill buttons inside modal */
+.st-btn {
+  padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  border: 2px solid transparent; cursor: pointer; transition: all .15s;
+}
+.st-btn.active-done    { background: #16a34a; color: #fff; border-color: #16a34a; }
+.st-btn.active-missing { background: #ef4444; color: #fff; border-color: #ef4444; }
+.st-btn.active-empty   { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+.st-btn:not(.active-done):not(.active-missing):not(.active-empty) {
+  background: #f9fafb; color: #6b7280; border-color: #e5e7eb;
+}
+.st-btn:hover { opacity: .85; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Top bar ── -->
+<header class="bg-white border-b px-6 sticky top-0 z-20 shadow-sm">
+  <!-- Row 1: title + main actions -->
+  <div class="flex items-center justify-between py-3 gap-4">
+    <!-- Title block -->
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold text-gray-900 leading-tight">Rotinas</h1>
+        <p class="text-xs text-gray-400" id="header-sub">{{ month_name }} {{ year }}</p>
+      </div>
+    </div>
+
+    <!-- Center: month nav -->
+    <div class="flex items-center gap-1">
+      <a href="/rotinas-v2?year={{ prev_m[0] }}&month={{ prev_m[1] }}"
+         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <span class="text-sm font-semibold text-gray-700 w-36 text-center">{{ month_name }} {{ year }}</span>
+      <a href="/rotinas-v2?year={{ next_m[0] }}&month={{ next_m[1] }}"
+         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <a href="/rotinas-v2"
+         class="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-blue-50">
+        Hoje
+      </a>
+    </div>
+
+    <!-- Right: controls -->
+    <div class="flex items-center gap-2">
+      <!-- Day limit selector -->
+      <div class="flex rounded-lg border border-gray-200 overflow-hidden bg-gray-50" title="Dias úteis visíveis">
+        <button class="dlim-btn dlim-active" data-n="5"  onclick="setDayLimit(5)">5d</button>
+        <button class="dlim-btn"             data-n="10" onclick="setDayLimit(10)" style="border-left:1px solid #e5e7eb">10d</button>
+        <button class="dlim-btn"             data-n="30" onclick="setDayLimit(30)" style="border-left:1px solid #e5e7eb">30d</button>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px h-5 bg-gray-200"></div>
+
+      <!-- Pendentes toggle -->
+      <button id="btn-pendentes" onclick="togglePendentes()"
+        class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-red-400 inline-block shrink-0"></span>
+        Pendentes
+      </button>
+
+      <!-- Partner filter dropdown -->
+      <div class="relative" id="part-filter-wrap">
+        <button id="part-filter-btn" onclick="togglePartMenu()"
+          class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-50 transition-colors">
+          <svg class="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.916-3.519M9 20H4v-2a4 4 0 015.916-3.519M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 10a3 3 0 116 0 3 3 0 01-6 0z"/>
+          </svg>
+          <span id="part-filter-label">Parceiro</span>
+          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="part-filter-menu" class="hidden absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-30 min-w-[180px]">
+          <p class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold mb-2">Mostrar / Ocultar</p>
+          <div id="part-filter-items"></div>
+          <div class="border-t border-gray-100 mt-2 pt-2 flex gap-1">
+            <button onclick="showAllParts()" class="flex-1 text-xs text-blue-600 hover:underline">Mostrar todos</button>
+            <button onclick="hideAllParts()" class="flex-1 text-xs text-gray-400 hover:underline">Ocultar todos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category filter dropdown -->
+      <div class="relative" id="cat-filter-wrap">
+        <button id="cat-filter-btn" onclick="toggleCatMenu()"
+          class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs hover:bg-gray-50 transition-colors">
+          <svg class="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+          </svg>
+          <span id="cat-filter-label">Processos</span>
+          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="cat-filter-menu" class="hidden absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-30 min-w-[210px]">
+          <p class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold mb-2">Mostrar / Ocultar</p>
+          <div id="cat-filter-items"></div>
+          <div class="border-t border-gray-100 mt-2 pt-2 flex gap-1">
+            <button onclick="showAllCats()" class="flex-1 text-xs text-blue-600 hover:underline">Mostrar todos</button>
+            <button onclick="hideAllCats()" class="flex-1 text-xs text-gray-400 hover:underline">Ocultar todos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px h-5 bg-gray-200"></div>
+
+      <!-- Settings -->
+      <button onclick="openSettings()"
+        class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Configurações">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+
+      <!-- Add processo -->
+      <button onclick="openAddRow()"
+        class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Adicionar Processo
+      </button>
+    </div>
+  </div>
+
+  <!-- Row 2: category filters + period switcher -->
+  <div class="flex items-center justify-between border-t border-gray-100 py-2">
+    <div class="flex items-center gap-1.5">
+      <button id="cattab-all"           class="cat-tab cat-active" onclick="setCatFilter(null)">Todos</button>
+      <button id="cattab-carga"         class="cat-tab" onclick="setCatFilter('carga')">
+        <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Carga
+      </button>
+      <button id="cattab-processamento" class="cat-tab" onclick="setCatFilter('processamento')">
+        <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>Processamento
+      </button>
+      <button id="cattab-conciliacao"   class="cat-tab" onclick="setCatFilter('conciliacao')">
+        <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Conciliação
+      </button>
+      <button id="cattab-publicacao"    class="cat-tab" onclick="setCatFilter('publicacao')">
+        <span class="inline-block w-2 h-2 rounded-full bg-orange-400 mr-1"></span>Publicação
+      </button>
+    </div>
+    <div class="flex items-center gap-1">
+      <button id="tabbtn-daily"   class="tab-btn tab-active" onclick="switchTab('daily')">Diárias</button>
+      <button id="tabbtn-weekly"  class="tab-btn"            onclick="switchTab('weekly')">Semanais</button>
+      <button id="tabbtn-monthly" class="tab-btn"            onclick="switchTab('monthly')">Mensais</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Legend ── -->
+<div class="bg-gray-50 border-b px-6 py-1.5 flex flex-wrap items-center gap-5 text-xs text-gray-500">
+  <span class="flex items-center gap-1.5 font-medium text-gray-400 uppercase tracking-wide text-[10px]">Legenda</span>
+  <span class="w-px h-3 bg-gray-300"></span>
+  <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded c-done    inline-block shadow-sm"></span>Concluído</span>
+  <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded c-partial inline-block shadow-sm"></span>Parcial</span>
+  <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded c-missing inline-block shadow-sm"></span>Faltando</span>
+  <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded c-not-expected inline-block"></span>Aguardando</span>
+  <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded c-future  inline-block"></span>Futuro</span>
+  <span class="ml-auto text-gray-400 text-[10px]">Clique em qualquer célula para comentários</span>
+</div>
+
+<!-- ── Daily tab ── -->
+<div id="tab-daily">
+  <div class="px-6 py-5">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <h2 class="text-sm font-semibold text-gray-700">Processos diários</h2>
+        <span id="stat-badge-daily" class="text-xs bg-gray-100 text-gray-500 font-semibold px-2 py-0.5 rounded-full">—</span>
+      </div>
+    </div>
+    <div class="tbl-wrap rounded-xl border border-gray-200 shadow-sm bg-white">
+      <table class="grid-table text-xs" id="rtbl">
+        <thead id="rtbl-head"></thead>
+        <tbody id="rtbl-body">
+          <tr><td colspan="10" class="text-center py-12 text-gray-400">Carregando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Weekly tab ── -->
+<div id="tab-weekly" class="hidden">
+  <div class="px-6 py-5">
+    <div class="flex items-center gap-2 mb-3">
+      <h2 class="text-sm font-semibold text-gray-700">Processos semanais</h2>
+      <span id="stat-badge-weekly" class="text-xs bg-gray-100 text-gray-500 font-semibold px-2 py-0.5 rounded-full">—</span>
+    </div>
+    <div class="tbl-wrap rounded-xl border border-gray-200 shadow-sm bg-white">
+      <table class="sgrid-table text-xs" id="wtbl">
+        <thead id="wtbl-head"></thead>
+        <tbody id="wtbl-body">
+          <tr><td colspan="10" class="text-center py-12 text-gray-400">Carregando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Monthly tab ── -->
+<div id="tab-monthly" class="hidden">
+  <div class="px-6 py-5">
+    <div class="flex items-center gap-2 mb-3">
+      <h2 class="text-sm font-semibold text-gray-700">Processos mensais</h2>
+      <span id="stat-badge-monthly" class="text-xs bg-gray-100 text-gray-500 font-semibold px-2 py-0.5 rounded-full">—</span>
+    </div>
+    <div class="tbl-wrap rounded-xl border border-gray-200 shadow-sm bg-white">
+      <table class="sgrid-table text-xs" id="mtbl">
+        <thead id="mtbl-head"></thead>
+        <tbody id="mtbl-body">
+          <tr><td colspan="10" class="text-center py-12 text-gray-400">Carregando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- ── Cell / Comment modal ── -->
+<div id="modal-cell" class="modal-bg hidden" onclick="if(event.target===this)closeCell()">
+  <div class="modal-box p-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h2 class="font-semibold text-gray-900 text-sm" id="mcell-title">—</h2>
+        <p class="text-xs text-gray-400 mt-0.5" id="mcell-sub">—</p>
+      </div>
+      <button onclick="closeCell()" class="text-gray-400 hover:text-gray-600 ml-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Status toggle (only for manual rows) -->
+    <div id="mcell-status-section" class="hidden mb-4">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Status</p>
+      <div class="flex gap-2">
+        <button class="st-btn" data-st="done"    onclick="setManualStatus('done')">✓ Concluído</button>
+        <button class="st-btn" data-st="missing" onclick="setManualStatus('missing')">✗ Faltando</button>
+        <button class="st-btn" data-st=""        onclick="setManualStatus('')">— Limpar</button>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Comentários</p>
+    <div id="mcell-comments" class="space-y-2 max-h-48 overflow-y-auto mb-3"></div>
+    <div class="flex gap-2">
+      <input id="mcell-input" type="text" placeholder="Adicionar comentário…"
+        class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+        onkeydown="if(event.key==='Enter')submitComment()">
+      <button onclick="submitComment()"
+        class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg font-medium">
+        Enviar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Row modal ── -->
+<div id="modal-add" class="modal-bg hidden" onclick="if(event.target===this)closeAddRow()">
+  <div class="modal-box">
+    <!-- Modal header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <h2 class="font-semibold text-gray-900 text-sm">Adicionar Processo</h2>
+      </div>
+      <button onclick="closeAddRow()" class="text-gray-300 hover:text-gray-500 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <!-- Modal body -->
+    <div class="px-6 py-5 space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Categoria</label>
+          <select id="add-categoria" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+            <option>Carga</option>
+            <option>Processamento Posições</option>
+            <option>Processamento Transações</option>
+            <option>Check Rent</option>
+            <option>Envio Relatórios</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Parceiro</label>
+          <input id="add-parceiro" type="text" placeholder="ex: Mira"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Instituição</label>
+          <input id="add-inst" type="text" placeholder="ex: BTG BR"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Responsável</label>
+          <input id="add-resp" type="text" placeholder="ex: João"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Automatização</label>
+          <select id="add-auto" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+            <option value="">—</option>
+            <option>Automatizado</option>
+            <option>Semi Automatizado</option>
+            <option>Manual</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Obs</label>
+          <input id="add-obs" type="text" placeholder="Observações adicionais"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+        </div>
+      </div>
+    </div>
+    <!-- Modal footer -->
+    <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+      <button onclick="closeAddRow()"
+        class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors">Cancelar</button>
+      <button onclick="submitAddRow()"
+        class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings modal ── -->
+<div id="modal-settings" class="modal-bg hidden" onclick="if(event.target===this)closeSettings()">
+  <div class="modal-box">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-gray-700 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h2 class="font-semibold text-gray-900 text-sm">Configurações – Rotinas</h2>
+      </div>
+      <button onclick="closeSettings()" class="text-gray-300 hover:text-gray-500 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="px-6 py-5">
+      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+        Threshold Check Rent (%)
+      </label>
+      <p class="text-xs text-gray-400 mb-3">Diferença máxima aceita entre rentabilidade NAV e Contrib</p>
+      <input id="thresh-input" type="number" step="0.001" min="0" max="100" value="{{ rent_threshold }}"
+        class="w-48 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+    </div>
+    <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+      <button onclick="closeSettings()"
+        class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors">Cancelar</button>
+      <button onclick="saveSettings()"
+        class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Server data ─────────────────────────────────────────────────────── */
+const ROWS          = {{ rows          | default([])  | tojson }};
+const STATUS        = {{ status        | default({})  | tojson }};
+const WALLET_STATUS = {{ wallet_status | default({})  | tojson }};
+const BIZ_DAYS      = {{ biz_days      | default([])  | tojson }};
+const TODAY         = "{{ today | default('') }}";
+const COMMENTS_MAP  = {{ comments_map  | default({})  | tojson }};
+// parceiro name → companyId string (for Processamento issues view)
+const CO_COMPANY_MAP  = {{ co_company_map  | default({}) | tojson }};
+// Extended past biz days pool (cross-month) for 5d/10d/30d selector
+const BIZ_DAYS_POOL   = {{ biz_days_pool   | default([]) | tojson }};
+const RENT_THRESHOLD  = {{ rent_threshold  | default(0.01) }};
+
+let _dayLimit = 5;
+let _vizDays  = (() => { const p = BIZ_DAYS_POOL.filter(d => d <= TODAY); return (p.length ? p : BIZ_DAYS_POOL).slice(-_dayLimit); })();
+
+
+/* weekly / monthly */
+const ROWS_W      = {{ weekly_rows  | default([]) | tojson }};
+const ROWS_M      = {{ monthly_rows | default([]) | tojson }};
+const BIZ_WEEKS   = {{ biz_weeks   | default([]) | tojson }};
+const YEAR_MONTHS = {{ year_months | default([]) | tojson }};
+const STATUS_W    = {{ status_w    | default({}) | tojson }};
+const STATUS_M    = {{ status_m    | default({}) | tojson }};
+const COMMENTS_W  = {{ comments_w  | default({}) | tojson }};
+const COMMENTS_M  = {{ comments_m  | default({}) | tojson }};
+
+/* ── Category → accent class ─────────────────────────────────────────── */
+const CAT_CLS = {
+  "Carga":                   "cat-carga",
+  "Processamento Posições":  "cat-proc-pos",
+  "Processamento Transações":"cat-proc-tx",
+  "Check Rent":              "cat-check",
+  "Envio Relatórios":        "cat-envio",
+};
+
+/* ── Status → cell CSS class ─────────────────────────────────────────── */
+const ST_CLS = {
+  done: "c-done", partial: "c-partial",
+  missing: "c-missing", future: "c-future",
+  not_expected: "c-not-expected", "": "c-empty",
+};
+
+/* ── Helpers ─────────────────────────────────────────────────────────── */
+function esc(s) {
+  return String(s || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function dayLabel(d) {
+  const parts = d.split("-");
+  return `${parts[2]}/${parts[1]}`;
+}
+
+/* ── Group collapse state ────────────────────────────────────────────── */
+// Special sections start collapsed (processamento + conciliação)
+const _compCollapsed = new Set(["__proc_pos__", "__proc_tx__", "__check_rent__", "__publicacao__"]);
+const _instCollapsed = new Set();
+
+/* ── Category filter ─────────────────────────────────────────────────── */
+let _catFilter              = null;
+let _issuesData             = {};   // {walletId: {date: count}}
+let _positionsCount         = {};   // Posições top row: {date: count}
+let _companyIssues          = {};   // Posições by company: {companyId: {date: count}}
+let _transactionsCount      = {};   // Transações top row: {date: count}
+let _transactionsByCompany  = {};   // Transações by company: {companyId: {date: count}}
+let _navCheckTotal          = {};   // Conciliação top row: {date: {total, above}}
+let _navCheckByCompany      = {};   // Conciliação by company: {companyId: {date: {total, above}}}
+let _publicationTotal       = {};   // Publicação top row: {date: {total, not_published}}
+let _publicationByCompany   = {};   // Publicação by company: {companyId: {date: {total, not_published}}}
+
+const _CAT_MATCH = {
+  carga:         r => r.categoria === "Carga",
+  processamento: r => r.categoria === "Processamento Posições" || r.categoria === "Processamento Transações",
+  conciliacao:   r => r.categoria === "Check Rent",
+  publicacao:    r => r.categoria === "Envio Relatórios",
+};
+
+function setCatFilter(cat) {
+  _catFilter = cat;
+  ["all","carga","processamento","conciliacao","publicacao"].forEach(k => {
+    document.getElementById(`cattab-${k}`)?.classList.toggle("cat-active", k === (cat || "all"));
+  });
+  if (cat === "processamento") {
+    buildBody(); loadIssuesData();
+  } else if (cat === "conciliacao") {
+    buildBody(); loadNavCheckData();
+  } else if (cat === "publicacao") {
+    buildBody(); loadPublicationData();
+  } else {
+    buildBody(); applyFilter();
+  }
+}
+
+async function loadNavCheckData() {
+  try {
+    const thr = RENT_THRESHOLD;
+    const [total, byCo] = await Promise.all([
+      fetch(`/api/rotinas/nav-check-total?limit=${_dayLimit}&threshold=${thr}`).then(r => r.json()),
+      fetch(`/api/rotinas/nav-check-by-company?limit=${_dayLimit}&threshold=${thr}`).then(r => r.json()),
+    ]);
+    _navCheckTotal     = (total && !total.error) ? total : {};
+    _navCheckByCompany = (byCo  && !byCo.error)  ? byCo  : {};
+  } catch (_) { _navCheckTotal = {}; _navCheckByCompany = {}; }
+  buildBody(); applyFilter();
+}
+
+async function loadPublicationData() {
+  try {
+    const thr = RENT_THRESHOLD;
+    const [total, byCo] = await Promise.all([
+      fetch(`/api/rotinas/groupings-publication-total?limit=${_dayLimit}&threshold=${thr}`).then(r => r.json()),
+      fetch(`/api/rotinas/groupings-publication-by-company?limit=${_dayLimit}&threshold=${thr}`).then(r => r.json()),
+    ]);
+    _publicationTotal     = (total && !total.error) ? total : {};
+    _publicationByCompany = (byCo  && !byCo.error)  ? byCo  : {};
+  } catch (_) { _publicationTotal = {}; _publicationByCompany = {}; }
+  buildBody(); applyFilter();
+}
+
+async function loadIssuesData() {
+  try {
+    const [wallet, pos, coByCo, txTotal, txByCo] = await Promise.all([
+      fetch(`/api/rotinas/issues-count?limit=${_dayLimit}`).then(r => r.json()),
+      fetch(`/api/rotinas/issues-positions-count?limit=${_dayLimit}`).then(r => r.json()),
+      fetch(`/api/rotinas/issues-positions-by-company?limit=${_dayLimit}`).then(r => r.json()),
+      fetch(`/api/rotinas/transactions-count?limit=${_dayLimit}`).then(r => r.json()),
+      fetch(`/api/rotinas/transactions-by-company?limit=${_dayLimit}`).then(r => r.json()),
+    ]);
+    _issuesData            = (wallet  && !wallet.error)  ? wallet  : {};
+    _positionsCount        = (pos     && !pos.error)     ? pos     : {};
+    _companyIssues         = (coByCo  && !coByCo.error)  ? coByCo  : {};
+    _transactionsCount     = (txTotal && !txTotal.error) ? txTotal : {};
+    _transactionsByCompany = (txByCo  && !txByCo.error)  ? txByCo  : {};
+  } catch (_) {
+    _issuesData = {}; _positionsCount = {}; _companyIssues = {};
+    _transactionsCount = {}; _transactionsByCompany = {};
+  }
+  buildBody(); applyFilter();
+}
+
+/* ── Build header ────────────────────────────────────────────────────── */
+function buildHead() {
+  const frozen = `
+    <th class="sc sc-0 sc-bg bg-gray-900 text-white text-left px-3 py-2" style="width:200px;font-size:10px">Obs / Rotina</th>
+    <th class="sc sc-1 sc-bg bg-gray-900 text-white text-left px-2 py-2" style="width:80px;font-size:10px">Resp.</th>
+    <th class="sc sc-2 sc-bg bg-gray-900 text-white px-1 py-2" style="width:46px;font-size:10px"></th>`;
+  const dateCols = _vizDays.map(d => {
+    const lbl     = dayLabel(d);
+    const isToday = d === TODAY;
+    return `<th class="dc py-2 bg-gray-900 text-white text-center ${isToday ? "today-head" : ""}"
+              style="font-size:10px">${lbl}</th>`;
+  }).join("");
+  document.getElementById("rtbl-head").innerHTML = `<tr>${frozen}${dateCols}</tr>`;
+}
+
+/* ── Processamento issues view ───────────────────────────────────────── */
+function buildBodyProcessamento() {
+  const tbody = document.getElementById("rtbl-body");
+  let   html  = "";
+
+  // Issue count cell: small colored square (like carga cell)
+  // 0=green, 1-4=yellow, 5+=red; future dates = gray
+  function issueCell(count, date) {
+    const tc    = date === TODAY ? " today-col" : "";
+    const style = "cursor:default;display:flex;align-items:center;justify-content:center";
+    if (date > TODAY) {
+      return `<td class="dc${tc}"><div class="cell c-future" style="${style}"></div></td>`;
+    }
+    const bgCls = !count ? "c-done" : count >= 5 ? "c-missing" : "c-partial";
+    const label = count
+      ? `<span style="font-size:11px;color:#fff;font-weight:700;line-height:1">${count}</span>`
+      : "";
+    return `<td class="dc${tc}"><div class="cell ${bgCls}" style="${style}">${label}</div></td>`;
+  }
+
+  // Sum issue count across a set of walletIds for a date
+  function coIssueCell(wids, date) {
+    const total = [...wids].reduce((s, w) => s + ((_issuesData[w] || {})[date] || 0), 0);
+    return issueCell(total, date);
+  }
+
+  // Build company → Set(walletId) from a list of ROWS
+  function companyMap(rows) {
+    const map = new Map();
+    for (const row of rows) {
+      const co = row.parceiro || "—";
+      if (!map.has(co)) map.set(co, new Set());
+      for (const child of (row.children || [])) map.get(co).add(child.id);
+    }
+    return map;
+  }
+
+  function renderSection(typeKey, label, typeRows) {
+    const coMap      = companyMap(typeRows);
+    const allWids    = new Set([...coMap.values()].flatMap(s => [...s]));
+    const collapsed  = _compCollapsed.has(typeKey);
+
+    // Top row cells — each section uses its own MongoDB-sourced total
+    const topDCells = _vizDays.map(d => {
+      const total = typeKey === "__proc_pos__"
+        ? (_positionsCount[d]    || 0)
+        : (_transactionsCount[d] || 0);
+      return issueCell(total, d);
+    }).join("");
+    html += `<tr class="grp-co-row" data-action="toggle-co" data-co="${esc(typeKey)}">
+      <td class="sc sc-0 px-3 py-2">
+        <span class="xbtn mr-2">${collapsed ? "▶" : "▼"}</span>
+        <strong style="font-size:12px;vertical-align:middle">${esc(label)}</strong>
+      </td>
+      <td class="sc sc-1"></td><td class="sc sc-2"></td>
+      ${topDCells}
+    </tr>`;
+
+    if (collapsed) return;
+
+    for (const [co, wids] of coMap) {
+      const instKey       = `${typeKey}||${co}`;
+      const instCollapsed = _instCollapsed.has(instKey);
+
+      // Company row: both sections use MongoDB companyId lookup
+      const coDCells = _vizDays.map(d => {
+        const cid    = CO_COMPANY_MAP[co];
+        const src    = typeKey === "__proc_pos__" ? _companyIssues : _transactionsByCompany;
+        const count  = cid ? ((src[cid] || {})[d] || 0) : 0;
+        return issueCell(count, d);
+      }).join("");
+      html += `<tr class="grp-inst-row" data-action="toggle-inst" data-co="${esc(typeKey)}" data-inst="${esc(co)}">
+        <td class="sc sc-0 py-1.5" style="padding-left:22px">
+          <span class="xbtn mr-2" style="font-size:8px">${instCollapsed ? "▶" : "▼"}</span>
+          <span style="font-size:10px;color:#64748b;vertical-align:middle">${esc(co)}</span>
+        </td>
+        <td class="sc sc-1"></td><td class="sc sc-2"></td>
+        ${coDCells}
+      </tr>`;
+
+      if (instCollapsed) continue;
+
+      // Wallet rows — only wallets that have at least 1 issue on any visible date
+      for (const wid of wids) {
+        const wIssues  = _issuesData[wid] || {};
+        const hasIssue = _vizDays.some(d => (wIssues[d] || 0) > 0);
+        if (!hasIssue) continue;
+
+        // Find wallet display name from children
+        let wName = wid;
+        for (const row of typeRows) {
+          if (row.parceiro !== co) continue;
+          const ch = (row.children || []).find(c => c.id === wid);
+          if (ch) { wName = ch.name; break; }
+        }
+
+        const wDCells = _vizDays.map(d => issueCell(wIssues[d] || 0, d)).join("");
+        html += `<tr class="data-row border-b border-gray-100">
+          <td class="sc sc-0 sc-bg px-2 py-1.5" style="padding-left:36px">
+            <span style="font-size:10px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;display:inline-block;vertical-align:middle" title="${esc(wName)}">${esc(wName)}</span>
+          </td>
+          <td class="sc sc-1 sc-bg"></td><td class="sc sc-2 sc-bg"></td>
+          ${wDCells}
+        </tr>`;
+      }
+    }
+  }
+
+  renderSection("__proc_pos__", "Processamento Posições",  ROWS.filter(r => r.type === "proc_pos"));
+  renderSection("__proc_tx__",  "Transações",               ROWS.filter(r => r.type === "proc_tx"));
+
+  tbody.innerHTML = html;
+}
+
+/* ── Conciliação (Check Rent / navPackages) view ─────────────────────── */
+function checkRentCell(data, date) {
+  const above = data ? data.above : 0;
+  const total = data ? data.total : 0;
+  const tc    = date === TODAY ? " today-col" : "";
+  const style = "cursor:default;display:flex;align-items:center;justify-content:center";
+  if (date > TODAY) return `<td class="dc${tc}"><div class="cell c-future" style="${style}"></div></td>`;
+  if (!total)       return `<td class="dc${tc}"><div class="cell c-not-expected" style="${style}"></div></td>`;
+  const bgCls = above === 0 ? "c-done" : above >= total ? "c-missing" : "c-partial";
+  const label = `<span style="font-size:11px;color:#fff;font-weight:700;line-height:1">${above}/${total}</span>`;
+  return `<td class="dc${tc}"><div class="cell ${bgCls}" style="${style}">${label}</div></td>`;
+}
+
+function buildBodyConciliacao() {
+  const tbody = document.getElementById("rtbl-body");
+  let   html  = "";
+
+  const typeKey   = "__check_rent__";
+  const collapsed = _compCollapsed.has(typeKey);
+
+  // Top row: total across all companies
+  const topDCells = _vizDays.map(d => checkRentCell(_navCheckTotal[d], d)).join("");
+  html += `<tr class="grp-co-row" data-action="toggle-co" data-co="${typeKey}">
+    <td class="sc sc-0 px-3 py-2">
+      <span class="xbtn mr-2">${collapsed ? "▶" : "▼"}</span>
+      <strong style="font-size:12px;vertical-align:middle">Conciliação</strong>
+    </td>
+    <td class="sc sc-1"></td><td class="sc sc-2"></td>
+    ${topDCells}
+  </tr>`;
+
+  if (!collapsed) {
+    // Build company list from check_rent rows
+    const checkRows = ROWS.filter(r => r.type === "check_rent");
+    const coMap = new Map();
+    for (const row of checkRows) {
+      const co = row.parceiro || "—";
+      if (!coMap.has(co)) coMap.set(co, true);
+    }
+
+    for (const [co] of coMap) {
+      const cid    = CO_COMPANY_MAP[co];
+      const coData = cid ? (_navCheckByCompany[cid] || {}) : {};
+      const coDCells = _vizDays.map(d => checkRentCell(coData[d], d)).join("");
+      html += `<tr class="grp-inst-row" data-action="toggle-inst" data-co="${typeKey}" data-inst="${esc(co)}">
+        <td class="sc sc-0 py-1.5" style="padding-left:22px">
+          <span style="font-size:10px;color:#64748b;vertical-align:middle">${esc(co)}</span>
+        </td>
+        <td class="sc sc-1"></td><td class="sc sc-2"></td>
+        ${coDCells}
+      </tr>`;
+    }
+  }
+
+  tbody.innerHTML = html;
+}
+
+function publicationCell(data, date) {
+  const notPub = data ? data.not_published : 0;
+  const total  = data ? data.total : 0;
+  const tc     = date === TODAY ? " today-col" : "";
+  const style  = "cursor:default;display:flex;align-items:center;justify-content:center";
+  if (date > TODAY) return `<td class="dc${tc}"><div class="cell c-future" style="${style}"></div></td>`;
+  if (!total)       return `<td class="dc${tc}"><div class="cell c-not-expected" style="${style}"></div></td>`;
+  const bgCls = notPub === 0 ? "c-done" : "c-missing";
+  const label = `<span style="font-size:11px;color:#fff;font-weight:700;line-height:1">${notPub}/${total}</span>`;
+  return `<td class="dc${tc}"><div class="cell ${bgCls}" style="${style}">${label}</div></td>`;
+}
+
+function buildBodyPublicacao() {
+  const tbody = document.getElementById("rtbl-body");
+  let   html  = "";
+
+  const typeKey   = "__publicacao__";
+  const collapsed = _compCollapsed.has(typeKey);
+
+  // Top row: total across all companies
+  const topDCells = _vizDays.map(d => publicationCell(_publicationTotal[d], d)).join("");
+  html += `<tr class="grp-co-row" data-action="toggle-co" data-co="${typeKey}">
+    <td class="sc sc-0 px-3 py-2">
+      <span class="xbtn mr-2">${collapsed ? "▶" : "▼"}</span>
+      <strong style="font-size:12px;vertical-align:middle">Publicação</strong>
+    </td>
+    <td class="sc sc-1"></td><td class="sc sc-2"></td>
+    ${topDCells}
+  </tr>`;
+
+  if (!collapsed) {
+    const checkRows = ROWS.filter(r => r.type === "check_rent");
+    const coMap = new Map();
+    for (const row of checkRows) {
+      const co = row.parceiro || "—";
+      if (!coMap.has(co)) coMap.set(co, true);
+    }
+
+    for (const [co] of coMap) {
+      const cid    = CO_COMPANY_MAP[co];
+      const coData = cid ? (_publicationByCompany[cid] || {}) : {};
+      const coDCells = _vizDays.map(d => publicationCell(coData[d], d)).join("");
+      html += `<tr class="grp-inst-row" data-action="toggle-inst" data-co="${typeKey}" data-inst="${esc(co)}">
+        <td class="sc sc-0 py-1.5" style="padding-left:22px">
+          <span style="font-size:10px;color:#64748b;vertical-align:middle">${esc(co)}</span>
+        </td>
+        <td class="sc sc-1"></td><td class="sc sc-2"></td>
+        ${coDCells}
+      </tr>`;
+    }
+  }
+
+  tbody.innerHTML = html;
+}
+
+/* ── Build body ──────────────────────────────────────────────────────── */
+function buildBody() {
+  if (_catFilter === "processamento") { buildBodyProcessamento(); return; }
+  if (_catFilter === "conciliacao")   { buildBodyConciliacao();   return; }
+  if (_catFilter === "publicacao")    { buildBodyPublicacao();    return; }
+
+  const tbody = document.getElementById("rtbl-body");
+  let   html  = "";
+
+  // Apply category filter before grouping
+  const visibleRows = _catFilter ? ROWS.filter(_CAT_MATCH[_catFilter] || (() => true)) : ROWS;
+
+  // Group ROWS: company (parceiro) → institution (instituicao) → rows[]
+  const groupMap = new Map();
+  for (const row of visibleRows) {
+    const co   = row.parceiro    || "—";
+    const inst = row.instituicao || "—";
+    if (!groupMap.has(co))           groupMap.set(co, new Map());
+    if (!groupMap.get(co).has(inst)) groupMap.get(co).set(inst, []);
+    groupMap.get(co).get(inst).push(row);
+  }
+
+  // Compute done/total for a set of rows on a specific date.
+  //
+  // Wallet counts come ONLY from "carga" rows (unprocessedSecurityPositions),
+  // which matches the wallet count shown in Controle Carteiras.
+  // If there are no carga rows, fall back to any rows that have children.
+  // The same wallet ID may appear in multiple row types (Carga, PP, CR)
+  // but we deduplicate via Set.
+  //
+  // done  = wallets with "done" status in the reference (carga) rows for this date
+  // total = unique wallets across reference rows (date-independent)
+  function agg(rows, date) {
+    // Apply active category filter to the row set first
+    const catRows = _catFilter ? rows.filter(_CAT_MATCH[_catFilter] || (() => true)) : rows;
+    // Pick reference rows: prefer "carga" type
+    const cargaRows  = catRows.filter(r => r.type === "carga");
+    const refRows    = cargaRows.length > 0
+                       ? cargaRows
+                       : catRows.filter(r => r.children && r.children.length > 0);
+
+    const allWallets  = new Set();
+    const doneWallets = new Set();
+    let manualTotal = 0, manualDone = 0;
+
+    for (const row of refRows) {
+      const ws = WALLET_STATUS[row.id] || {};
+      for (const child of row.children) {
+        allWallets.add(child.id);
+        const cst = (ws[child.id] || {})[date] || "";
+        if (cst === "done") doneWallets.add(child.id);
+      }
+    }
+
+    // Manual rows (no children) counted separately from all rows
+    for (const row of rows) {
+      if (row.children && row.children.length > 0) continue;
+      const st = (STATUS[row.id] || {})[date] || "";
+      if (st === "future" || st === "not_expected") continue;
+      manualTotal++;
+      if (st === "done") manualDone++;
+    }
+
+    return {
+      done:  doneWallets.size + manualDone,
+      total: allWallets.size  + manualTotal,
+    };
+  }
+
+  // Build a colored aggregate cell with "done/total"
+  function aggCell(rows, date) {
+    const { done, total } = agg(rows, date);
+    const today = date === TODAY ? " today-col" : "";
+    if (total === 0) return `<td class="dc agg-cell${today}"></td>`;
+    const cls = done === total ? "agg-green" : done === 0 ? "agg-red" : "agg-yellow";
+    return `<td class="dc agg-cell ${cls}${today}"><span class="agg-num">${done}/${total}</span></td>`;
+  }
+
+  for (const [co, instMap] of groupMap) {
+    const allCoRows   = [...instMap.values()].flat();
+    const coCollapsed = _compCollapsed.has(co);
+    const coArrow     = coCollapsed ? "▶" : "▼";
+
+    // ── Company header row with aggregate per date ──────────────────────
+    const coDCells = _vizDays.map(d => aggCell(allCoRows, d)).join("");
+    html += `<tr class="grp-co-row" data-action="toggle-co" data-co="${esc(co)}">
+      <td class="sc sc-0 px-3 py-2">
+        <span class="xbtn mr-2">${coArrow}</span>
+        <strong style="font-size:12px;vertical-align:middle">${esc(co)}</strong>
+      </td>
+      <td class="sc sc-1"></td>
+      <td class="sc sc-2"></td>
+      ${coDCells}
+    </tr>`;
+
+    if (coCollapsed) continue;
+
+    for (const [inst, rows] of instMap) {
+      const instKey       = `${co}||${inst}`;
+      const instCollapsed = _instCollapsed.has(instKey);
+      // Skip institution sub-header when institution is empty ("—")
+      // Those rows (proc_pos, proc_tx, check_rent) are accessible via category filter tabs
+      if (inst === "—") continue;
+
+      const instArrow     = instCollapsed ? "▶" : "▼";
+
+      // ── Institution row with aggregate per date ───────────────────────
+      const instDCells = _vizDays.map(d => aggCell(rows, d)).join("");
+      html += `<tr class="grp-inst-row" data-action="toggle-inst" data-co="${esc(co)}" data-inst="${esc(inst)}">
+        <td class="sc sc-0 py-1.5" style="padding-left:22px">
+          <span class="xbtn mr-2" style="font-size:8px">${instArrow}</span>
+          <span style="font-size:10px;color:#64748b;vertical-align:middle">${esc(inst)}</span>
+        </td>
+        <td class="sc sc-1"></td>
+        <td class="sc sc-2"></td>
+        ${instDCells}
+      </tr>`;
+
+      if (instCollapsed) continue;
+
+      for (const row of rows) {
+        const accent  = CAT_CLS[row.categoria] || "";
+        const hasSubs = row.children && row.children.length > 0;
+        const rowSt   = STATUS[row.id] || {};
+        const rowCmts = COMMENTS_MAP[row.id] || {};
+
+        const xbtn = hasSubs
+          ? `<span class="xbtn mr-1" id="xbtn_${row.id}" data-action="expand" data-id="${row.id}">▶</span>`
+          : `<span class="inline-block w-4"></span>`;
+
+        // Small category badge
+        const catShort = { "Carga":"CA","Processamento Posições":"PP","Processamento Transações":"PT","Check Rent":"CR","Envio Relatórios":"ER" };
+        const catBadge = `<span title="${esc(row.categoria)}"
+          style="font-size:8px;padding:1px 4px;border-radius:3px;background:#e5e7eb;color:#6b7280;margin-right:4px;flex-shrink:0">${catShort[row.categoria]||row.categoria.slice(0,2)}</span>`;
+
+        const respHtml = `<span class="editable-resp" data-row="${row.id}"
+          onclick="editResp(this,'${row.id}')">${esc(row.responsavel)}</span>`;
+
+        const delBtn = row.custom
+          ? `<button class="text-red-400 hover:text-red-600 transition-colors" title="Excluir"
+               data-action="delete" data-id="${row.id}">
+               <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+               </svg>
+             </button>`
+          : "";
+
+        const dateCells = _vizDays.map(d => {
+          const st      = rowSt[d] || "";
+          const cls     = ST_CLS[st] || "c-empty";
+          const isToday = d === TODAY;
+          const hasCmt  = (rowCmts[d] && rowCmts[d].length > 0) ? "show" : "";
+          return `<td class="dc${isToday?' today-col':''}" data-action="cell" data-id="${row.id}" data-date="${d}" data-type="${row.type}" style="cursor:pointer">
+            <div class="cell ${cls}" id="cell_${row.id}_${d.replace(/-/g,'')}" style="position:relative">
+              <span class="cell-badge ${hasCmt}"></span>
+            </div>
+          </td>`;
+        }).join("");
+
+        html += `<tr class="data-row border-b border-gray-100" id="row_${row.id}" data-cat="${esc(row.categoria)}" data-part="${esc(co)}">
+          <td class="sc sc-0 sc-bg ${accent} px-2 py-1.5" style="padding-left:36px">
+            <div style="display:flex;align-items:center;gap:2px">
+              ${xbtn}${catBadge}
+              <span style="font-size:11px;color:#4b5563;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px" title="${esc(row.obs)}">${esc(row.obs)||'—'}</span>
+            </div>
+          </td>
+          <td class="sc sc-1 sc-bg px-2 py-1.5" style="font-size:11px">${respHtml}</td>
+          <td class="sc sc-2 sc-bg px-2 py-1.5 text-center">${delBtn}</td>
+          ${dateCells}
+        </tr>`;
+
+        // Child rows (wallets)
+        if (hasSubs) {
+          const ws = WALLET_STATUS[row.id] || {};
+          for (const child of row.children) {
+            const childDC = _vizDays.map(d => {
+              const childSt = (ws[child.id] || {})[d] || (d > TODAY ? "future" : "");
+              const cls     = ST_CLS[childSt] || "c-empty";
+              return `<td class="dc${d===TODAY?' today-col':''}"><div class="cell ${cls}" style="cursor:default"></div></td>`;
+            }).join("");
+
+            html += `<tr class="child-row border-b border-gray-50 hidden" id="child_${row.id}_${child.id}">
+              <td class="sc sc-0 sc-bg-alt py-1 pr-2" style="padding-left:52px;font-size:10px;color:#6b7280;overflow:hidden;text-overflow:ellipsis" title="${esc(child.name)}">${esc(child.name)}</td>
+              <td class="sc sc-1 sc-bg-alt py-1 truncate" style="font-size:10px;color:#9ca3af">${esc(child.note)}</td>
+              <td class="sc sc-2 sc-bg-alt py-1"></td>
+              ${childDC}
+            </tr>`;
+          }
+        }
+      }
+    }
+  }
+
+  tbody.innerHTML = html;
+}
+
+/* ── Event delegation ────────────────────────────────────────────────── */
+const _exp = new Set();
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const action = el.dataset.action;
+  const id     = el.dataset.id;
+
+  if (action === "expand") {
+    toggleExpand(id);
+  } else if (action === "toggle-co") {
+    const co = el.closest("[data-co]").dataset.co;
+    if (_compCollapsed.has(co)) _compCollapsed.delete(co); else _compCollapsed.add(co);
+    buildBody(); applyFilter();
+  } else if (action === "toggle-inst") {
+    const tr  = el.closest("[data-inst]");
+    const key = `${tr.dataset.co}||${tr.dataset.inst}`;
+    if (_instCollapsed.has(key)) _instCollapsed.delete(key); else _instCollapsed.add(key);
+    buildBody(); applyFilter();
+  } else if (action === "cell") {
+    openCell(id, el.dataset.date, el.dataset.type);
+  } else if (action === "delete") {
+    deleteRow(id);
+  }
+});
+
+/* ── Expand / collapse ───────────────────────────────────────────────── */
+function toggleExpand(rowId) {
+  const btn = document.getElementById(`xbtn_${rowId}`);
+  const row = ROWS.find(r => r.id === rowId);
+  if (!row || !row.children) return;
+  if (_exp.has(rowId)) {
+    _exp.delete(rowId);
+    if (btn) btn.textContent = "▶";
+    row.children.forEach(c => {
+      const el = document.getElementById(`child_${rowId}_${c.id}`);
+      if (el) el.classList.add("hidden");
+    });
+  } else {
+    _exp.add(rowId);
+    if (btn) btn.textContent = "▼";
+    row.children.forEach(c => {
+      const el = document.getElementById(`child_${rowId}_${c.id}`);
+      if (el) el.classList.remove("hidden");
+    });
+  }
+}
+
+/* ── Responsável inline edit ─────────────────────────────────────────── */
+function editResp(span, rowId) {
+  if (span.querySelector("input")) return;
+  const cur = span.textContent.trim();
+  const inp = document.createElement("input");
+  inp.type  = "text";
+  inp.value = cur;
+  inp.className = "border border-blue-400 rounded px-1 py-0 text-xs focus:outline-none";
+  inp.style.width = "70px";
+  span.textContent = "";
+  span.appendChild(inp);
+  inp.focus();
+  inp.select();
+
+  async function save() {
+    const val = inp.value.trim();
+    span.textContent = val;
+    if (val !== cur) {
+      await fetch(`/api/rotinas/row-config/${rowId}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({responsavel: val}),
+      });
+      const row = ROWS.find(r => r.id === rowId);
+      if (row) row.responsavel = val;
+    }
+  }
+  inp.addEventListener("blur",   save);
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") inp.blur(); if (e.key === "Escape") { inp.value = cur; inp.blur(); }});
+}
+
+
+/* ── Cell modal ──────────────────────────────────────────────────────── */
+let _cellRow  = null;
+let _cellDate = null;
+let _cellType = null;
+
+let _cellTab = "daily";
+
+async function openCell(rowId, colId, type, tab) {
+  _cellRow  = rowId;
+  _cellDate = colId;
+  _cellType = type;
+  _cellTab  = tab || "daily";
+
+  let row, rowSt, colLabel;
+  if (_cellTab === "weekly") {
+    row      = ROWS_W.find(r => r.id === rowId);
+    rowSt    = STATUS_W[rowId] || {};
+    const wk = BIZ_WEEKS.find(w => w.id === colId);
+    colLabel = wk ? `${wk.label} (${wk.tooltip})` : colId;
+  } else if (_cellTab === "monthly") {
+    row      = ROWS_M.find(r => r.id === rowId);
+    rowSt    = STATUS_M[rowId] || {};
+    const mo = YEAR_MONTHS.find(m => m.id === colId);
+    colLabel = mo ? mo.label : colId;
+  } else {
+    row      = ROWS.find(r => r.id === rowId);
+    rowSt    = STATUS[rowId] || {};
+    colLabel = dayLabel(colId);
+  }
+
+  document.getElementById("mcell-title").textContent =
+    row ? `${row.parceiro || ""}${row.obs ? " · " + row.obs : ""}` : rowId;
+  document.getElementById("mcell-sub").textContent =
+    colLabel + " — " + (row ? row.categoria : "");
+
+  const isManual = (_cellTab !== "daily") || type === "manual";
+  const statusSec = document.getElementById("mcell-status-section");
+  statusSec.classList.toggle("hidden", !isManual);
+  if (isManual) _updateStatusBtns(rowSt[colId] || "");
+
+  await loadComments();
+  document.getElementById("modal-cell").classList.remove("hidden");
+  document.getElementById("mcell-input").focus();
+}
+
+function closeCell() {
+  document.getElementById("modal-cell").classList.add("hidden");
+  _cellRow = _cellDate = _cellType = null;
+}
+
+function _commentUrl(base) {
+  if (_cellTab === "weekly")  return `/api/rotinas/weekly/${base}/${_cellRow}/${_cellDate}`;
+  if (_cellTab === "monthly") return `/api/rotinas/monthly/${base}/${_cellRow}/${_cellDate}`;
+  return `/api/rotinas/${base}/${_cellRow}/${_cellDate}`;
+}
+
+async function loadComments() {
+  const res  = await fetch(_commentUrl("comments"));
+  const list = await res.json();
+  const div  = document.getElementById("mcell-comments");
+  if (!list.length) {
+    div.innerHTML = `<p class="text-xs text-gray-400 italic">Sem comentários ainda.</p>`;
+    return;
+  }
+  div.innerHTML = list.map((c, i) => `
+    <div class="bg-gray-50 rounded-lg px-3 py-2 flex items-start gap-2">
+      <div class="flex-1">
+        <p class="text-xs text-gray-700">${esc(c.text)}</p>
+        <p class="text-[10px] text-gray-400 mt-0.5">${c.created_at ? c.created_at.slice(0,16).replace("T"," ") : ""}</p>
+      </div>
+      <button onclick="removeComment(${i})" class="text-gray-300 hover:text-red-400 shrink-0 mt-0.5">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>`).join("");
+
+  /* update badge */
+  const cmap = _cellTab === "weekly" ? COMMENTS_W : _cellTab === "monthly" ? COMMENTS_M : COMMENTS_MAP;
+  const cellId = _cellTab === "daily"
+    ? `cell_${_cellRow}_${_cellDate.replace(/-/g,'')}`
+    : _cellTab === "weekly"
+    ? `wcell_${_cellRow}_${_cellDate.replace(/-/g,'')}`
+    : `mcell_${_cellRow}_${_cellDate.replace(/-/g,'')}`;
+  const cellEl = document.getElementById(cellId);
+  if (cellEl) {
+    const badge = cellEl.querySelector(".cell-badge");
+    if (badge) badge.classList.toggle("show", list.length > 0);
+  }
+  if (!cmap[_cellRow]) cmap[_cellRow] = {};
+  cmap[_cellRow][_cellDate] = list;
+}
+
+async function submitComment() {
+  const inp  = document.getElementById("mcell-input");
+  const text = inp.value.trim();
+  if (!text) return;
+  await fetch(_commentUrl("comments"), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({text}),
+  });
+  inp.value = "";
+  await loadComments();
+}
+
+async function removeComment(idx) {
+  await fetch(`${_commentUrl("comments")}/${idx}`, {method: "DELETE"});
+  await loadComments();
+}
+
+function _updateCellBadge(rowId, d, hasComments) {
+  const cell = document.getElementById(`cell_${rowId}_${d.replace(/-/g,'')}`);
+  if (!cell) return;
+  const badge = cell.querySelector(".cell-badge");
+  if (badge) badge.classList.toggle("show", hasComments);
+}
+
+/* ── Manual status (from cell modal) ────────────────────────────────── */
+function _updateStatusBtns(cur) {
+  document.querySelectorAll("#mcell-status-section .st-btn").forEach(btn => {
+    btn.className = "st-btn";
+    if (btn.dataset.st === cur) btn.classList.add(`active-${cur || "empty"}`);
+  });
+}
+
+async function setManualStatus(st) {
+  let url;
+  if (_cellTab === "weekly")       url = `/api/rotinas/weekly/status/${_cellRow}/${_cellDate}`;
+  else if (_cellTab === "monthly") url = `/api/rotinas/monthly/status/${_cellRow}/${_cellDate}`;
+  else                             url = `/api/rotinas/status/${_cellRow}/${_cellDate}`;
+
+  const res   = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({status: st}),
+  });
+  const data  = await res.json();
+  const newSt = data.status || "";
+
+  /* update in-memory status map */
+  const stMap = _cellTab === "weekly" ? STATUS_W : _cellTab === "monthly" ? STATUS_M : STATUS;
+  if (!stMap[_cellRow]) stMap[_cellRow] = {};
+  stMap[_cellRow][_cellDate] = newSt;
+  _updateStatusBtns(newSt);
+
+  /* update cell color */
+  const pfx  = _cellTab === "weekly" ? "w" : _cellTab === "monthly" ? "m" : "";
+  const cell = document.getElementById(`${pfx}cell_${_cellRow}_${_cellDate.replace(/-/g,'')}`);
+  if (cell) {
+    Object.values(ST_CLS).forEach(c => cell.classList.remove(c));
+    cell.classList.remove("c-empty");
+    cell.classList.add(ST_CLS[newSt] || "c-empty");
+  }
+}
+
+/* ── Add row modal ───────────────────────────────────────────────────── */
+let _activeTab = "daily";
+function openAddRow()  { document.getElementById("modal-add").classList.remove("hidden"); }
+function closeAddRow() { document.getElementById("modal-add").classList.add("hidden"); }
+
+async function submitAddRow() {
+  const payload = {
+    categoria:   document.getElementById("add-categoria").value,
+    parceiro:    document.getElementById("add-parceiro").value.trim(),
+    obs:         document.getElementById("add-obs").value.trim(),
+    responsavel: document.getElementById("add-resp").value.trim(),
+  };
+  let url = "/api/rotinas/rows";
+  if (_activeTab === "weekly")       url = "/api/rotinas/rows/weekly";
+  else if (_activeTab === "monthly") url = "/api/rotinas/rows/monthly";
+  else {
+    payload.instituicao   = document.getElementById("add-inst").value.trim();
+    payload.automatizacao = document.getElementById("add-auto").value;
+  }
+  const res  = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (data.ok) { closeAddRow(); location.reload(); }
+}
+
+/* ── Delete row ──────────────────────────────────────────────────────── */
+async function deleteRow(rowId) {
+  if (!confirm("Excluir este processo?")) return;
+  let url = `/api/rotinas/rows/${rowId}`;
+  if (_activeTab === "weekly")       url = `/api/rotinas/rows/weekly/${rowId}`;
+  else if (_activeTab === "monthly") url = `/api/rotinas/rows/monthly/${rowId}`;
+  await fetch(url, {method: "DELETE"});
+  location.reload();
+}
+
+/* ── Settings modal ──────────────────────────────────────────────────── */
+function openSettings()  { document.getElementById("modal-settings").classList.remove("hidden"); }
+function closeSettings() { document.getElementById("modal-settings").classList.add("hidden"); }
+async function saveSettings() {
+  const val = parseFloat(document.getElementById("thresh-input").value) || 0.01;
+  await fetch("/api/rotinas/settings", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({rent_threshold: val}),
+  });
+  closeSettings();
+}
+
+/* ── Pendentes toggle ────────────────────────────────────────────────── */
+let showOnlyIssues = false;
+
+function togglePendentes() {
+  showOnlyIssues = !showOnlyIssues;
+  const btn = document.getElementById("btn-pendentes");
+  if (showOnlyIssues) {
+    btn.classList.remove("border-gray-200", "text-gray-600", "hover:bg-gray-50");
+    btn.classList.add("border-red-400", "bg-red-50", "text-red-600");
+  } else {
+    btn.classList.add("border-gray-200", "text-gray-600", "hover:bg-gray-50");
+    btn.classList.remove("border-red-400", "bg-red-50", "text-red-600");
+  }
+  applyFilter();
+}
+
+function _rowHasIssue(row) {
+  const st = STATUS[row.id] || {};
+  return Object.values(st).some(v => v === "missing" || v === "partial");
+}
+
+/* ── Category filter ─────────────────────────────────────────────────── */
+const _CAT_KEY  = "rotinas_hidden_cats_v1";
+const _PART_KEY = "rotinas_hidden_parts_v1";
+let hiddenCats    = new Set(JSON.parse(localStorage.getItem(_CAT_KEY)  || "[]"));
+let hiddenPartners= new Set(JSON.parse(localStorage.getItem(_PART_KEY) || "[]"));
+
+const CAT_ACCENT = {
+  "Carga":                    "#3b82f6",
+  "Processamento Posições":   "#22c55e",
+  "Processamento Transações": "#14b8a6",
+  "Check Rent":               "#a855f7",
+  "Envio Relatórios":         "#f97316",
+};
+
+function toggleCatMenu()  {
+  document.getElementById("cat-filter-menu").classList.toggle("hidden");
+  document.getElementById("part-filter-menu").classList.add("hidden");
+}
+function togglePartMenu() {
+  document.getElementById("part-filter-menu").classList.toggle("hidden");
+  document.getElementById("cat-filter-menu").classList.add("hidden");
+}
+
+function buildCatMenu() {
+  const cats = [...new Set(ROWS.map(r => r.categoria))];
+  document.getElementById("cat-filter-items").innerHTML = cats.map(cat => `
+    <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded">
+      <input type="checkbox" class="cat-chk" data-cat="${esc(cat)}"
+        ${!hiddenCats.has(cat) ? "checked" : ""}
+        onchange="setCatVisible('${esc(cat).replace(/'/g,"\\'")}', this.checked)">
+      <span class="w-2 h-2 rounded-sm inline-block shrink-0"
+        style="background:${CAT_ACCENT[cat] || '#6b7280'}"></span>
+      ${esc(cat)}
+    </label>`).join("");
+  _updateCatBtn();
+}
+
+function buildPartMenu() {
+  const parts = [...new Set(ROWS.map(r => r.parceiro).filter(Boolean))].sort();
+  document.getElementById("part-filter-items").innerHTML = parts.map(p => `
+    <label class="flex items-center gap-2 py-1 text-xs cursor-pointer hover:bg-gray-50 px-1 rounded">
+      <input type="checkbox" class="part-chk" data-part="${esc(p)}"
+        ${!hiddenPartners.has(p) ? "checked" : ""}
+        onchange="setPartVisible('${esc(p).replace(/'/g,"\\'")}', this.checked)">
+      ${esc(p)}
+    </label>`).join("");
+  _updatePartBtn();
+}
+
+function setCatVisible(cat, visible) {
+  if (visible) hiddenCats.delete(cat);
+  else         hiddenCats.add(cat);
+  localStorage.setItem(_CAT_KEY, JSON.stringify([...hiddenCats]));
+  _updateCatBtn();
+  applyFilter();
+}
+
+function setPartVisible(part, visible) {
+  if (visible) hiddenPartners.delete(part);
+  else         hiddenPartners.add(part);
+  localStorage.setItem(_PART_KEY, JSON.stringify([...hiddenPartners]));
+  _updatePartBtn();
+  applyFilter();
+}
+
+function showAllCats() {
+  hiddenCats.clear();
+  localStorage.setItem(_CAT_KEY, "[]");
+  document.querySelectorAll(".cat-chk").forEach(c => { c.checked = true; });
+  _updateCatBtn(); applyFilter();
+}
+function hideAllCats() {
+  [...new Set(ROWS.map(r => r.categoria))].forEach(c => hiddenCats.add(c));
+  localStorage.setItem(_CAT_KEY, JSON.stringify([...hiddenCats]));
+  document.querySelectorAll(".cat-chk").forEach(c => { c.checked = false; });
+  _updateCatBtn(); applyFilter();
+}
+function showAllParts() {
+  hiddenPartners.clear();
+  localStorage.setItem(_PART_KEY, "[]");
+  document.querySelectorAll(".part-chk").forEach(c => { c.checked = true; });
+  _updatePartBtn(); applyFilter();
+}
+function hideAllParts() {
+  [...new Set(ROWS.map(r => r.parceiro).filter(Boolean))].forEach(p => hiddenPartners.add(p));
+  localStorage.setItem(_PART_KEY, JSON.stringify([...hiddenPartners]));
+  document.querySelectorAll(".part-chk").forEach(c => { c.checked = false; });
+  _updatePartBtn(); applyFilter();
+}
+
+function _updateCatBtn() {
+  const n = hiddenCats.size;
+  const lbl = document.getElementById("cat-filter-label");
+  if (lbl) lbl.innerHTML = n > 0
+    ? `Processos <span class="ml-1 bg-blue-600 text-white rounded-full px-1.5 py-px" style="font-size:9px">${n}</span>`
+    : "Processos";
+}
+function _updatePartBtn() {
+  const n = hiddenPartners.size;
+  const lbl = document.getElementById("part-filter-label");
+  if (lbl) lbl.innerHTML = n > 0
+    ? `Parceiro <span class="ml-1 bg-blue-600 text-white rounded-full px-1.5 py-px" style="font-size:9px">${n}</span>`
+    : "Parceiro";
+}
+
+function applyFilter() {
+  for (const row of ROWS) {
+    const tr   = document.getElementById(`row_${row.id}`);
+    const hide = hiddenCats.has(row.categoria)
+              || hiddenPartners.has(row.parceiro)
+              || (showOnlyIssues && !_rowHasIssue(row));
+    if (tr) tr.classList.toggle("hidden", hide);
+    if (hide && row.children) {
+      row.children.forEach(c => {
+        const ctr = document.getElementById(`child_${row.id}_${c.id}`);
+        if (ctr) ctr.classList.add("hidden");
+      });
+    }
+  }
+  /* hide separator when ALL rows of that category are hidden */
+  document.querySelectorAll(".cat-sep[data-cat-sep]").forEach(sep => {
+    const cat = sep.dataset.catSep;
+    const allHidden = ROWS.filter(r => r.categoria === cat)
+      .every(r => hiddenCats.has(r.categoria) || hiddenPartners.has(r.parceiro));
+    sep.classList.toggle("hidden", allHidden);
+  });
+  updateStats();
+}
+
+/* ── Summary stats ───────────────────────────────────────────────────── */
+function updateStats() {
+  const visibleRows = ROWS.filter(r => {
+    const tr = document.getElementById(`row_${r.id}`);
+    return tr && !tr.classList.contains('hidden');
+  });
+  const total   = visibleRows.length;
+  const done    = visibleRows.filter(r => (STATUS[r.id] || {})[TODAY] === 'done').length;
+  const missing = visibleRows.filter(r => (STATUS[r.id] || {})[TODAY] === 'missing').length;
+  const partial = visibleRows.filter(r => (STATUS[r.id] || {})[TODAY] === 'partial').length;
+  const el = id => document.getElementById(id);
+  if (el('stat-total'))     el('stat-total').textContent     = total;
+  if (el('stat-done'))      el('stat-done').textContent      = done;
+  if (el('stat-pendentes')) el('stat-pendentes').textContent = missing;
+  if (el('stat-parcial'))   el('stat-parcial').textContent   = partial;
+  if (el('stat-badge-daily'))   el('stat-badge-daily').textContent   = total;
+  if (el('stat-badge-weekly'))  el('stat-badge-weekly').textContent  = ROWS_W.length;
+  if (el('stat-badge-monthly')) el('stat-badge-monthly').textContent = ROWS_M.length;
+}
+
+/* close both menus on outside click */
+document.addEventListener("click", ev => {
+  ["cat-filter-wrap", "part-filter-wrap"].forEach(id => {
+    const wrap = document.getElementById(id);
+    const menu = document.getElementById(id.replace("wrap", "menu"));
+    if (wrap && menu && !wrap.contains(ev.target)) menu.classList.add("hidden");
+  });
+});
+
+/* ── Weekly / Monthly grids ──────────────────────────────────────────── */
+function _simpleHead(cols, tblHeadId) {
+  const frozen = `
+    <th class="ssc ssc-0 ssc-bg bg-gray-900 text-white text-left px-3 py-2" style="font-size:10px">Parceiro / Rotina</th>
+    <th class="ssc ssc-1 ssc-bg bg-gray-900 text-white text-left px-2 py-2" style="font-size:10px">Categoria</th>
+    <th class="ssc ssc-2 ssc-bg bg-gray-900 text-white text-left px-2 py-2" style="font-size:10px">Resp.</th>
+    <th class="ssc ssc-3 ssc-bg bg-gray-900 text-white px-1 py-2" style="font-size:10px"></th>`;
+  const dateCols = cols.map(c => `
+    <th class="sdc py-2 bg-gray-900 text-white text-center" style="font-size:10px" title="${esc(c.tooltip||'')}">
+      ${esc(c.label)}</th>`).join("");
+  document.getElementById(tblHeadId).innerHTML = `<tr>${frozen}${dateCols}</tr>`;
+}
+
+function _simpleBody(rows, cols, stMap, cmtMap, tab, tblBodyId) {
+  const pfx  = tab === "weekly" ? "w" : "m";
+  let   html = "";
+  for (const row of rows) {
+    const rowSt  = stMap[row.id]  || {};
+    const rowCmt = cmtMap[row.id] || {};
+    const delBtn = `<button class="text-red-400 hover:text-red-600" title="Excluir"
+        data-action="del-simple" data-id="${row.id}">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg></button>`;
+    const cells = cols.map(c => {
+      const st    = rowSt[c.id] || "";
+      const hasCmt= (rowCmt[c.id] && rowCmt[c.id].length > 0) ? "show" : "";
+      return `<td class="sdc" style="cursor:pointer"
+          data-action="scell" data-id="${row.id}" data-col="${c.id}" data-tab="${tab}">
+        <div class="cell ${ST_CLS[st] || 'c-empty'}" id="${pfx}cell_${row.id}_${c.id.replace(/-/g,'')}" style="margin:4px auto;width:40px;height:26px;border-radius:3px">
+          <span class="cell-badge ${hasCmt}"></span>
+        </div></td>`;
+    }).join("");
+    html += `<tr class="sdata-row border-b border-gray-100" id="srow_${row.id}">
+      <td class="ssc ssc-0 ssc-bg px-2 py-2 text-gray-700 truncate" style="font-size:11px"
+        title="${esc(row.parceiro)}">${esc(row.parceiro)}${row.obs ? `<span class="text-gray-400 ml-1">${esc(row.obs)}</span>` : ""}</td>
+      <td class="ssc ssc-1 ssc-bg px-2 py-2 text-gray-500 truncate" style="font-size:11px">${esc(row.categoria)}</td>
+      <td class="ssc ssc-2 ssc-bg px-2 py-2 text-gray-500 truncate" style="font-size:11px">${esc(row.responsavel)}</td>
+      <td class="ssc ssc-3 ssc-bg px-2 py-2 text-center">${delBtn}</td>
+      ${cells}
+    </tr>`;
+  }
+  document.getElementById(tblBodyId).innerHTML = html ||
+    `<tr><td colspan="20" class="text-center py-12 text-gray-400 text-xs">
+       Nenhuma rotina cadastrada. Use "Adicionar Processo" para criar.
+     </td></tr>`;
+}
+
+function buildWeeklyGrid() {
+  _simpleHead(BIZ_WEEKS, "wtbl-head");
+  _simpleBody(ROWS_W, BIZ_WEEKS, STATUS_W, COMMENTS_W, "weekly", "wtbl-body");
+}
+
+function buildMonthlyGrid() {
+  _simpleHead(YEAR_MONTHS, "mtbl-head");
+  _simpleBody(ROWS_M, YEAR_MONTHS, STATUS_M, COMMENTS_M, "monthly", "mtbl-body");
+}
+
+/* click delegation for simple grids */
+document.addEventListener("click", ev => {
+  const el = ev.target.closest("[data-action='scell']");
+  if (el) { openCell(el.dataset.id, el.dataset.col, "manual", el.dataset.tab); return; }
+  const dl = ev.target.closest("[data-action='del-simple']");
+  if (dl) { deleteRow(dl.dataset.id); }
+});
+
+/* ── Tab switching ───────────────────────────────────────────────────── */
+const _TAB_KEY = "rotinas_active_tab_v1";
+_activeTab = localStorage.getItem(_TAB_KEY) || "daily";
+
+function setDayLimit(n) {
+  _dayLimit = n;
+  // Use cross-month pool so 10d/30d can include previous month days
+  const past = BIZ_DAYS_POOL.filter(d => d <= TODAY);
+  _vizDays = (past.length ? past : BIZ_DAYS_POOL).slice(-n);
+  document.querySelectorAll('.dlim-btn').forEach(b =>
+    b.classList.toggle('dlim-active', parseInt(b.dataset.n) === n));
+  buildHead();
+  if      (_catFilter === "processamento") { loadIssuesData();      }
+  else if (_catFilter === "conciliacao")   { loadNavCheckData();   }
+  else if (_catFilter === "publicacao")    { loadPublicationData(); }
+  else                                     { buildBody(); applyFilter(); }
+}
+
+function switchTab(tab) {
+  _activeTab = tab;
+  localStorage.setItem(_TAB_KEY, tab);
+  ["daily", "weekly", "monthly"].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle("hidden", t !== tab);
+    document.getElementById(`tabbtn-${t}`).classList.toggle("tab-active", t === tab);
+  });
+  const sub = document.getElementById("header-sub");
+  if (sub) {
+    if (tab === "monthly") sub.textContent = "{{ year }}";
+    else sub.textContent = "{{ month_name }} {{ year }}";
+  }
+  if (tab === "weekly")  buildWeeklyGrid();
+  if (tab === "monthly") buildMonthlyGrid();
+}
+
+/* ── Init ────────────────────────────────────────────────────────────── */
+buildHead();
+buildBody();
+buildCatMenu();
+buildPartMenu();
+applyFilter();
+switchTab(_activeTab);
+</script>
+{% endblock %}

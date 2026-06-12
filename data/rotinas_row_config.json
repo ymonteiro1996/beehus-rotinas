@@ -1,0 +1,85 @@
+{
+  "carga_oikos_acesso_direto": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_btg_br": {
+    "automatizacao": "Automatizado"
+  },
+  "carga_oikos_btg_cayman": {
+    "automatizacao": "Semi Automatizado"
+  },
+  "carga_oikos_bradesco": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_daycoval": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_goldman_sachs": {
+    "automatizacao": "Semi Automatizado"
+  },
+  "carga_oikos_itaú": {
+    "automatizacao": "Automatizado"
+  },
+  "carga_oikos_jpm": {
+    "automatizacao": "Semi Automatizado"
+  },
+  "carga_oikos_morgan_stanley": {
+    "automatizacao": "Semi Automatizado",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_original": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_outros": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_safra": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_santander": {
+    "automatizacao": "Manual",
+    "responsavel": "Oikos"
+  },
+  "carga_oikos_ubs": {
+    "automatizacao": "Manual"
+  },
+  "carga_mira_alternatives": {
+    "automatizacao": "Manual",
+    "responsavel": "Beehus"
+  },
+  "carga_mira_btg_br": {
+    "automatizacao": "Semi Automatizado",
+    "responsavel": "Beehus"
+  },
+  "carga_mira_btg_cayman": {
+    "automatizacao": "Semi Automatizado",
+    "responsavel": "Beehus"
+  },
+  "carga_mira_btg_us": {
+    "automatizacao": "Semi Automatizado",
+    "responsavel": "Beehus"
+  },
+  "carga_mira_jpm": {
+    "automatizacao": "Semi Automatizado",
+    "responsavel": "Beehus"
+  },
+  "carga_mira_morgan_stanley": {
+    "automatizacao": "Semi Automatizado",
+    "responsavel": "Beehus"
+  },
+  "carga_smig_btg_br": {
+    "automatizacao": "Automatizado"
+  },
+  "carga_smig_itaú": {
+    "automatizacao": "Automatizado"
+  },
+  "carga_smig_outros": {
+    "automatizacao": "Manual"
+  }
+}
