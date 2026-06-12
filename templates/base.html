@@ -13,6 +13,7 @@
   <!-- Dark mode overrides for page content (avoids touching every template) -->
   <style>
     .hidden { display: none !important; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     html.dark body                          { background-color: #111827; }
     html.dark .bg-gray-100                  { background-color: #111827 !important; }
     html.dark .bg-white                     { background-color: #1f2937 !important; }
@@ -89,6 +90,13 @@
       </a>
     </nav>
     <div class="px-3 py-4 border-t border-white/10 space-y-1">
+      <!-- Atualizar versão -->
+      <button onclick="atualizarVersao()" id="btn-atualizar" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-white/60 hover:text-white hover:bg-white/10">
+        <svg id="icon-update" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span id="label-atualizar">Atualizar versão</span>
+      </button>
       <!-- Dark mode toggle -->
       <button onclick="toggleDark()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-white/60 hover:text-white hover:bg-white/10">
         <!-- Moon icon — shown in light mode -->
@@ -120,6 +128,33 @@
   {% block modals %}{% endblock %}
 
   <script>
+    async function atualizarVersao() {
+      const btn   = document.getElementById('btn-atualizar');
+      const label = document.getElementById('label-atualizar');
+      const icon  = document.getElementById('icon-update');
+      btn.disabled = true;
+      label.textContent = 'Verificando…';
+      icon.style.animation = 'spin 1s linear infinite';
+      icon.style.display = 'inline-block';
+      try {
+        const res  = await fetch('/api/update');
+        const data = await res.json();
+        if (data.status === 'up_to_date') {
+          label.textContent = 'Já atualizado ✓';
+          setTimeout(() => { label.textContent = 'Atualizar versão'; btn.disabled = false; icon.style.animation = ''; }, 3000);
+        } else if (data.status === 'updated') {
+          label.textContent = 'Reiniciando…';
+          setTimeout(() => location.reload(), 4000);
+        } else {
+          label.textContent = 'Erro: ' + data.message;
+          setTimeout(() => { label.textContent = 'Atualizar versão'; btn.disabled = false; icon.style.animation = ''; }, 4000);
+        }
+      } catch (_) {
+        label.textContent = 'Erro de conexão';
+        setTimeout(() => { label.textContent = 'Atualizar versão'; btn.disabled = false; icon.style.animation = ''; }, 3000);
+      }
+    }
+
     function toggleDark() {
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');

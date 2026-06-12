@@ -1,5 +1,8 @@
 import os
-from flask import Flask, redirect, request
+import sys
+import subprocess
+import threading
+from flask import Flask, redirect, request, jsonify
 from pages.dashboard          import bp as dashboard_bp
 from pages.controle_carteiras import bp as controle_carteiras_bp
 from pages.controle_demandas  import bp as controle_demandas_bp
@@ -15,6 +18,7 @@ import db as db_module
 
 app = Flask(__name__)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1 year cache for static files
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(controle_carteiras_bp)
 app.register_blueprint(controle_demandas_bp)
@@ -36,6 +40,27 @@ def require_registration():
     if request.path.startswith("/setup") or request.path.startswith("/api/setup") or request.path.startswith("/static"):
         return
     return redirect("/setup")
+
+
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route("/api/update")
+def api_update():
+    """Pull latest code from GitHub and restart the server."""
+    try:
+        result = subprocess.run(
+            ["git", "pull"],
+            capture_output=True, text=True, cwd=_BASE_DIR, timeout=30
+        )
+        already_latest = "Already up to date" in result.stdout or "Já está atualizado" in result.stdout
+        if result.returncode != 0:
+            return jsonify({"status": "error", "message": result.stderr or "Falha no git pull"})
+        if already_latest:
+            return jsonify({"status": "up_to_date", "message": "Já está na versão mais recente."})
+        threading.Timer(0.8, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()
+        return jsonify({"status": "updated", "message": "Código atualizado! Reiniciando em instantes…"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 
 if __name__ == "__main__":
