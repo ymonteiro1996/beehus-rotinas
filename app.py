@@ -59,7 +59,7 @@ def api_update():
             return jsonify({"status": "error", "message": result.stderr or "Falha no git pull"})
         if already_latest:
             return jsonify({"status": "up_to_date", "message": "Já está na versão mais recente."})
-        threading.Timer(0.8, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()
+        threading.Timer(0.3, lambda: os.execv(sys.executable, [sys.executable] + sys.argv)).start()
         return jsonify({"status": "updated", "message": "Código atualizado! Reiniciando em instantes…"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
