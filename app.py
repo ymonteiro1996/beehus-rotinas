@@ -11,6 +11,7 @@ from pages.rotinas_v2             import bp as rotinas_v2_bp
 from pages.banda_rentabilidades   import bp as banda_rentabilidades_bp
 from pages.saude_operacional  import bp as saude_operacional_bp
 from pages.setup              import bp as setup_bp
+from pages.teste              import bp as teste_bp
 # nav and config kept for internal API endpoints used by the pages above
 from pages.nav    import bp as nav_bp
 from pages.config import bp as config_bp
@@ -27,6 +28,7 @@ app.register_blueprint(rotinas_v2_bp)
 app.register_blueprint(saude_operacional_bp)
 app.register_blueprint(setup_bp)
 app.register_blueprint(banda_rentabilidades_bp)
+app.register_blueprint(teste_bp)
 app.register_blueprint(nav_bp)
 app.register_blueprint(config_bp)
 
