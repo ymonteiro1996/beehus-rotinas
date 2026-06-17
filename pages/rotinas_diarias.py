@@ -1,10 +1,30 @@
 import json
 import os
 import re
+import time
 import uuid
 import calendar
 from datetime import date, datetime, timedelta
 from collections import defaultdict
+
+# ── In-process TTL cache ──────────────────────────────────────────────────────
+_rd_cache: dict = {}
+_page_generation: list = [0]  # mutable counter; increment to bust page caches
+
+
+def _rc_get(key):
+    entry = _rd_cache.get(key)
+    if entry and time.monotonic() < entry[0]:
+        return True, entry[1]
+    return False, None
+
+
+def _rc_set(key, val, ttl):
+    _rd_cache[key] = (time.monotonic() + ttl, val)
+
+
+def _bump_page_gen():
+    _page_generation[0] += 1
 
 from bson import ObjectId
 from flask import Blueprint, jsonify, render_template, request
@@ -51,29 +71,46 @@ AUTOMATIZACAO_OPTS = ["", "Automatizado", "Semi Automatizado", "Manual"]
 # ── Storage helpers ────────────────────────────────────────────────────────────
 
 def _load_templates():
+    hit, val = _rc_get("templates")
+    if hit:
+        return val
     if not os.path.exists(TEMPLATES_FILE):
         return []
     with open(TEMPLATES_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("templates", data, 30)
+    return data
 
 
 def _load_status():
+    hit, val = _rc_get("daily_status")
+    if hit:
+        return val
     if not os.path.exists(STATUS_FILE):
         return {}
     with open(STATUS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("daily_status", data, 10)
+    return data
 
 
 def _save_status(data):
     with open(STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    _rd_cache.pop("daily_status", None)
+    _bump_page_gen()
 
 
 def _load_row_config():
+    hit, val = _rc_get("row_config")
+    if hit:
+        return val
     if not os.path.exists(ROW_CONFIG_FILE):
         return {}
     with open(ROW_CONFIG_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("row_config", data, 30)
+    return data
 
 
 def _save_row_config(data):
@@ -82,63 +119,95 @@ def _save_row_config(data):
 
 
 def _load_custom_rows():
+    hit, val = _rc_get("custom_rows")
+    if hit:
+        return val
     if not os.path.exists(CUSTOM_ROWS_FILE):
         return []
     with open(CUSTOM_ROWS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("custom_rows", data, 30)
+    return data
 
 
 def _save_custom_rows(data):
     with open(CUSTOM_ROWS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    _rd_cache.pop("custom_rows", None)
 
 
 def _load_weekly_rows():
+    hit, val = _rc_get("weekly_rows")
+    if hit:
+        return val
     if not os.path.exists(WEEKLY_ROWS_FILE):
         return []
     with open(WEEKLY_ROWS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("weekly_rows", data, 30)
+    return data
 
 
 def _save_weekly_rows(data):
     with open(WEEKLY_ROWS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    _rd_cache.pop("weekly_rows", None)
 
 
 def _load_monthly_rows():
+    hit, val = _rc_get("monthly_rows")
+    if hit:
+        return val
     if not os.path.exists(MONTHLY_ROWS_FILE):
         return []
     with open(MONTHLY_ROWS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("monthly_rows", data, 30)
+    return data
 
 
 def _save_monthly_rows(data):
     with open(MONTHLY_ROWS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    _rd_cache.pop("monthly_rows", None)
 
 
 def _load_weekly_status():
+    hit, val = _rc_get("weekly_status")
+    if hit:
+        return val
     if not os.path.exists(WEEKLY_STATUS_FILE):
         return {}
     with open(WEEKLY_STATUS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("weekly_status", data, 10)
+    return data
 
 
 def _save_weekly_status(data):
     with open(WEEKLY_STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    _rd_cache.pop("weekly_status", None)
+    _bump_page_gen()
 
 
 def _load_monthly_status():
+    hit, val = _rc_get("monthly_status")
+    if hit:
+        return val
     if not os.path.exists(MONTHLY_STATUS_FILE):
         return {}
     with open(MONTHLY_STATUS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _rc_set("monthly_status", data, 10)
+    return data
 
 
 def _save_monthly_status(data):
     with open(MONTHLY_STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    _rd_cache.pop("monthly_status", None)
+    _bump_page_gen()
 
 
 def _load_settings():
@@ -258,7 +327,14 @@ def _institution(name: str, account_code: str = "", note: str = "") -> str:
     return "Outros"
 
 
+_btr_cache = {}  # stores last result keyed by (id(templates), id(row_config))
+
+
 def _build_template_rows(templates, row_config):
+    btr_key = (id(templates), id(row_config))
+    if btr_key in _btr_cache:
+        return _btr_cache[btr_key]
+
     carga_rows        = []
     proc_pos_rows     = []
     proc_tx_rows      = []
@@ -366,7 +442,10 @@ def _build_template_rows(templates, row_config):
             "custom":        False,
         })
 
-    return carga_rows, proc_pos_rows, proc_tx_rows, check_rent_rows, wallet_delay_map
+    result = (carga_rows, proc_pos_rows, proc_tx_rows, check_rent_rows, wallet_delay_map)
+    _btr_cache.clear()
+    _btr_cache[btr_key] = result
+    return result
 
 
 def _agg_wid_date(collection, wids, past_days):
@@ -445,6 +524,13 @@ def _mongo_status(mongo_rows, biz_days, year, month,
     """
     if not db_module.db._ready() or not mongo_rows:
         return {}, {}
+
+    _all_wids = tuple(sorted({wid for r in mongo_rows for wid in r["wallet_ids"]}))
+    _row_ids  = tuple(sorted(r["id"] for r in mongo_rows))
+    _cache_key = ("mongo_status", _row_ids, _all_wids, tuple(biz_days), rent_threshold)
+    _hit, _cached = _rc_get(_cache_key)
+    if _hit:
+        return _cached
 
     today     = date.today().strftime("%Y-%m-%d")
     past_days = [d for d in biz_days if d <= today]
@@ -571,6 +657,7 @@ def _mongo_status(mongo_rows, biz_days, year, month,
                 rw[wid] = wd
             wallet_status[row["id"]] = rw
 
+    _rc_set(_cache_key, (row_status, wallet_status), 60)
     return row_status, wallet_status
 
 

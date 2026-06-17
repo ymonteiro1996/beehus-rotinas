@@ -1,137 +1,707 @@
-  <div class="flex items-center justify-between mb-5">
-    <p class="text-xs text-gray-400">Checklist de onboarding por empresa</p>
-    <button onclick="openAddCompany()"
-      class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-      + Empresa
-    </button>
+<div id="ob-esteira-root" style="min-height:200px">
+  <div style="display:flex;align-items:center;justify-content:center;padding:60px;color:#9ca3af;font-size:13px">Carregando…</div>
+</div>
+
+<!-- ── Modal: Novo Onboarding ─────────────────────────────────────── -->
+<div id="ob-new-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 max-w-full" style="width:460px">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Novo Onboarding</h3>
+    <div class="mb-3">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Nome da empresa *</label>
+      <input id="ob-new-name" type="text" placeholder="ex: Vértice Capital"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">CNPJ</label>
+        <input id="ob-new-cnpj" type="text" placeholder="00.000.000/0001-00"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Data de início</label>
+        <input id="ob-new-inicio" type="date"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+      </div>
+    </div>
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Prazo da Fase 1 <span class="font-normal text-gray-400">(opcional)</span></label>
+      <input id="ob-new-due1" type="date"
+        class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 w-40">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="obCloseNew()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="obConfirmNew()" class="px-4 py-1.5 text-xs rounded-lg font-semibold" style="background:#f59e0b;color:#111827" onmouseenter="this.style.background='#d97706'" onmouseleave="this.style.background='#f59e0b'">Criar onboarding</button>
+    </div>
   </div>
+</div>
 
-  {% if not onboarding %}
-  <div class="text-center py-16 text-gray-400 text-sm">
-    <p>Nenhuma empresa em onboarding.</p>
-    <button onclick="openAddCompany()" class="mt-2 text-blue-500 hover:text-blue-700 text-xs underline">+ Adicionar empresa</button>
+<!-- ── Modal: Adicionar Carteira ──────────────────────────────────── -->
+<div id="ob-cart-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-96 max-w-full">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Adicionar Carteira</h3>
+    <input type="hidden" id="ob-cart-pid">
+    <div class="mb-3">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Nome da carteira *</label>
+      <input id="ob-cart-name" type="text" placeholder="ex: Família Andrade — Consolidada"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Instituição</label>
+        <input id="ob-cart-inst" type="text" placeholder="ex: XP Investimentos"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Moeda</label>
+        <select id="ob-cart-cur" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <option value="BRL">BRL</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="obCloseCart()" class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancelar</button>
+      <button onclick="obConfirmCart()" class="px-4 py-1.5 text-xs rounded-lg font-semibold" style="background:#f59e0b;color:#111827" onmouseenter="this.style.background='#d97706'" onmouseleave="this.style.background='#f59e0b'">Adicionar</button>
+    </div>
   </div>
-  {% else %}
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+</div>
 
-  {% for company, demands_all in onboarding | dictsort %}
-  {%- set open_dems = [] %}
-  {%- set done_dems = [] %}
-  {%- for d in demands_all %}
-  {%- if d.done %}{% set _ = done_dems.append(d) %}{% else %}{% set _ = open_dems.append(d) %}{% endif %}
-  {%- endfor %}
+<style>
+.ob-pill { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px;line-height:18px;white-space:nowrap }
+.ob-stat { background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 20px }
+.ob-card { background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden }
+.ob-row  { display:grid;grid-template-columns:minmax(200px,1.9fr) minmax(175px,1.5fr) minmax(155px,1.25fr) minmax(150px,1.3fr) 56px minmax(240px,1.7fr) 76px;gap:12px;align-items:center;padding:13px 20px;border-bottom:1px solid #f3f4f6 }
+.ob-row:not(.ob-row-hd):hover { background:#fafafa;cursor:pointer }
+.ob-chk { width:18px;height:18px;flex:none;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s }
+.ob-btn-outline { display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer }
+.ob-btn-outline:hover { background:#f9fafb }
+.ob-step-line { height:2px;flex:1 }
+</style>
 
-  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-    <!-- Company header -->
-    <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-100">
-      <span class="font-semibold text-gray-800 flex-1">{{ company }}</span>
-      <button data-company="{{ company }}" onclick="openAddObDemand(this.dataset.company)"
-        class="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors">+ Demanda</button>
-      <button data-company="{{ company }}" onclick="removeCompany(this.dataset.company)"
-        class="text-gray-300 hover:text-red-400 transition-colors" title="Remover empresa do onboarding">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-        </svg>
+<script>
+(function () {
+'use strict';
+
+const PHASES = [
+  { n:1, name:'Definição e Preparação',   resp:'Parceiro + CS Beehus', wait:'parceiro' },
+  { n:2, name:'Arquivos e Estrutura',      resp:'Parceiro + Beehus',    wait:'parceiro' },
+  { n:3, name:'Processamento',             resp:'Beehus (Operações)',   wait:'beehus'   },
+  { n:4, name:'Configuração e Relatórios', resp:'Parceiro + CS Beehus', wait:'parceiro' },
+  { n:5, name:'Validação',                 resp:'Parceiro',             wait:'parceiro' },
+  { n:6, name:'Conclusão',                 resp:'Beehus',               wait:'beehus'   },
+];
+
+const DELS = [
+  ['Cadastro da empresa e do responsável na plataforma (CNPJ, país, endereço, admin)','Definição do período histórico a processar','Escolha do modelo de processamento dos dados históricos','Volumetria inicial — instituições, famílias, clientes, agrupamentos e carteiras'],
+  ['Mapeamento das instituições financeiras e forma de acesso (scraping, API, XML, PDF)','Árvore de classificação de ativos (até 5 níveis hierárquicos)','Mapeamento e cadastro de carteiras e agrupamentos','Estruturas e particularidades de precificação (curva, preços de terceiros, derivativos)','Envio dos arquivos com dados históricos para validação operacional'],
+  ['Validação dos arquivos recebidos pelo time operacional','Processamento dos dados históricos (fechamentos mensais + consolidação diária)','Verificação da integridade dos dados processados'],
+  ['Identidade visual — logos PNG/SVG, manual de marca, capa e disclaimer','Configuração do sistema white label','Lista de usuários e hierarquia de acesso','Definição dos relatórios que serão gerados','Frequência de geração (mensal, trimestral, sob demanda)'],
+  ['Revisão dos dados publicados pelo parceiro','Registro de inconsistências','Ajustes pela Beehus conforme apontamentos','Sign-off do parceiro'],
+  ['Ativação do processamento diário','Onboarding marcado como concluído'],
+];
+
+const TONE = {
+  success: { bg:'#f0fdf4', fg:'#15803d', dot:'#22c55e' },
+  error:   { bg:'#fef2f2', fg:'#b91c1c', dot:'#ef4444' },
+  warning: { bg:'#fffbeb', fg:'#b45309', dot:'#f59e0b' },
+  info:    { bg:'#eff6ff', fg:'#1d4ed8', dot:'#3b82f6' },
+  neutral: { bg:'#f9fafb', fg:'#6b7280', dot:'#9ca3af' },
+};
+
+function pill(tone, label) {
+  const t = TONE[tone];
+  return `<span class="ob-pill" style="background:${t.bg};color:${t.fg}"><span style="width:6px;height:6px;border-radius:50%;background:${t.dot};display:inline-block;flex-shrink:0"></span>${h(label)}</span>`;
+}
+
+function h(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function daysSince(iso) {
+  if (!iso) return 0;
+  return Math.max(0, Math.floor((new Date() - new Date(iso)) / 86400000));
+}
+
+function pctOf(p) {
+  let t=0, d=0;
+  p.phases.forEach(ph => ph.dels.forEach(x => { t++; if(x) d++; }));
+  return t ? Math.round(d/t*100) : 0;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+const S = {
+  partners: [],
+  view: 'list',
+  selId: null,
+  selPhase: 1,
+  editDel: null,
+  delDraft: '',
+  newTodo: '',
+  newOwner: 'beehus',
+  fFase: 'all', fResp: 'all', fStatus: 'all', q: '',
+};
+
+function render() {
+  const root = document.getElementById('ob-esteira-root');
+  if (!root) return;
+  if (S.view === 'detail') {
+    const p = S.partners.find(x => x.id === S.selId);
+    root.innerHTML = p ? renderDetail(p) : renderList();
+  } else {
+    root.innerHTML = renderList();
+  }
+}
+
+// ── LIST ─────────────────────────────────────────────────────────────────────
+function renderList() {
+  const active   = S.partners.filter(p => !p.concluded);
+  const q        = S.q.trim().toLowerCase();
+  const filtered = S.partners.filter(p => {
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    if (S.fFase !== 'all' && String(p.current) !== S.fFase) return false;
+    if (S.fResp !== 'all' && (p.concluded || p.waiting !== S.fResp)) return false;
+    if (S.fStatus !== 'all') {
+      const st = p.concluded ? 'concluido' : p.atrasado ? 'atrasado' : 'em-dia';
+      if (st !== S.fStatus) return false;
+    }
+    return true;
+  });
+
+  const stAtras = active.filter(p => p.atrasado).length;
+  const stAgP   = active.filter(p => p.waiting === 'parceiro').length;
+  const stAgB   = active.filter(p => p.waiting === 'beehus').length;
+
+  const rows = filtered.map(p => {
+    const meta    = PHASES[p.current - 1];
+    const stTone  = p.concluded ? 'success' : p.atrasado ? 'error' : 'success';
+    const stLabel = p.concluded ? 'Concluído' : p.atrasado ? 'Atrasado' : 'Em dia';
+    const wTone   = p.waiting === 'beehus' ? 'info' : 'warning';
+    const wLabel  = p.waiting === 'beehus' ? 'Aguard. Beehus' : 'Aguard. parceiro';
+    const pct     = pctOf(p);
+    const dias    = daysSince(p.inicio);
+    return `
+    <div class="ob-row" onclick="obOpen('${h(p.id)}')">
+      <div style="min-width:0">
+        <div style="font-size:14px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(p.name)}</div>
+        <div style="font-size:12px;color:#9ca3af">${p.cnpj ? 'CNPJ '+h(p.cnpj) : '—'}</div>
+      </div>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:500;color:#111827">Fase ${p.current} de 6</div>
+        <div style="font-size:12px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(meta.name)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;max-width:110px;height:6px;border-radius:999px;background:#f3f4f6;overflow:hidden">
+          <div style="width:${pct}%;height:100%;border-radius:999px;background:#f59e0b"></div>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:#6b7280">${pct}%</span>
+      </div>
+      <div style="font-size:13px;color:#6b7280">${h(meta.resp)}</div>
+      <div style="text-align:right;font-size:13px;font-weight:600;color:#111827">${dias}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        ${pill(stTone, stLabel)}
+        ${!p.concluded ? pill(wTone, wLabel) : ''}
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <span class="ob-btn-outline">Abrir</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const filtersActive = S.fFase !== 'all' || S.fResp !== 'all' || S.fStatus !== 'all' || !!q;
+  const clrBtn = filtersActive
+    ? `<div onclick="obClearFilters()" style="padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;user-select:none;align-self:flex-end" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background=''">Limpar filtros</div>`
+    : '';
+
+  return `
+  <div style="display:flex;flex-direction:column;gap:20px;padding-bottom:48px">
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <div class="ob-stat"><div style="font-size:28px;font-weight:700;color:#111827">${active.length}</div><div style="font-size:12px;color:#9ca3af;margin-top:4px">Parceiros em onboarding</div></div>
+      <div class="ob-stat"><div style="font-size:28px;font-weight:700;color:#b91c1c">${stAtras}</div><div style="font-size:12px;color:#9ca3af;margin-top:4px">Atrasados</div></div>
+      <div class="ob-stat"><div style="font-size:28px;font-weight:700;color:#b45309">${stAgP}</div><div style="font-size:12px;color:#9ca3af;margin-top:4px">Aguardando parceiro</div></div>
+      <div class="ob-stat"><div style="font-size:28px;font-weight:700;color:#1d4ed8">${stAgB}</div><div style="font-size:12px;color:#9ca3af;margin-top:4px">Aguardando Beehus</div></div>
+    </div>
+
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;font-weight:500;color:#6b7280">Fase atual</span>
+        <select onchange="obSetFilter('fFase',this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;color:#111827;min-width:220px;cursor:pointer">
+          <option value="all"${S.fFase==='all'?' selected':''}>Todas as fases</option>
+          ${PHASES.map(ph=>`<option value="${ph.n}"${S.fFase===String(ph.n)?' selected':''}>Fase ${ph.n} — ${h(ph.name)}</option>`).join('')}
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;font-weight:500;color:#6b7280">Aguardando</span>
+        <select onchange="obSetFilter('fResp',this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;color:#111827;min-width:160px;cursor:pointer">
+          <option value="all"${S.fResp==='all'?' selected':''}>Todos</option>
+          <option value="parceiro"${S.fResp==='parceiro'?' selected':''}>Parceiro</option>
+          <option value="beehus"${S.fResp==='beehus'?' selected':''}>Beehus</option>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;font-weight:500;color:#6b7280">Status</span>
+        <select onchange="obSetFilter('fStatus',this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;color:#111827;min-width:150px;cursor:pointer">
+          <option value="all"${S.fStatus==='all'?' selected':''}>Todos</option>
+          <option value="em-dia"${S.fStatus==='em-dia'?' selected':''}>Em dia</option>
+          <option value="atrasado"${S.fStatus==='atrasado'?' selected':''}>Atrasado</option>
+          <option value="concluido"${S.fStatus==='concluido'?' selected':''}>Concluído</option>
+        </select>
+      </label>
+      ${clrBtn}
+      <span style="margin-left:auto;font-size:13px;color:#9ca3af;padding-bottom:8px;align-self:flex-end">Exibindo ${filtered.length} ${filtered.length===1?'parceiro':'parceiros'}</span>
+      <button onclick="obOpenNew()" style="padding:9px 16px;border-radius:8px;background:#f59e0b;color:#111827;font-size:13px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;align-self:flex-end" onmouseenter="this.style.background='#d97706'" onmouseleave="this.style.background='#f59e0b'">
+        + Novo Onboarding
       </button>
     </div>
 
-    {% if not demands_all %}
-    <div class="px-5 py-4 text-xs text-gray-400">
-      Sem demandas.
-      <button data-company="{{ company }}" onclick="openAddObDemand(this.dataset.company)"
-        class="text-blue-500 hover:text-blue-700 ml-1">+ Adicionar</button>
-    </div>
-    {% else %}
-    <div class="divide-y divide-gray-50">
-
-    {% for demand in open_dems + done_dems %}
-    <div class="px-5 py-3 transition-opacity {{ 'opacity-50' if demand.done else '' }}">
-      <!-- Demand row -->
-      <div class="flex items-start gap-2">
-        <button data-company="{{ company }}" data-demand-id="{{ demand.id }}"
-          onclick="toggleObDemand(this.dataset.company, this.dataset.demandId)"
-          class="mt-0.5 shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors
-            {{ 'bg-green-500 border-green-500' if demand.done else 'border-gray-300 hover:border-green-400' }}"
-          title="{{ 'Desmarcar' if demand.done else 'Marcar como concluído' }}">
-          {% if demand.done %}
-          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15 3.293 9.879a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clip-rule="evenodd"/>
-          </svg>
-          {% endif %}
-        </button>
-        <span class="flex-1 text-sm font-medium leading-tight
-          {{ 'line-through text-gray-400' if demand.done else 'text-gray-800' }}">
-          {{ demand.title }}
-        </span>
-        {% if demand.sla %}
-        <span class="text-xs shrink-0
-          {{ 'text-red-400 font-medium' if demand.sla < today and not demand.done else 'text-gray-400' }}">
-          {{ demand.sla[8:] }}/{{ demand.sla[5:7] }}/{{ demand.sla[:4] }}
-        </span>
-        {% endif %}
-        <button data-company="{{ company }}" data-demand-id="{{ demand.id }}"
-          onclick="deleteObDemand(this.dataset.company, this.dataset.demandId)"
-          class="mt-0.5 shrink-0 text-gray-200 hover:text-red-400 transition-colors" title="Remover demanda">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
+    <div class="ob-card">
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #f3f4f6">
+        <span style="font-size:16px;font-weight:600;color:#111827">Parceiros em onboarding</span>
+        <span class="ob-pill" style="background:#fffbeb;color:#b45309">${filtered.length} ${filtered.length===1?'parceiro':'parceiros'}</span>
       </div>
-
-      <!-- Checklist items -->
-      {%- set open_items = [] %}
-      {%- set done_items = [] %}
-      {%- for it in demand.get('checklist', []) %}
-      {%- if it.done %}{% set _ = done_items.append(it) %}{% else %}{% set _ = open_items.append(it) %}{% endif %}
-      {%- endfor %}
-
-      {% if demand.get('checklist') %}
-      <div class="mt-2 pl-6 space-y-1.5">
-      {% for item in open_items + done_items %}
-      <div class="flex items-center gap-2 group {{ 'opacity-60' if item.done else '' }}">
-        <button data-company="{{ company }}" data-demand-id="{{ demand.id }}" data-item-id="{{ item.id }}"
-          onclick="toggleObItem(this.dataset.company, this.dataset.demandId, this.dataset.itemId)"
-          class="shrink-0 w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors
-            {{ 'bg-green-500 border-green-500' if item.done else 'border-gray-300 hover:border-green-400' }}">
-          {% if item.done %}
-          <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15 3.293 9.879a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clip-rule="evenodd"/>
-          </svg>
-          {% endif %}
-        </button>
-        <span class="flex-1 text-xs
-          {{ 'line-through text-gray-300' if item.done else 'text-gray-600' }}">
-          {{ item.text }}
-        </span>
-        {% if item.sla %}
-        <span class="text-xs shrink-0
-          {{ 'text-red-400' if item.sla < today and not item.done else 'text-gray-300' }}">
-          {{ item.sla[8:] }}/{{ item.sla[5:7] }}
-        </span>
-        {% endif %}
-        <button data-company="{{ company }}" data-demand-id="{{ demand.id }}" data-item-id="{{ item.id }}"
-          onclick="deleteObItem(this.dataset.company, this.dataset.demandId, this.dataset.itemId)"
-          class="shrink-0 text-gray-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
-          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-      {% endfor %}
-      </div>
-      {% endif %}
-
-      <div class="mt-1.5 pl-6">
-        <button data-company="{{ company }}" data-demand-id="{{ demand.id }}"
-          onclick="openAddObItem(this.dataset.company, this.dataset.demandId)"
-          class="text-xs text-gray-300 hover:text-blue-500 transition-colors">+ item</button>
+      <div style="overflow-x:auto">
+        <div style="min-width:1100px">
+          <div class="ob-row ob-row-hd" style="background:#f9fafb;font-size:12px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb">
+            <span>Parceiro</span><span>Fase atual</span><span>Progresso</span><span>Responsável da fase</span><span style="text-align:right">Dias</span><span>Status</span><span></span>
+          </div>
+          ${rows || '<div style="padding:40px;text-align:center;font-size:13px;color:#9ca3af">Nenhum parceiro encontrado com os filtros selecionados.</div>'}
+        </div>
       </div>
     </div>
-    {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-  {% endfor %}
 
-  </div>
-  {% endif %}
+  </div>`;
+}
+
+// ── DETAIL ────────────────────────────────────────────────────────────────────
+function renderDetail(p) {
+  const pct      = pctOf(p);
+  const dias     = daysSince(p.inicio);
+  const allApt   = p.carteiras.length > 0 && p.carteiras.every(c => c.status === 'apta');
+  const selN     = S.selPhase || p.current;
+  const stTone   = p.concluded ? 'success' : p.atrasado ? 'error' : 'success';
+  const stLabel  = p.concluded ? 'Concluído' : p.atrasado ? 'Atrasado' : 'Em dia';
+  const wTone    = p.waiting === 'beehus' ? 'info' : 'warning';
+  const wLabel   = p.waiting === 'beehus' ? 'Aguardando Beehus' : 'Aguardando parceiro';
+  const initials = p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+  // Advance button logic
+  let advEnabled = false, advLabel = '', advHint = '';
+  if (!p.concluded) {
+    if (p.current < 6) {
+      advEnabled = p.phases[p.current-1].dels.every(Boolean);
+      advLabel   = `Avançar para a Fase ${p.current+1}`;
+      if (!advEnabled) advHint = 'Conclua todas as entregas da fase atual para avançar';
+    } else {
+      advEnabled = allApt;
+      advLabel   = 'Concluir onboarding';
+      if (!advEnabled) advHint = 'Todas as carteiras precisam estar aptas para o processamento diário';
+    }
+  }
+
+  // Stepper
+  const stepperHtml = PHASES.map((meta, i) => {
+    const n       = i + 1;
+    const done    = p.concluded || n < p.current;
+    const cur     = !p.concluded && n === p.current;
+    const blocked = !p.concluded && n === 6 && !cur && !allApt;
+    const isSel   = n === selN;
+    let dotBg, dotBorder, dotFg, dotIcon;
+    if (done)         { dotBg='#22c55e'; dotBorder='#22c55e'; dotFg='#fff'; }
+    else if (cur)     { dotBg='#f59e0b'; dotBorder='#f59e0b'; dotFg='#111827'; }
+    else if (blocked) { dotBg='#f3f4f6'; dotBorder='#e5e7eb'; dotFg='#9ca3af'; }
+    else              { dotBg='#fff';    dotBorder='#e5e7eb'; dotFg='#9ca3af'; }
+    if (done)           dotIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    else if (blocked)   dotIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+    else                dotIcon = `<span style="font-size:13px;font-weight:600">${n}</span>`;
+    const lLine     = i===0 ? 'transparent' : (p.concluded || n<=p.current ? '#22c55e' : '#e5e7eb');
+    const rLine     = i===5 ? 'transparent' : (p.concluded || n<p.current  ? '#22c55e' : '#e5e7eb');
+    const ring      = isSel ? 'box-shadow:0 0 0 4px rgba(245,158,11,.25)' : '';
+    const nameColor = isSel||cur ? '#111827' : done ? '#6b7280' : '#9ca3af';
+    const nameFw    = isSel||cur ? '600' : '500';
+    return `
+    <div onclick="obSelPhase('${h(p.id)}',${n})" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;cursor:pointer">
+      <div style="display:flex;align-items:center;width:100%">
+        <div class="ob-step-line" style="background:${lLine}"></div>
+        <div style="width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${dotBg};border:1px solid ${dotBorder};color:${dotFg};${ring}">${dotIcon}</div>
+        <div class="ob-step-line" style="background:${rLine}"></div>
+      </div>
+      <div style="text-align:center;padding:0 6px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.05em;color:#9ca3af;text-transform:uppercase">Fase ${n}</div>
+        <div style="font-size:12px;margin-top:2px;font-weight:${nameFw};color:${nameColor}">${h(meta.name)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Phase card
+  const phMeta    = PHASES[selN-1];
+  const ph        = p.phases[selN-1];
+  const phDone    = p.concluded || selN < p.current;
+  const phCur     = !p.concluded && selN === p.current;
+  const phBlocked = !p.concluded && selN === 6 && !phCur && !allApt;
+  const editable  = !p.concluded && (phDone || phCur);
+  const phSt      = phDone ? {tone:'success',label:'Concluída'} : phCur ? {tone:'warning',label:'Em andamento'} : phBlocked ? {tone:'error',label:'Bloqueada'} : {tone:'neutral',label:'Pendente'};
+  const doneCount = ph.dels.filter(Boolean).length;
+  let dateLabel = '—', dateColor = '#9ca3af';
+  if (phDone && ph.completed)                   { dateLabel = 'Concluída em ' + fmtDate(ph.completed); }
+  else if (ph.due && ph.overdue>0 && phCur)     { dateLabel = `Prazo: ${fmtDate(ph.due)} · ${ph.overdue} dias em atraso`; dateColor='#dc2626'; }
+  else if (ph.due)                               { dateLabel = 'Prazo: ' + fmtDate(ph.due); }
+  let phDotBg, phDotFg;
+  if (phDone)          { phDotBg='#22c55e'; phDotFg='#fff'; }
+  else if (phCur)      { phDotBg='#f59e0b'; phDotFg='#111827'; }
+  else                 { phDotBg='#f3f4f6'; phDotFg='#6b7280'; }
+  let phDotIcon;
+  if (phDone)          phDotIcon=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  else if (phBlocked)  phDotIcon=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+  else                 phDotIcon=`<span style="font-size:12px;font-weight:600">${selN}</span>`;
+
+  const delsHtml = DELS[selN-1].map((label, di) => {
+    const done    = ph.dels[di];
+    const detail  = (ph.details && ph.details[di]) || '';
+    const key     = `${p.id}:${selN-1}:${di}`;
+    const editing = S.editDel === key;
+    let extra = '';
+    if (editing) {
+      extra = `
+      <div style="display:flex;gap:8px;margin:2px 0 8px 28px">
+        <input data-del-key="${h(key)}" value="${h(S.delDraft)}" oninput="S.delDraft=this.value" onkeydown="obDelKey(event,'${h(p.id)}',${selN-1},${di},'${h(key)}')" placeholder="Descreva o que foi acordado…" style="flex:1;min-width:0;padding:7px 10px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:12px;color:#111827">
+        <span onclick="obSaveDel('${h(p.id)}',${selN-1},${di},'${h(key)}')" style="width:30px;height:30px;flex:none;border-radius:8px;background:#f59e0b;color:#111827;display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+      </div>`;
+    } else if (done && detail) {
+      extra = `
+      <div onclick="obStartEditDel('${h(key)}','${h(detail)}')" style="display:flex;align-items:flex-start;gap:7px;margin:0 0 6px 28px;padding:6px 10px;border-radius:6px;background:#f9fafb;cursor:pointer" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background='#f9fafb'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><polyline points="15 10 20 15 15 20"></polyline><path d="M4 4v7a4 4 0 0 0 4 4h12"></path></svg>
+        <span style="font-size:12px;line-height:18px;color:#6b7280">${h(detail)}</span>
+      </div>`;
+    } else if (done && editable) {
+      extra = `
+      <div onclick="obStartEditDel('${h(key)}','')" style="display:inline-flex;align-items:center;gap:5px;margin:0 0 6px 28px;padding:2px 0;font-size:12px;font-weight:500;color:#d97706;cursor:pointer;user-select:none">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Detalhar o que foi acordado
+      </div>`;
+    }
+    const boxBg     = done ? '#f59e0b' : '#fff';
+    const boxBorder = done ? '#f59e0b' : '#d1d5db';
+    const textColor = done ? '#9ca3af' : '#111827';
+    const textDeco  = done ? 'line-through' : 'none';
+    const cursor    = editable ? 'pointer' : 'default';
+    const opacity   = editable ? 1 : 0.55;
+    const hoverIn   = editable ? `this.style.background='#f9fafb'` : '';
+    const hoverOut  = editable ? `this.style.background=''` : '';
+    const toggleFn  = editable ? `obToggleDel('${h(p.id)}',${selN-1},${di})` : '';
+    return `
+    <div>
+      <div onclick="${toggleFn}" style="display:flex;align-items:flex-start;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:6px;cursor:${cursor};opacity:${opacity}" onmouseenter="${hoverIn}" onmouseleave="${hoverOut}">
+        <span class="ob-chk" style="margin-top:1px;background:${boxBg};border:1px solid ${boxBorder}">
+          ${done?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>':''}
+        </span>
+        <span style="font-size:13px;line-height:20px;color:${textColor};text-decoration:${textDeco}">${h(label)}</span>
+      </div>
+      ${extra}
+    </div>`;
+  }).join('');
+
+  // Carteiras
+  const apt        = p.carteiras.filter(c => c.status==='apta').length;
+  const cartPct    = p.carteiras.length ? Math.round(apt/p.carteiras.length*100) : 0;
+  const cartSummary = `${apt} de ${p.carteiras.length} aptas`;
+  const cartItems = p.carteiras.map((c, ci) => {
+    const cTone  = c.status==='apta' ? 'success' : c.status==='processando' ? 'warning' : 'neutral';
+    const cLabel = c.status==='apta' ? 'Apta para diário' : c.status==='processando' ? 'Processando' : 'Pendente';
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid #f3f4f6">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h(c.name)}</div>
+        <div style="font-size:11px;color:#9ca3af">${h(c.inst)} · ${h(c.cur)}</div>
+      </div>
+      ${pill(cTone, cLabel)}
+      ${c.status!=='apta'&&!p.concluded ? `<span onclick="obMarkApt('${h(p.id)}',${ci})" style="width:26px;height:26px;flex:none;border-radius:50%;border:1px solid #d1d5db;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#16a34a" onmouseenter="this.style.background='#f0fdf4'" onmouseleave="this.style.background='#fff'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>` : ''}
+    </div>`;
+  }).join('');
+
+  // Todos
+  const pending  = p.todos.filter(t => !t.done).length;
+  const todoItems = p.todos.map((t, ti) => {
+    const oTone  = t.owner==='beehus' ? 'info' : 'warning';
+    const oLabel = t.owner==='beehus' ? 'Beehus' : 'Parceiro';
+    const color  = t.done ? '#9ca3af' : '#111827';
+    const deco   = t.done ? 'line-through' : 'none';
+    const boxBg  = t.done ? '#f59e0b' : '#fff';
+    const boxBrd = t.done ? '#f59e0b' : '#d1d5db';
+    return `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 18px;border-bottom:1px solid #f3f4f6">
+      <span onclick="obToggleTodo('${h(p.id)}',${ti})" class="ob-chk" style="margin-top:1px;cursor:pointer;background:${boxBg};border:1px solid ${boxBrd}">
+        ${t.done?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>':''}
+      </span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;line-height:19px;color:${color};text-decoration:${deco}">${h(t.text)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+          ${pill(oTone, oLabel)}
+          <span style="font-size:11px;color:#9ca3af">Prazo: ${h(t.due||'a definir')}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div style="display:flex;flex-direction:column;gap:20px;padding-bottom:48px">
+
+    <!-- back + header -->
+    <div>
+      <div onclick="obBack()" style="display:inline-flex;align-items:center;gap:8px;padding:7px 10px;margin-left:-10px;border-radius:8px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;user-select:none" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background=''">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Voltar para a lista
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-top:12px">
+        <div style="width:44px;height:44px;flex:none;border-radius:50%;background:#fef3c7;color:#92400e;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">${h(initials)}</div>
+        <div style="min-width:0;flex:1">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:22px;font-weight:700;color:#111827;letter-spacing:-.01em">${h(p.name)}</span>
+            ${pill(stTone, stLabel)}
+            ${!p.concluded ? pill(wTone, wLabel) : ''}
+          </div>
+          <div style="font-size:13px;color:#9ca3af;margin-top:4px">${p.cnpj?'CNPJ '+h(p.cnpj)+' · ':''}Início em ${fmtDate(p.inicio)} · ${dias} dias em andamento · Progresso geral ${pct}%</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none">
+          ${p.concluded ? `<span class="ob-pill" style="background:#f0fdf4;color:#15803d;padding:8px 14px;font-size:13px;font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>Onboarding concluído</span>` : ''}
+          ${!p.concluded ? `
+          <button onclick="obAdvance('${h(p.id)}')" style="padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;line-height:1;background:${advEnabled?'#f59e0b':'#f3f4f6'};color:${advEnabled?'#111827':'#9ca3af'};cursor:${advEnabled?'pointer':'not-allowed'};border:none;white-space:nowrap">${h(advLabel)}</button>
+          ${advHint ? `<span style="font-size:11px;color:#9ca3af;max-width:260px;text-align:right">${h(advHint)}</span>` : ''}
+          ` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- stepper -->
+    <div class="ob-card" style="padding:20px 12px 16px">
+      <div style="display:flex">${stepperHtml}</div>
+    </div>
+
+    <!-- body -->
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+      <!-- phase card -->
+      <div style="flex:999 1 480px;min-width:0">
+        <div class="ob-card">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 18px">
+            <div style="width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${phDotBg};color:${phDotFg}">${phDotIcon}</div>
+            <div style="min-width:0;flex:1">
+              <div style="font-size:14px;font-weight:600;color:#111827">Fase ${selN} — ${h(phMeta.name)}</div>
+              <div style="font-size:12px;color:#9ca3af;margin-top:1px">Responsável: ${h(phMeta.resp)} · ${doneCount} de ${DELS[selN-1].length} entregas</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none">
+              ${pill(phSt.tone, phSt.label)}
+              <span style="font-size:11px;color:${dateColor}">${h(dateLabel)}</span>
+            </div>
+          </div>
+          <div style="border-top:1px solid #f3f4f6;padding:14px 18px 16px;display:flex;flex-direction:column;gap:2px">
+            ${delsHtml}
+            <div style="margin-top:12px">
+              <div style="font-size:12px;font-weight:500;color:#6b7280;margin-bottom:6px">Notas da fase</div>
+              <textarea rows="2" oninput="obSaveNotes('${h(p.id)}',${selN-1},this.value)" placeholder="Adicionar observações da fase…" style="width:100%;resize:vertical;padding:9px 12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:13px;line-height:19px;color:#111827;box-sizing:border-box;font-family:inherit">${h(ph.notes||'')}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- side rail -->
+      <div style="flex:1 1 340px;max-width:420px;display:flex;flex-direction:column;gap:20px;min-width:0">
+
+        <!-- carteiras -->
+        <div class="ob-card">
+          <div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:15px;font-weight:600;color:#111827">Carteiras</span>
+            ${p.carteiras.length ? pill(allApt?'success':'neutral', cartSummary) : ''}
+            ${!p.concluded ? `<button onclick="obOpenCart('${h(p.id)}')" style="margin-left:auto;font-size:12px;font-weight:600;color:#d97706;background:none;border:none;cursor:pointer;padding:0">+ Adicionar</button>` : ''}
+          </div>
+          ${p.carteiras.length ? `
+          <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6">
+            <div style="height:6px;border-radius:999px;background:#f3f4f6;overflow:hidden">
+              <div style="width:${cartPct}%;height:100%;border-radius:999px;background:#22c55e;transition:width .25s ease-out"></div>
+            </div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:6px">Aptas para o processamento diário</div>
+          </div>
+          <div style="max-height:330px;overflow-y:auto">${cartItems}</div>
+          ` : `<div style="padding:20px 18px;font-size:13px;color:#9ca3af">As carteiras serão mapeadas e cadastradas na Fase 2 — Arquivos e Estrutura.</div>`}
+          <div style="margin:14px 18px;display:flex;gap:9px;align-items:flex-start;background:#fffbeb;border:1px solid #fef3c7;border-radius:8px;padding:10px 12px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span style="font-size:12px;line-height:17px;color:#92400e">O onboarding só é concluído quando todas as carteiras estiverem aptas para o processamento diário.</span>
+          </div>
+        </div>
+
+        <!-- próximos passos -->
+        <div class="ob-card">
+          <div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:15px;font-weight:600;color:#111827">Próximos passos</span>
+            ${pill('neutral', pending+(pending===1?' pendente':' pendentes'))}
+          </div>
+          <div>${todoItems}</div>
+          <div style="display:flex;gap:8px;padding:12px 18px;background:#fafafa">
+            <input id="ob-todo-inp" value="${h(S.newTodo)}" oninput="S.newTodo=this.value" onkeydown="if(event.key==='Enter')obAddTodo('${h(p.id)}')" placeholder="Novo passo…" style="flex:1;min-width:0;padding:8px 11px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:13px;color:#111827;font-family:inherit">
+            <select id="ob-todo-own" onchange="S.newOwner=this.value" style="padding:8px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:13px;cursor:pointer">
+              <option value="beehus"${S.newOwner==='beehus'?' selected':''}>Beehus</option>
+              <option value="parceiro"${S.newOwner==='parceiro'?' selected':''}>Parceiro</option>
+            </select>
+            <span onclick="obAddTodo('${h(p.id)}')" style="width:34px;height:34px;flex:none;border-radius:8px;background:#f59e0b;color:#111827;display:flex;align-items:center;justify-content:center;cursor:pointer" onmouseenter="this.style.background='#d97706'" onmouseleave="this.style.background='#f59e0b'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── API helpers ───────────────────────────────────────────────────────────────
+async function obPatch(id, data) {
+  const r = await fetch(`/api/saude/onboarding/esteira/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data),
+  });
+  const j = await r.json();
+  if (j.ok) {
+    const idx = S.partners.findIndex(x => x.id === id);
+    if (idx >= 0) S.partners[idx] = j.ob;
+  }
+  return j;
+}
+
+// ── Event handlers ────────────────────────────────────────────────────────────
+window.obOpen = function(id) {
+  const p = S.partners.find(x => x.id === id);
+  S.view = 'detail'; S.selId = id; S.selPhase = p ? p.current : 1;
+  S.editDel = null; S.delDraft = ''; S.newTodo = '';
+  render();
+};
+window.obBack = function() { S.view='list'; S.selId=null; render(); };
+window.obSelPhase = function(id, n) { S.selPhase=n; render(); };
+window.obSetFilter = function(k, v) { S[k]=v; render(); };
+window.obClearFilters = function() { S.fFase='all'; S.fResp='all'; S.fStatus='all'; S.q=''; render(); };
+
+window.obToggleDel = async function(id, pi, di) {
+  await obPatch(id, {action:'toggle_deliver', phase_idx:pi, del_idx:di});
+  render();
+};
+
+window.obStartEditDel = function(key, detail) {
+  S.editDel=key; S.delDraft=detail; render();
+  setTimeout(() => {
+    const inp = document.querySelector(`[data-del-key="${key}"]`);
+    if (inp) { inp.focus(); inp.select(); }
+  }, 40);
+};
+
+window.obSaveDel = async function(id, pi, di, key) {
+  if (S.editDel !== key) return;
+  await obPatch(id, {action:'save_detail', phase_idx:pi, del_idx:di, text:S.delDraft});
+  S.editDel=null; S.delDraft='';
+  render();
+};
+
+window.obDelKey = function(e, id, pi, di, key) {
+  if (e.key==='Enter')  obSaveDel(id,pi,di,key);
+  if (e.key==='Escape') { S.editDel=null; S.delDraft=''; render(); }
+};
+
+let _notesTimer = null;
+window.obSaveNotes = function(id, pi, val) {
+  const p = S.partners.find(x => x.id===id);
+  if (p) p.phases[pi].notes = val;
+  clearTimeout(_notesTimer);
+  _notesTimer = setTimeout(() => obPatch(id, {action:'save_notes', phase_idx:pi, notes:val}), 900);
+};
+
+window.obAdvance = async function(id) {
+  const j = await obPatch(id, {action:'advance'});
+  if (!j.ok) { alert(j.error || 'Não foi possível avançar.'); return; }
+  const p = S.partners.find(x => x.id===id);
+  S.selPhase = p ? p.current : S.selPhase;
+  render();
+};
+
+window.obToggleTodo = async function(id, ti) {
+  await obPatch(id, {action:'toggle_todo', todo_idx:ti}); render();
+};
+
+window.obAddTodo = async function(id) {
+  const txt = S.newTodo.trim();
+  if (!txt) return;
+  await obPatch(id, {action:'add_todo', text:txt, owner:S.newOwner, due:'a definir'});
+  S.newTodo=''; render();
+};
+
+window.obMarkApt = async function(id, ci) {
+  await obPatch(id, {action:'mark_carteira_apt', carteira_idx:ci}); render();
+};
+
+// Modals
+window.obOpenNew = function() {
+  document.getElementById('ob-new-modal').classList.remove('hidden');
+  document.getElementById('ob-new-inicio').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ob-new-name').value = '';
+  document.getElementById('ob-new-cnpj').value = '';
+  document.getElementById('ob-new-due1').value = '';
+  setTimeout(() => document.getElementById('ob-new-name').focus(), 40);
+};
+window.obCloseNew = function() { document.getElementById('ob-new-modal').classList.add('hidden'); };
+window.obConfirmNew = async function() {
+  const name = document.getElementById('ob-new-name').value.trim();
+  if (!name) { alert('Informe o nome da empresa.'); return; }
+  const r = await fetch('/api/saude/onboarding/esteira', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name, cnpj:  document.getElementById('ob-new-cnpj').value.trim(),
+      inicio: document.getElementById('ob-new-inicio').value,
+      due_fase1: document.getElementById('ob-new-due1').value || '',
+    }),
+  });
+  const j = await r.json();
+  if (j.ok) { S.partners.push(j.ob); obCloseNew(); render(); }
+};
+
+window.obOpenCart = function(id) {
+  document.getElementById('ob-cart-pid').value  = id;
+  document.getElementById('ob-cart-name').value = '';
+  document.getElementById('ob-cart-inst').value = '';
+  document.getElementById('ob-cart-cur').value  = 'BRL';
+  document.getElementById('ob-cart-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('ob-cart-name').focus(), 40);
+};
+window.obCloseCart = function() { document.getElementById('ob-cart-modal').classList.add('hidden'); };
+window.obConfirmCart = async function() {
+  const id   = document.getElementById('ob-cart-pid').value;
+  const name = document.getElementById('ob-cart-name').value.trim();
+  if (!name) { alert('Informe o nome da carteira.'); return; }
+  await obPatch(id, {action:'add_carteira', name, inst:document.getElementById('ob-cart-inst').value.trim(), cur:document.getElementById('ob-cart-cur').value});
+  obCloseCart(); render();
+};
+
+// Backdrop close
+['ob-new-modal','ob-cart-modal'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', e => { if (e.target===el) el.classList.add('hidden'); });
+});
+
+// Enter key shortcuts in modals
+document.getElementById('ob-new-name').addEventListener('keydown', e => { if(e.key==='Enter') obConfirmNew(); if(e.key==='Escape') obCloseNew(); });
+document.getElementById('ob-cart-name').addEventListener('keydown', e => { if(e.key==='Enter') obConfirmCart(); if(e.key==='Escape') obCloseCart(); });
+
+// Init
+(async function() {
+  try {
+    const r = await fetch('/api/saude/onboarding/esteira');
+    S.partners = await r.json();
+  } catch(_) { S.partners = []; }
+  render();
+})();
+
+})();
+</script>

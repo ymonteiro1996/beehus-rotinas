@@ -1,0 +1,242 @@
+[
+  {
+    "id": "20260617145012069042",
+    "name": "Next",
+    "cnpj": "58.454.495/0001-09",
+    "inicio": "2026-06-08",
+    "current": 1,
+    "atrasado": false,
+    "waiting": "parceiro",
+    "concluded": false,
+    "phases": [
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": "2026-06-22",
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false
+        ],
+        "details": [
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      }
+    ],
+    "carteiras": [],
+    "todos": []
+  },
+  {
+    "id": "20260617145153274015",
+    "name": "Eté Gestão",
+    "cnpj": "00.000.000.0/000-01",
+    "inicio": "2026-06-08",
+    "current": 1,
+    "atrasado": false,
+    "waiting": "parceiro",
+    "concluded": false,
+    "phases": [
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": "2026-06-26",
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "details": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      },
+      {
+        "dels": [
+          false,
+          false
+        ],
+        "details": [
+          "",
+          ""
+        ],
+        "completed": null,
+        "due": null,
+        "overdue": 0,
+        "notes": ""
+      }
+    ],
+    "carteiras": [],
+    "todos": []
+  }
+]

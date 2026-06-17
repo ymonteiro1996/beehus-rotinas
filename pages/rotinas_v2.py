@@ -1,3 +1,4 @@
+import time
 from datetime import date
 
 from flask import Blueprint, render_template, request
@@ -11,9 +12,12 @@ from pages.rotinas_diarias import (
     _load_weekly_status, _load_monthly_status,
     _prev_month, _next_month,
     MANUAL_ROWS, MONTH_NAMES, AUTOMATIZACAO_OPTS,
+    _page_generation,
 )
 
 bp = Blueprint("rotinas_v2", __name__)
+
+_page_cache: dict = {}
 
 
 @bp.route("/rotinas-v2")
@@ -21,6 +25,11 @@ def index():
     today = date.today()
     year  = int(request.args.get("year",  today.year))
     month = int(request.args.get("month", today.month))
+
+    _pkey = (year, month, _page_generation[0])
+    _pe   = _page_cache.get(_pkey)
+    if _pe and time.monotonic() < _pe[0]:
+        return _pe[1]
     days  = _biz_days(year, month)
 
     templates  = _load_templates()
@@ -150,7 +159,7 @@ def index():
             rid    = rest[:-8]
             comments_m.setdefault(rid, {})[col_id] = val
 
-    return render_template(
+    _html = render_template(
         "rotinas_v2.html",
         active="rotinas_v2",
         rows=all_rows,
@@ -177,3 +186,5 @@ def index():
         comments_w=comments_w,
         comments_m=comments_m,
     )
+    _page_cache[_pkey] = (time.monotonic() + 120, _html)
+    return _html

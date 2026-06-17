@@ -1,6 +1,18 @@
 from pymongo import MongoClient
 from datetime import date, timedelta
-import json, os, certifi
+import json, os, certifi, time
+
+# ── In-process TTL cache ──────────────────────────────────────────────────────
+_db_cache: dict = {}
+
+def _c_get(key):
+    e = _db_cache.get(key)
+    if e and time.monotonic() < e[0]:
+        return True, e[1]
+    return False, None
+
+def _c_set(key, val, ttl):
+    _db_cache[key] = (time.monotonic() + ttl, val)
 
 DB_NAME                = "Beehus"
 CONFIG_FILE            = os.path.join(os.path.dirname(__file__), "data", "config.json")
@@ -115,6 +127,10 @@ def valid_wallet_ids():
 
 def get_biz_dates(limit, end_date=None):
     """Last `limit` business days (Mon-Fri, excluding holidays) ending on end_date (or today), oldest → newest."""
+    key = ("biz_dates", limit, end_date)
+    hit, val = _c_get(key)
+    if hit:
+        return val
     holidays = set(load_settings().get("holidays", []))
     result  = []
     current = date.fromisoformat(end_date) if end_date else date.today()
@@ -122,7 +138,9 @@ def get_biz_dates(limit, end_date=None):
         if current.weekday() < 5 and current.strftime("%Y-%m-%d") not in holidays:
             result.append(current.strftime("%Y-%m-%d"))
         current -= timedelta(days=1)
-    return list(reversed(result))
+    result = list(reversed(result))
+    _c_set(key, result, 60)
+    return result
 
 
 def get_biz_dates_range(start_date, end_date):
@@ -183,13 +201,18 @@ def _load_default_blacklist():
         return []
 
 def load_settings():
+    hit, val = _c_get("settings")
+    if hit:
+        return val
     defaults = {"only_daily_position": False, "only_with_consumption": False,
                 "wizard_blacklist": _load_default_blacklist(), "company_filter": []}
     if not os.path.exists(SETTINGS_FILE):
+        _c_set("settings", defaults, 30)
         return defaults
     with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
     data.setdefault("wizard_blacklist", _load_default_blacklist())
+    _c_set("settings", data, 30)
     return data
 
 
@@ -259,6 +282,10 @@ def wallet_cls(has_value):
 def build_wallet_map(settings=None):
     """Returns (wallet_to_pair, pair_total) filtered by settings."""
     query = wallet_filter_query(settings or {})
+    key   = ("wallet_map", tuple(sorted((k, str(v)) for k, v in query.items())))
+    hit, val = _c_get(key)
+    if hit:
+        return val
     wallet_to_pair = {}
     pair_total     = {}
     for w in db.wallets.find(query, {"companyId": 1, "entityId": 1}):
@@ -268,4 +295,6 @@ def build_wallet_map(settings=None):
         if cid and eid:
             wallet_to_pair[wid] = (cid, eid)
             pair_total[(cid, eid)] = pair_total.get((cid, eid), 0) + 1
-    return wallet_to_pair, pair_total
+    result = (wallet_to_pair, pair_total)
+    _c_set(key, result, 300)
+    return result

@@ -37,6 +37,9 @@ def _cache_set(key, value, ttl):
 
 
 def _load_time_log():
+    cached, hit = _cache_get("time_log")
+    if hit:
+        return cached
     if not os.path.exists(TIME_LOG_FILE):
         return []
     with open(TIME_LOG_FILE, "r", encoding="utf-8") as fh:
@@ -44,48 +47,68 @@ def _load_time_log():
     for i, e in enumerate(entries):
         if "id" not in e:
             e["id"] = f"{e.get('date', 'x')}_{i:04d}"
+    _cache_set("time_log", entries, 10)
     return entries
 
 
 def _save_time_log(data):
     with open(TIME_LOG_FILE, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)
+    _cache.pop("time_log", None)
 
 
 def _load_company_notes():
+    cached, hit = _cache_get("company_notes")
+    if hit:
+        return cached
     if not os.path.exists(NOTES_FILE):
         return {}
     with open(NOTES_FILE, "r", encoding="utf-8") as fh:
-        return json.load(fh)
+        data = json.load(fh)
+    _cache_set("company_notes", data, 30)
+    return data
 
 
 def _save_company_notes(data):
     with open(NOTES_FILE, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)
+    _cache.pop("company_notes", None)
 
 
 def _load_demands():
+    cached, hit = _cache_get("demands")
+    if hit:
+        return cached
     if not os.path.exists(DEMANDS_FILE):
         return {}
     with open(DEMANDS_FILE, "r", encoding="utf-8") as fh:
-        return json.load(fh)
+        data = json.load(fh)
+    _cache_set("demands", data, 30)
+    return data
 
 
 def _save_demands(data):
     with open(DEMANDS_FILE, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)
+    _cache.pop("demands", None)
 
 
 def _load_onboarding():
+    cached, hit = _cache_get("onboarding")
+    if hit:
+        return cached
     if not os.path.exists(ONBOARDING_FILE):
         return {}
     with open(ONBOARDING_FILE, "r", encoding="utf-8") as fh:
-        return json.load(fh)
+        data = json.load(fh)
+    _cache_set("onboarding", data, 30)
+    return data
 
 
 def _save_onboarding(data):
     with open(ONBOARDING_FILE, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)
+    _cache.pop("onboarding", None)
 
 
 def _last_published_by_company():
@@ -285,7 +308,7 @@ def _company_health(year, month):
         health[partner]["_overall"] = overall
 
     result = (health, past)
-    _cache_set(cache_key, result, 120)
+    _cache_set(cache_key, result, 300)
     return result
 
 
@@ -293,11 +316,19 @@ def _prev_month(y, m): return (y - 1, 12) if m == 1 else (y, m - 1)
 def _next_month(y, m): return (y + 1, 1)  if m == 12 else (y, m + 1)
 
 
+_so_page_cache: dict = {}
+
+
 @bp.route("/saude-operacional")
 def index():
     today = date.today()
     year  = int(request.args.get("year",  today.year))
     month = int(request.args.get("month", today.month))
+
+    _pkey = (year, month)
+    _pe   = _so_page_cache.get(_pkey)
+    if _pe and time.monotonic() < _pe[0]:
+        return _pe[1]
 
     health, past_days = _company_health(year, month)
 
@@ -335,7 +366,7 @@ def index():
     biz_count     = len(_biz_days(year, month))
     avg_minutes   = round(total_minutes / len(entries), 1) if entries else 0
 
-    return render_template(
+    _html = render_template(
         "saude_operacional.html",
         active="saude_operacional",
         health=health,
@@ -358,6 +389,8 @@ def index():
         demands=demands,
         onboarding=_load_onboarding(),
     )
+    _so_page_cache[_pkey] = (time.monotonic() + 30, _html)
+    return _html
 
 
 @bp.route("/api/saude/time-log", methods=["GET"])
@@ -613,4 +646,199 @@ def ob_delete_item(company, demand_id, item_id):
             ]
             break
     _save_onboarding(all_ob)
+    return jsonify({"ok": True})
+
+
+# ── Onboarding Esteira (v2) ────────────────────────────────────────────────────
+
+ESTEIRA_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "onboarding_esteira.json")
+
+ESTEIRA_PHASES = [
+    {"n": 1, "name": "Definição e Preparação",   "resp": "Parceiro + CS Beehus", "wait": "parceiro"},
+    {"n": 2, "name": "Arquivos e Estrutura",      "resp": "Parceiro + Beehus",    "wait": "parceiro"},
+    {"n": 3, "name": "Processamento",             "resp": "Beehus (Operações)",   "wait": "beehus"},
+    {"n": 4, "name": "Configuração e Relatórios", "resp": "Parceiro + CS Beehus", "wait": "parceiro"},
+    {"n": 5, "name": "Validação",                 "resp": "Parceiro",             "wait": "parceiro"},
+    {"n": 6, "name": "Conclusão",                 "resp": "Beehus",               "wait": "beehus"},
+]
+
+ESTEIRA_DELS = [
+    [
+        "Cadastro da empresa e do responsável na plataforma (CNPJ, país, endereço, admin)",
+        "Definição do período histórico a processar",
+        "Escolha do modelo de processamento dos dados históricos",
+        "Volumetria inicial — instituições, famílias, clientes, agrupamentos e carteiras",
+    ],
+    [
+        "Mapeamento das instituições financeiras e forma de acesso (scraping, API, XML, PDF)",
+        "Árvore de classificação de ativos (até 5 níveis hierárquicos)",
+        "Mapeamento e cadastro de carteiras e agrupamentos",
+        "Estruturas e particularidades de precificação (curva, preços de terceiros, derivativos)",
+        "Envio dos arquivos com dados históricos para validação operacional",
+    ],
+    [
+        "Validação dos arquivos recebidos pelo time operacional",
+        "Processamento dos dados históricos (fechamentos mensais + consolidação diária)",
+        "Verificação da integridade dos dados processados",
+    ],
+    [
+        "Identidade visual — logos PNG/SVG, manual de marca, capa e disclaimer",
+        "Configuração do sistema white label",
+        "Lista de usuários e hierarquia de acesso",
+        "Definição dos relatórios que serão gerados",
+        "Frequência de geração (mensal, trimestral, sob demanda)",
+    ],
+    [
+        "Revisão dos dados publicados pelo parceiro",
+        "Registro de inconsistências",
+        "Ajustes pela Beehus conforme apontamentos",
+        "Sign-off do parceiro",
+    ],
+    [
+        "Ativação do processamento diário",
+        "Onboarding marcado como concluído",
+    ],
+]
+
+
+def _load_esteira():
+    if not os.path.exists(ESTEIRA_FILE):
+        return []
+    with open(ESTEIRA_FILE, "r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _save_esteira(data):
+    with open(ESTEIRA_FILE, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False, indent=2)
+
+
+def _make_esteira_phases():
+    phases = []
+    for meta in ESTEIRA_PHASES:
+        n = len(ESTEIRA_DELS[meta["n"] - 1])
+        phases.append({
+            "dels":      [False] * n,
+            "details":   [""] * n,
+            "completed": None,
+            "due":       None,
+            "overdue":   0,
+            "notes":     "",
+        })
+    return phases
+
+
+@bp.route("/api/saude/onboarding/esteira", methods=["GET"])
+def esteira_list():
+    return jsonify(_load_esteira())
+
+
+@bp.route("/api/saude/onboarding/esteira", methods=["POST"])
+def esteira_create():
+    data = request.get_json(force=True) or {}
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"ok": False, "error": "name required"}), 400
+
+    phases = _make_esteira_phases()
+    if data.get("due_fase1"):
+        phases[0]["due"] = data["due_fase1"]
+
+    ob = {
+        "id":        datetime.utcnow().strftime("%Y%m%d%H%M%S%f"),
+        "name":      name,
+        "cnpj":      data.get("cnpj", "").strip(),
+        "inicio":    data.get("inicio", date.today().isoformat()),
+        "current":   1,
+        "atrasado":  False,
+        "waiting":   ESTEIRA_PHASES[0]["wait"],
+        "concluded": False,
+        "phases":    phases,
+        "carteiras": [],
+        "todos":     [],
+    }
+    all_ob = _load_esteira()
+    all_ob.append(ob)
+    _save_esteira(all_ob)
+    return jsonify({"ok": True, "ob": ob})
+
+
+@bp.route("/api/saude/onboarding/esteira/<ob_id>", methods=["PATCH"])
+def esteira_patch(ob_id):
+    data   = request.get_json(force=True) or {}
+    action = data.get("action")
+    all_ob = _load_esteira()
+    ob     = next((x for x in all_ob if x["id"] == ob_id), None)
+    if not ob:
+        return jsonify({"ok": False, "error": "not found"}), 404
+
+    if action == "toggle_deliver":
+        pi = int(data["phase_idx"])
+        di = int(data["del_idx"])
+        ob["phases"][pi]["dels"][di] = not ob["phases"][pi]["dels"][di]
+
+    elif action == "save_detail":
+        pi = int(data["phase_idx"])
+        di = int(data["del_idx"])
+        if "details" not in ob["phases"][pi]:
+            ob["phases"][pi]["details"] = [""] * len(ob["phases"][pi]["dels"])
+        ob["phases"][pi]["details"][di] = data.get("text", "").strip()
+
+    elif action == "save_notes":
+        pi = int(data["phase_idx"])
+        ob["phases"][pi]["notes"] = data.get("notes", "")
+
+    elif action == "advance":
+        cur = ob["current"]
+        if cur < 6:
+            ph = ob["phases"][cur - 1]
+            if not all(ph["dels"]):
+                return jsonify({"ok": False, "error": "deliverables incomplete"}), 400
+            ph["completed"] = date.today().isoformat()
+            ob["current"]   = cur + 1
+            ob["atrasado"]  = False
+            ob["waiting"]   = ESTEIRA_PHASES[cur]["wait"]
+        else:
+            carteiras = ob.get("carteiras", [])
+            if not carteiras or not all(c["status"] == "apta" for c in carteiras):
+                return jsonify({"ok": False, "error": "carteiras not all apt"}), 400
+            ob["phases"][5]["dels"]      = [True] * len(ob["phases"][5]["dels"])
+            ob["phases"][5]["completed"] = date.today().isoformat()
+            ob["concluded"] = True
+
+    elif action == "toggle_todo":
+        ti = int(data["todo_idx"])
+        ob["todos"][ti]["done"] = not ob["todos"][ti]["done"]
+
+    elif action == "add_todo":
+        text = data.get("text", "").strip()
+        if not text:
+            return jsonify({"ok": False}), 400
+        ob["todos"].append({
+            "text":  text,
+            "owner": data.get("owner", "beehus"),
+            "due":   data.get("due", "a definir"),
+            "done":  False,
+        })
+
+    elif action == "add_carteira":
+        ob["carteiras"].append({
+            "name":   data.get("name", "").strip(),
+            "inst":   data.get("inst", "").strip(),
+            "cur":    data.get("cur", "BRL"),
+            "status": "pendente",
+        })
+
+    elif action == "mark_carteira_apt":
+        ci = int(data["carteira_idx"])
+        ob["carteiras"][ci]["status"] = "apta"
+
+    _save_esteira(all_ob)
+    return jsonify({"ok": True, "ob": ob})
+
+
+@bp.route("/api/saude/onboarding/esteira/<ob_id>", methods=["DELETE"])
+def esteira_delete(ob_id):
+    all_ob = [x for x in _load_esteira() if x["id"] != ob_id]
+    _save_esteira(all_ob)
     return jsonify({"ok": True})
