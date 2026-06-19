@@ -1,9 +1,19 @@
+import os
 import time
 from datetime import date
 
 from flask import Blueprint, render_template, request
 
 import db as db_module
+
+_TMPL = os.path.join(os.path.dirname(__file__), "..", "templates", "rotinas_v2.html")
+
+
+def _tmpl_mtime() -> float:
+    try:
+        return os.path.getmtime(_TMPL)
+    except OSError:
+        return 0.0
 from pages.rotinas_diarias import (
     _biz_days, _biz_weeks, _year_months,
     _load_templates, _load_row_config, _build_template_rows,
@@ -26,7 +36,7 @@ def index():
     year  = int(request.args.get("year",  today.year))
     month = int(request.args.get("month", today.month))
 
-    _pkey = (year, month, _page_generation[0])
+    _pkey = (year, month, _page_generation[0], _tmpl_mtime())
     _pe   = _page_cache.get(_pkey)
     if _pe and time.monotonic() < _pe[0]:
         return _pe[1]

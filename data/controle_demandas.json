@@ -525,9 +525,10 @@
     "deadline": "05/06/2026",
     "status": "Em Andamento",
     "created_at": "2026-05-05T13:39:11.337393",
-    "updated_at": "2026-06-03T13:14:51.159604",
+    "updated_at": "2026-06-19T13:45:19.739375",
     "comments": [],
-    "tipo": "Operacional"
+    "tipo": "Operacional",
+    "progress": 80
   },
   {
     "_id": "d518041d-e429-4a24-a5e8-53a8af4fc0e4",
@@ -536,9 +537,9 @@
     "prioridade": "Baixo",
     "responsavel": "",
     "deadline": "15/05/2026",
-    "status": "Pendente",
+    "status": "Concluído",
     "created_at": "2026-05-05T13:39:33.019489",
-    "updated_at": "2026-06-03T12:45:40.845035",
+    "updated_at": "2026-06-19T13:50:02.899356",
     "comments": [],
     "tipo": "Operacional"
   },
@@ -861,19 +862,6 @@
     "comments": []
   },
   {
-    "_id": "20a61630-b2a4-4810-8822-0be3d664177d",
-    "cliente": "Beehus",
-    "demanda": "Criar bandas de rentabilidade e de NAV para publicação das carteiras",
-    "prioridade": "Médio",
-    "tipo": "Operacional",
-    "responsavel": "",
-    "deadline": "TBD",
-    "status": "Pendente",
-    "created_at": "2026-05-20T13:44:02.189539",
-    "updated_at": "2026-06-03T12:44:00.607269",
-    "comments": []
-  },
-  {
     "_id": "54e67834-d955-4ded-ab41-f014b32becaf",
     "cliente": "Beehus",
     "demanda": "Automatização de cadastro de ativos (Padronizar mainId e beehusName)\nCVM e B3 - Leonardo\nCDB, LCI, LCA - Kim\nIncluir cadastro e mapeamento",
@@ -1067,6 +1055,19 @@
     "status": "Em Andamento",
     "created_at": "2026-06-15T13:30:13.193479",
     "updated_at": "2026-06-15T13:30:26.648293",
+    "comments": []
+  },
+  {
+    "_id": "8db3ad12-4484-4eb3-a72e-51a908fd8609",
+    "cliente": "Beehus",
+    "demanda": "API do BTG retornando posição \"Doador\" duplicado",
+    "prioridade": "Médio",
+    "tipo": "Operacional",
+    "responsavel": "Evair",
+    "deadline": "",
+    "status": "Pendente",
+    "created_at": "2026-06-19T13:54:30.218568",
+    "updated_at": "2026-06-19T13:54:30.218568",
     "comments": []
   }
 ]

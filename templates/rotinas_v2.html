@@ -840,11 +840,12 @@ function checkRentCell(data, date) {
   const above = data ? data.above : 0;
   const total = data ? data.total : 0;
   const tc    = date === TODAY ? " today-col" : "";
-  const style = "cursor:default;display:flex;align-items:center;justify-content:center";
+  const style = "cursor:default;display:flex;align-items:center;justify-content:center;overflow:hidden;gap:0";
   if (date > TODAY) return `<td class="dc${tc}"><div class="cell c-future" style="${style}"></div></td>`;
   if (!total)       return `<td class="dc${tc}"><div class="cell c-not-expected" style="${style}"></div></td>`;
   const bgCls = above === 0 ? "c-done" : above >= total ? "c-missing" : "c-partial";
-  const label = `<span style="font-size:11px;color:#fff;font-weight:700;line-height:1">${above}/${total}</span>`;
+  const txtClr = bgCls === "c-partial" ? "#713f12" : "#fff";
+  const label = `<span style="font-size:9px;color:${txtClr};font-weight:800;line-height:1;white-space:nowrap;letter-spacing:-0.3px">${above}/${total}</span>`;
   return `<td class="dc${tc}"><div class="cell ${bgCls}" style="${style}">${label}</div></td>`;
 }
 
@@ -896,27 +897,36 @@ function publicationCell(data, date) {
   const notPub = data ? data.not_published : 0;
   const total  = data ? data.total : 0;
   const tc     = date === TODAY ? " today-col" : "";
-  const style  = "cursor:default;display:flex;align-items:center;justify-content:center";
+  const style  = "cursor:default;display:flex;align-items:center;justify-content:center;overflow:hidden";
   if (date > TODAY) return `<td class="dc${tc}"><div class="cell c-future" style="${style}"></div></td>`;
   if (!total)       return `<td class="dc${tc}"><div class="cell c-not-expected" style="${style}"></div></td>`;
   const bgCls = notPub === 0 ? "c-done" : "c-missing";
-  const label = `<span style="font-size:11px;color:#fff;font-weight:700;line-height:1">${notPub}/${total}</span>`;
+  const label = `<span style="font-size:9px;color:#fff;font-weight:800;line-height:1;white-space:nowrap;letter-spacing:-0.3px">${notPub}/${total}</span>`;
   return `<td class="dc${tc}"><div class="cell ${bgCls}" style="${style}">${label}</div></td>`;
+}
+
+function _readyBadge(n, small) {
+  const fs  = small ? '9px' : '10px';
+  const pad = small ? '1px 5px' : '2px 7px';
+  const bg  = n > 0 ? '#fef3c7' : '#dcfce7';
+  const col = n > 0 ? '#92400e' : '#166534';
+  return `<span style="margin-left:6px;font-size:${fs};padding:${pad};border-radius:10px;background:${bg};color:${col};font-weight:700;white-space:nowrap">${n} prontos &lt;0,02%</span>`;
 }
 
 function buildBodyPublicacao() {
   const tbody = document.getElementById("rtbl-body");
   let   html  = "";
 
-  const typeKey   = "__publicacao__";
-  const collapsed = _compCollapsed.has(typeKey);
+  const typeKey    = "__publicacao__";
+  const collapsed  = _compCollapsed.has(typeKey);
+  const todayReady = (_publicationTotal[TODAY] || {}).ready || 0;
 
-  // Top row: total across all companies
   const topDCells = _vizDays.map(d => publicationCell(_publicationTotal[d], d)).join("");
   html += `<tr class="grp-co-row" data-action="toggle-co" data-co="${typeKey}">
     <td class="sc sc-0 px-3 py-2">
       <span class="xbtn mr-2">${collapsed ? "▶" : "▼"}</span>
       <strong style="font-size:12px;vertical-align:middle">Publicação</strong>
+      ${_readyBadge(todayReady, false)}
     </td>
     <td class="sc sc-1"></td><td class="sc sc-2"></td>
     ${topDCells}
@@ -931,12 +941,14 @@ function buildBodyPublicacao() {
     }
 
     for (const [co] of coMap) {
-      const cid    = CO_COMPANY_MAP[co];
-      const coData = cid ? (_publicationByCompany[cid] || {}) : {};
+      const cid      = CO_COMPANY_MAP[co];
+      const coData   = cid ? (_publicationByCompany[cid] || {}) : {};
+      const coReady  = (coData[TODAY] || {}).ready || 0;
       const coDCells = _vizDays.map(d => publicationCell(coData[d], d)).join("");
       html += `<tr class="grp-inst-row" data-action="toggle-inst" data-co="${typeKey}" data-inst="${esc(co)}">
         <td class="sc sc-0 py-1.5" style="padding-left:22px">
           <span style="font-size:10px;color:#64748b;vertical-align:middle">${esc(co)}</span>
+          ${_readyBadge(coReady, true)}
         </td>
         <td class="sc sc-1"></td><td class="sc sc-2"></td>
         ${coDCells}

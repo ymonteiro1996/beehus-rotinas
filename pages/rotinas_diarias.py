@@ -1310,11 +1310,28 @@ def get_groupings_publication_total():
                     {"$ne": ["$published", True]},
                     1, 0,
                 ]}},
+                "ready": {"$sum": {"$cond": [
+                    {"$and": [
+                        {"$ne": ["$published", True]},
+                        {"$lt": [
+                            {"$abs": {"$subtract": [
+                                "$returnNavPerShare",
+                                {"$ifNull": ["$returnContribution", 0]},
+                            ]}},
+                            0.0002,
+                        ]},
+                    ]},
+                    1, 0,
+                ]}},
             }},
         ]
         for doc in db_module.db.groupings.aggregate(pipeline):
             dstr = str(doc["_id"])[:10]
-            result[dstr] = {"total": doc["total"], "not_published": doc["not_published"]}
+            result[dstr] = {
+                "total":         doc["total"],
+                "not_published": doc["not_published"],
+                "ready":         doc["ready"],
+            }
     except Exception as exc:  # pylint: disable=broad-except
         return jsonify({"error": str(exc)}), 500
 
@@ -1352,13 +1369,28 @@ def get_groupings_publication_by_company():
                     {"$ne": ["$published", True]},
                     1, 0,
                 ]}},
+                "ready": {"$sum": {"$cond": [
+                    {"$and": [
+                        {"$ne": ["$published", True]},
+                        {"$lt": [
+                            {"$abs": {"$subtract": [
+                                "$returnNavPerShare",
+                                {"$ifNull": ["$returnContribution", 0]},
+                            ]}},
+                            0.0002,
+                        ]},
+                    ]},
+                    1, 0,
+                ]}},
             }},
         ]
         for doc in db_module.db.groupings.aggregate(pipeline):
             cid  = str(doc["_id"]["companyId"])
             dstr = str(doc["_id"]["date"])[:10]
             result.setdefault(cid, {})[dstr] = {
-                "total": doc["total"], "not_published": doc["not_published"],
+                "total":         doc["total"],
+                "not_published": doc["not_published"],
+                "ready":         doc["ready"],
             }
     except Exception as exc:  # pylint: disable=broad-except
         return jsonify({"error": str(exc)}), 500
