@@ -10,6 +10,9 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5002 ^| findstr LISTENING 2^
 echo Atualizando codigo...
 git pull
 
+echo Verificando dependencias...
+python -m pip install -q -r requirements.txt
+
 echo.
 echo Iniciando servidor... (feche esta janela para encerrar)
 python app.py

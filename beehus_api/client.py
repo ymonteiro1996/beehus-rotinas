@@ -41,9 +41,19 @@ _session = requests.Session()
 # to this single host — and which may now run in the BACKGROUND
 # (stale-while-revalidate) while a foreground request is also in flight. The
 # urllib3 default `pool_maxsize=10` discards the overflow ("Connection pool is
-# full"), forcing a fresh TCP+TLS handshake each time. 20 keeps a full fan-out
-# plus a concurrent foreground request pooled for keep-alive reuse.
-_adapter = HTTPAdapter(pool_connections=20, pool_maxsize=20)
+# full"), forcing a fresh TCP+TLS handshake each time.
+# [2026-08-10, beehus-rotinas] bumped 20 -> 100 (via 50 first, still saturava
+# ao vivo): `db.py`'s per-DATE fan-out (api_processed_positions_multi/
+# api_nav_results_multi, até 10 workers para o histórico de ~66-313 dias da
+# Banda de Rentabilidade) aninha com o fan-out por-carteira de `positions.py`
+# (até 5 workers por chamada) — e a tela da Banda de Rentabilidade dispara
+# várias chamadas (Ativos/Carteiras/Agrupamentos/Benchmarks) em paralelo ao
+# trocar de empresa, multiplicando tudo isso ainda mais. Observado ao vivo:
+# com pool_maxsize=20 e depois 50, o excesso de conexões era descartado e
+# re-handshakeado toda hora ("Connection pool is full") — mesmo gargalo que
+# o ControleCargas já tinha documentado (lá resolvido subindo de 20 pra 40;
+# aqui o aninhamento é mais profundo, por isso foi direto pra 100).
+_adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
 _session.mount("https://", _adapter)
 _session.mount("http://", _adapter)
 
