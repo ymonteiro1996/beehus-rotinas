@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, redirect
-from db import (db, get_biz_dates, load_config_full, load_nav_settings, wallet_filter_query,
+from db import (catalog_company_names, catalog_entity_names, catalog_wallets, filter_wallets,
+                api_nav_results, get_biz_dates, load_config_full, load_nav_settings,
                 NAV_SETTINGS_FILE, biz_days_elapsed as _biz_days_elapsed,
                 cell_cls as _cell_cls, wallet_cls as _wallet_cls,
                 build_wallet_map as _build_wallet_map)
@@ -9,20 +10,30 @@ bp = Blueprint("nav", __name__)
 
 
 def _count_navs(dates, wallet_to_pair, pairs):
-    relevant_wids = [wid for wid, pair in wallet_to_pair.items() if pair in pairs]
+    """Contexto:
+    Conta, por (companyId,entityId) e data, quantas carteiras têm NAV
+    calculado — substitui a antiga agregação `db.navPackages.aggregate`.
+    Chamada pela grade principal de NAV. Retorna {(pair, date): count}.
+
+    Pseudocódigo:
+      1. Sem carteiras relevantes -> {}.
+      2. 1 chamada `api_nav_results(d)` por data (fan-out por empresa, já
+         cacheado em db.py) — cada item já vem por carteira.
+      3. Agrupa por (pair, date), só contando carteiras que estão em
+         `wallet_to_pair`/`pairs` (mesmo filtro de antes).
+    """
+    relevant_wids = {wid for wid, pair in wallet_to_pair.items() if pair in pairs}
     if not relevant_wids:
         return {}
     pair_wids = {}  # (pair, date) -> set of walletIds
-    for doc in db.navPackages.aggregate([
-        {"$match": {"positionDate": {"$in": dates}, "walletId": {"$in": relevant_wids}, "trashed": {"$ne": True}}},
-        {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}}},
-    ]):
-        wid  = str(doc["_id"]["w"])
-        d    = str(doc["_id"]["d"])[:10]
-        pair = wallet_to_pair.get(wid)
-        if pair and pair in pairs:
-            key = (pair, d)
-            pair_wids.setdefault(key, set()).add(wid)
+    for d in dates:
+        for item in api_nav_results(d):
+            wid = str(item.get("walletId", ""))
+            if wid not in relevant_wids:
+                continue
+            pair = wallet_to_pair.get(wid)
+            if pair and pair in pairs:
+                pair_wids.setdefault((pair, d), set()).add(wid)
     return {k: len(v) for k, v in pair_wids.items()}
 
 
@@ -37,8 +48,8 @@ def index():
 def get_rows():
     limit         = int(request.args.get("limit", 10))
     dates         = get_biz_dates(limit)
-    company_names = {str(c["_id"]): c.get("name", "") for c in db.companies.find({}, {"name": 1})}
-    entity_names  = {str(e["_id"]): e.get("name", "") for e in db.entities.find({}, {"name": 1})}
+    company_names = catalog_company_names()
+    entity_names  = catalog_entity_names()
 
     wallet_to_pair, pair_total = _build_wallet_map(load_nav_settings())
 
@@ -80,18 +91,14 @@ def get_detail():
     eid = request.args.get("entityId")
     d   = request.args.get("date")
 
-    wq = {"companyId": cid, "entityId": eid, **wallet_filter_query(load_nav_settings())}
-    wallets = {
-        str(w["_id"]): {"name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
-    }
+    matched = filter_wallets(catalog_wallets(company_ids=[cid]), company_id=cid, entity_id=eid,
+                             settings=load_nav_settings())
+    wallets = {w["_id"]: {"name": w["name"] or w["_id"], "accountCode": w["accountCode"]} for w in matched}
 
     wids_with_nav = {
-        str(doc["walletId"])
-        for doc in db.navPackages.find(
-            {"walletId": {"$in": list(wallets)}, "positionDate": d, "trashed": {"$ne": True}},
-            {"walletId": 1}
-        )
+        str(item.get("walletId", ""))
+        for item in api_nav_results(d, company_ids=[cid])
+        if str(item.get("walletId", "")) in wallets
     }
 
     detail = sorted([
@@ -114,20 +121,16 @@ def get_nav_detail_grid():
     limit = int(request.args.get("limit", 10))
     dates = get_biz_dates(limit)
 
-    wq = {"companyId": cid, "entityId": eid, **wallet_filter_query(load_nav_settings())}
-    wallets = {
-        str(w["_id"]): {"name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
-    }
+    matched = filter_wallets(catalog_wallets(company_ids=[cid]), company_id=cid, entity_id=eid,
+                             settings=load_nav_settings())
+    wallets = {w["_id"]: {"name": w["name"] or w["_id"], "accountCode": w["accountCode"]} for w in matched}
 
     wids_by_date = {d: set() for d in dates}
-    for doc in db.navPackages.aggregate([
-        {"$match": {"walletId": {"$in": list(wallets)}, "positionDate": {"$in": dates}, "trashed": {"$ne": True}}},
-        {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}}},
-    ]):
-        d = str(doc["_id"]["d"])[:10]
-        if d in wids_by_date:
-            wids_by_date[d].add(str(doc["_id"]["w"]))
+    for d in dates:
+        for item in api_nav_results(d, company_ids=[cid]):
+            wid = str(item.get("walletId", ""))
+            if wid in wallets:
+                wids_by_date[d].add(wid)
 
     rows = sorted([
         {

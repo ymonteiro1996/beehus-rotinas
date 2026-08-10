@@ -13,6 +13,7 @@
   <!-- Dark mode overrides for page content (avoids touching every template) -->
   <style>
     .hidden { display: none !important; }
+    #btn-beehus-token.conexao-pendente { color: #fca5a5 !important; font-weight: 600; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     html.dark body                          { background-color: #111827; }
     html.dark .bg-gray-100                  { background-color: #111827 !important; }
@@ -91,6 +92,11 @@
       </a>
     </nav>
     <div class="px-3 py-4 border-t border-white/10 space-y-1">
+      <!-- Token da API Beehus (§8 do CLAUDE.md — API-first) -->
+      <button onclick="BeehusToken.abrirModal()" id="btn-beehus-token" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-white/60 hover:text-white hover:bg-white/10">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 11-12 0 6 6 0 0112 0zM9 9a6 6 0 016-6m-6 6L3 21m4-4h2"/></svg>
+        <span id="label-beehus-token">🔑 Beehus API</span>
+      </button>
       <!-- Atualizar versão -->
       <button onclick="atualizarVersao()" id="btn-atualizar" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-white/60 hover:text-white hover:bg-white/10">
         <svg id="icon-update" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -127,6 +133,22 @@
   </div>
 
   {% block modals %}{% endblock %}
+
+  <!-- Modal do token da API Beehus (global — todas as páginas) -->
+  <div id="beehus-token-overlay" class="hidden fixed inset-0 bg-black/40 z-40 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+      <h2 class="text-lg font-semibold mb-2">Token da API Beehus</h2>
+      <p class="text-gray-600 mb-3">Cole o token de hoje (válido por 1 dia — a Beehus renova todo dia). Ele fica só na memória deste servidor e é perdido a cada restart.</p>
+      <input type="password" id="input-beehus-token" placeholder="eyJ..."
+             class="w-full border rounded-lg px-3 py-2 font-mono text-xs" />
+      <p id="beehus-token-msg" class="mt-2 text-xs"></p>
+      <div class="mt-4 flex justify-end gap-2">
+        <button onclick="BeehusToken.fecharModal()" class="px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">Fechar</button>
+        <button onclick="BeehusToken.salvar()" id="btn-salvar-beehus-token" class="px-3 py-2 rounded-lg bg-black text-white hover:bg-gray-800">Validar e salvar</button>
+      </div>
+    </div>
+  </div>
+  <script src="/static/js/beehus_token.js"></script>
 
   <script>
     async function atualizarVersao() {

@@ -1,10 +1,14 @@
 from flask import Blueprint, render_template, jsonify, request
-from bson import ObjectId
 from db import (db, get_biz_dates, get_biz_dates_range, load_config_full, load_settings,
-                wallet_filter_query, get_company_filter,
+                get_company_filter,
                 biz_days_elapsed as _biz_days_elapsed,
                 cell_cls as _cell_cls, wallet_cls as _wallet_cls,
-                build_wallet_map as _build_wallet_map)
+                build_wallet_map as _build_wallet_map,
+                catalog_companies, catalog_company_names, catalog_entity_names,
+                catalog_wallets, filter_wallets,
+                api_unprocessed_positions, api_processed_positions,
+                api_processed_positions_multi, api_nav_results, api_nav_results_multi,
+                api_transactions, normalize_id)
 import json, os
 
 bp = Blueprint("dashboard", __name__)
@@ -33,23 +37,110 @@ def _write_wallet_comments(comments):
         json.dump(comments, f, indent=2, ensure_ascii=False)
 
 
-def _count_collection(collection, dates, wallet_to_pair, pairs):
-    """Count documents per (companyId-entityId pair, date) using aggregation."""
-    relevant_wids = [wid for wid, pair in wallet_to_pair.items() if pair in pairs]
-    if not relevant_wids:
-        return {}
-    pipeline = [
-        {"$match": {"walletId": {"$in": relevant_wids}, "positionDate": {"$in": dates}}},
-        {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}, "n": {"$sum": 1}}},
-    ]
+# ── Helpers de agregação (API) ────────────────────────────────────────────────
+# Substituem os antigos aggregates Mongo ($group por walletId/positionDate) —
+# agora recebem listas/dicts já buscados via db.py (API Beehus, CLAUDE.md §8).
+
+def _count_by_pair_date_flat(docs, dates, wallet_to_pair, pairs):
+    """Contexto:
+    Conta documentos de posição por (par empresa/entidade, data) a partir de uma
+    lista PLANA já buscada via API (ex.: api_unprocessed_positions, que devolve
+    tudo de uma janela de datas numa lista só) — substitui o antigo aggregate
+    Mongo `_count_collection` (agrupava por walletId/positionDate e depois somava
+    por par). Usada em /api/rows.
+
+    Pseudocódigo:
+      1. Filtra os documentos para as datas de interesse.
+      2. Resolve o par (companyId, entityId) da carteira do documento.
+      3. Soma 1 por documento em counts[(par, data)] quando o par está em `pairs`.
+    """
+    dates_set = set(dates)
     counts = {}
-    for doc in collection.aggregate(pipeline):
-        wid  = str(doc["_id"]["w"])
-        d    = str(doc["_id"]["d"])[:10]
+    for doc in docs:
+        d = str(doc.get("positionDate", ""))[:10]
+        if d not in dates_set:
+            continue
+        wid  = doc.get("walletId", "")
         pair = wallet_to_pair.get(wid)
         if pair and pair in pairs:
-            counts[(pair, d)] = counts.get((pair, d), 0) + doc["n"]
+            counts[(pair, d)] = counts.get((pair, d), 0) + 1
     return counts
+
+
+def _count_by_pair_date_multi(docs_by_date, wallet_to_pair, pairs):
+    """Contexto:
+    Mesma contagem de `_count_by_pair_date_flat`, mas a partir de um dict
+    {date: [docs]} (retorno de api_processed_positions_multi, que só aceita 1
+    data por chamada e já devolve os docs agrupados por data). Usada em
+    /api/processed/rows.
+
+    Pseudocódigo:
+      1. Para cada data e cada documento dessa data, resolve o par da carteira.
+      2. Soma 1 por documento em counts[(par, data)] quando o par está em `pairs`.
+    """
+    counts = {}
+    for d, docs in docs_by_date.items():
+        for doc in docs:
+            wid  = normalize_id(doc.get("walletId", ""))
+            pair = wallet_to_pair.get(wid)
+            if pair and pair in pairs:
+                counts[(pair, d)] = counts.get((pair, d), 0) + 1
+    return counts
+
+
+def _wallet_counts_by_date_flat(docs, dates):
+    """Contexto:
+    Conta documentos de posição por (walletId, data) a partir de uma lista PLANA
+    já buscada via API — substitui os aggregates Mongo $group por (w,d) com
+    $sum usados nas grades por carteira (Cargas). Usada em /api/detail-grid,
+    /api/wallet/rows (modo cargas) e /api/wallet/template-rows (modo cargas).
+
+    Pseudocódigo:
+      1. Filtra os documentos para as datas de interesse.
+      2. Soma 1 por documento em counts[(walletId, data)].
+    """
+    dates_set = set(dates)
+    counts = {}
+    for doc in docs:
+        d = str(doc.get("positionDate", ""))[:10]
+        if d not in dates_set:
+            continue
+        wid = doc.get("walletId", "")
+        counts[(wid, d)] = counts.get((wid, d), 0) + 1
+    return counts
+
+
+def _wallets_present_by_date_multi(docs_by_date):
+    """Contexto:
+    A partir de um dict {date: [docs]} (retorno de api_processed_positions_multi
+    ou api_nav_results_multi), monta {date: set(walletId)} — quais carteiras têm
+    dado em cada data. Substitui os aggregates Mongo $group por (w,d) sem $sum
+    (checagem de existência, ex.: processedPosition/navPackages). Usada em
+    /api/processed/detail-grid, /api/wallet/rows (modo processed/nav) e
+    /api/wallet/template-rows (modo processed/nav).
+
+    Pseudocódigo:
+      1. Para cada data, extrai o walletId normalizado de cada documento.
+    """
+    return {d: {normalize_id(doc.get("walletId", "")) for doc in docs} for d, docs in docs_by_date.items()}
+
+
+def _resolve_companies_for_wallets(wid_list):
+    """Contexto:
+    Resolve a quais companyIds pertence uma lista de walletIds vinda de um
+    template salvo (que pode misturar carteiras de empresas diferentes) — usada
+    pra restringir as chamadas de posição/transação/NAV via API a essas
+    empresas em vez de buscar em todas. Retorna (company_ids, wallet_by_id).
+
+    Pseudocódigo:
+      1. Busca o catálogo completo de carteiras (todas as empresas visíveis).
+      2. Filtra pro subconjunto de walletIds do template.
+      3. Extrai a lista de companyIds distintos e o dict walletId -> doc.
+    """
+    wid_set = set(wid_list)
+    wallet_by_id = {w["_id"]: w for w in catalog_wallets() if w["_id"] in wid_set}
+    company_ids = sorted({w["companyId"] for w in wallet_by_id.values() if w.get("companyId")})
+    return company_ids, wallet_by_id
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
@@ -61,10 +152,25 @@ def index():
 
 @bp.route("/api/rows")
 def get_rows():
+    """Contexto:
+    Grade principal do Dashboard (Cargas) — uma linha por par empresa/entidade,
+    uma coluna por data, com a contagem de carteiras que já subiram posição não
+    processada (unprocessedSecurityPositions) via API Beehus. Chamada pela tela
+    inicial do Dashboard.
+
+    Pseudocódigo:
+      1. Resolve as últimas `limit` datas úteis e os nomes de empresas/entidades.
+      2. Monta o mapa carteira -> par (companyId, entityId) e o total de carteiras
+         por par, já filtrado pelos toggles de settings.
+      3. Restringe os pares aos selecionados em config.json e ao filtro de empresa.
+      4. Busca as posições não processadas de todas as empresas na janela de
+         datas e conta quantas há por (par, data).
+      5. Monta as linhas com os rótulos "count/total" e a classe de cor da célula.
+    """
     limit         = int(request.args.get("limit", 10))
     dates         = get_biz_dates(limit)
-    company_names = {str(c["_id"]): c.get("name", "") for c in db.companies.find({}, {"name": 1})}
-    entity_names  = {str(e["_id"]): e.get("name", "") for e in db.entities.find({}, {"name": 1})}
+    company_names = catalog_company_names()
+    entity_names  = catalog_entity_names()
 
     wallet_to_pair, pair_total = _build_wallet_map(load_settings())
 
@@ -77,7 +183,8 @@ def get_rows():
         pairs = {p for p in pairs if p[0] in cf}
 
     elapsed = {d: _biz_days_elapsed(d) for d in dates}
-    counts  = _count_collection(db.unprocessedSecurityPositions, dates, wallet_to_pair, pairs)
+    docs    = api_unprocessed_positions(dates[0], dates[-1], company_ids=None) if dates else []
+    counts  = _count_by_pair_date_flat(docs, dates, wallet_to_pair, pairs)
 
     rows = []
     for cid, eid in sorted(pairs, key=lambda p: (company_names.get(p[0], p[0]), entity_names.get(p[1], p[1]))):
@@ -107,22 +214,29 @@ def get_rows():
 
 @bp.route("/api/detail")
 def get_detail():
+    """Contexto:
+    Drill-down do Dashboard (Cargas): lista as carteiras de um par empresa/
+    entidade numa data específica, com a contagem de posições não processadas
+    de cada uma. Chamada ao clicar numa célula da grade principal.
+
+    Pseudocódigo:
+      1. Filtra as carteiras do par via catálogo (API) + settings.
+      2. Busca as posições não processadas da empresa na data pedida.
+      3. Conta quantas posições cada carteira tem e monta o detalhe ordenado por nome.
+    """
     cid = request.args.get("companyId")
     eid = request.args.get("entityId")
     d   = request.args.get("date")
 
-    wq = {"companyId": cid, "entityId": eid, **wallet_filter_query(load_settings())}
-    wallets = {
-        str(w["_id"]): {"name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
-    }
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[cid]), company_id=cid, entity_id=eid,
+                                   settings=load_settings()) if cid else []
+    wallets = {w["_id"]: {"name": w.get("name") or w["_id"], "accountCode": w.get("accountCode", "")}
+               for w in wallets_list}
 
     counts = {wid: 0 for wid in wallets}
-    for pos in db.unprocessedSecurityPositions.find(
-        {"walletId": {"$in": list(wallets)}, "positionDate": d},
-        {"walletId": 1}
-    ):
-        wid = str(pos.get("walletId", ""))
+    docs = api_unprocessed_positions(d, d, company_ids=[cid]) if (cid and d) else []
+    for pos in docs:
+        wid = pos.get("walletId", "")
         if wid in counts:
             counts[wid] += 1
 
@@ -142,23 +256,27 @@ def get_detail():
 
 @bp.route("/api/detail-grid")
 def get_detail_grid():
+    """Contexto:
+    Grade de datas x carteiras do Dashboard (Cargas) pra um par empresa/entidade
+    — contagem de posições não processadas de cada carteira em cada data.
+
+    Pseudocódigo:
+      1. Filtra as carteiras do par via catálogo (API) + settings.
+      2. Busca as posições não processadas da empresa na janela de datas.
+      3. Conta por (carteira, data) e monta a grade ordenada por nome.
+    """
     cid   = request.args.get("companyId")
     eid   = request.args.get("entityId")
     limit = int(request.args.get("limit", 10))
     dates = get_biz_dates(limit)
 
-    wq = {"companyId": cid, "entityId": eid, **wallet_filter_query(load_settings())}
-    wallets = {
-        str(w["_id"]): {"name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
-    }
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[cid]), company_id=cid, entity_id=eid,
+                                   settings=load_settings()) if cid else []
+    wallets = {w["_id"]: {"name": w.get("name") or w["_id"], "accountCode": w.get("accountCode", "")}
+               for w in wallets_list}
 
-    counts = {}
-    for doc in db.unprocessedSecurityPositions.aggregate([
-        {"$match": {"walletId": {"$in": list(wallets)}, "positionDate": {"$in": dates}}},
-        {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}, "n": {"$sum": 1}}},
-    ]):
-        counts[(str(doc["_id"]["w"]), str(doc["_id"]["d"])[:10])] = doc["n"]
+    docs   = api_unprocessed_positions(dates[0], dates[-1], company_ids=[cid]) if (cid and dates) else []
+    counts = _wallet_counts_by_date_flat(docs, dates)
 
     rows = sorted([
         {
@@ -178,10 +296,23 @@ def get_detail_grid():
 
 @bp.route("/api/processed/rows")
 def get_processed_rows():
+    """Contexto:
+    Grade principal do Dashboard (Processado) — mesma ideia de `get_rows`, mas
+    contando posições processadas (processedPosition) via API Beehus.
+
+    Pseudocódigo:
+      1. Resolve as últimas `limit` datas úteis e os nomes de empresas/entidades.
+      2. Monta o mapa carteira -> par e o total de carteiras por par.
+      3. Restringe os pares aos selecionados em config.json e ao filtro de empresa.
+      4. Busca as posições processadas de todas as empresas, uma chamada por
+         data (a API não aceita faixa pra posição processada), e conta por
+         (par, data).
+      5. Monta as linhas com os rótulos "count/total" e a classe de cor da célula.
+    """
     limit         = int(request.args.get("limit", 10))
     dates         = get_biz_dates(limit)
-    company_names = {str(c["_id"]): c.get("name", "") for c in db.companies.find({}, {"name": 1})}
-    entity_names  = {str(e["_id"]): e.get("name", "") for e in db.entities.find({}, {"name": 1})}
+    company_names = catalog_company_names()
+    entity_names  = catalog_entity_names()
 
     wallet_to_pair, pair_total = _build_wallet_map(load_settings())
 
@@ -193,8 +324,9 @@ def get_processed_rows():
     if cf:
         pairs = {p for p in pairs if p[0] in cf}
 
-    elapsed = {d: _biz_days_elapsed(d) for d in dates}
-    counts  = _count_collection(db.processedPosition, dates, wallet_to_pair, pairs)
+    elapsed      = {d: _biz_days_elapsed(d) for d in dates}
+    docs_by_date = api_processed_positions_multi(dates, company_ids=None) if dates else {}
+    counts       = _count_by_pair_date_multi(docs_by_date, wallet_to_pair, pairs)
 
     rows = []
     for cid, eid in sorted(pairs, key=lambda p: (company_names.get(p[0], p[0]), entity_names.get(p[1], p[1]))):
@@ -224,23 +356,26 @@ def get_processed_rows():
 
 @bp.route("/api/processed/detail")
 def get_processed_detail():
+    """Contexto:
+    Drill-down do Dashboard (Processado): lista as carteiras de um par empresa/
+    entidade numa data específica, indicando se cada uma tem posição processada.
+
+    Pseudocódigo:
+      1. Filtra as carteiras do par via catálogo (API) + settings.
+      2. Busca as posições processadas da empresa na data pedida.
+      3. Marca quais carteiras aparecem no resultado e monta o detalhe.
+    """
     cid = request.args.get("companyId")
     eid = request.args.get("entityId")
     d   = request.args.get("date")
 
-    wq = {"companyId": cid, "entityId": eid, **wallet_filter_query(load_settings())}
-    wallets = {
-        str(w["_id"]): {"name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
-    }
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[cid]), company_id=cid, entity_id=eid,
+                                   settings=load_settings()) if cid else []
+    wallets = {w["_id"]: {"name": w.get("name") or w["_id"], "accountCode": w.get("accountCode", "")}
+               for w in wallets_list}
 
-    wids_with_pp = {
-        str(pos["walletId"])
-        for pos in db.processedPosition.find(
-            {"walletId": {"$in": list(wallets)}, "positionDate": d},
-            {"walletId": 1}
-        )
-    }
+    docs = api_processed_positions(d, company_ids=[cid]) if (cid and d) else []
+    wids_with_pp = {doc.get("walletId", "") for doc in docs if doc.get("walletId", "") in wallets}
 
     detail = sorted([
         {
@@ -258,23 +393,27 @@ def get_processed_detail():
 
 @bp.route("/api/processed/detail-grid")
 def get_processed_detail_grid():
+    """Contexto:
+    Grade de datas x carteiras do Dashboard (Processado) pra um par empresa/
+    entidade — existência de posição processada de cada carteira em cada data.
+
+    Pseudocódigo:
+      1. Filtra as carteiras do par via catálogo (API) + settings.
+      2. Busca as posições processadas da empresa, uma chamada por data.
+      3. Marca presença por (carteira, data) e monta a grade ordenada por nome.
+    """
     cid   = request.args.get("companyId")
     eid   = request.args.get("entityId")
     limit = int(request.args.get("limit", 10))
     dates = get_biz_dates(limit)
 
-    wq = {"companyId": cid, "entityId": eid, **wallet_filter_query(load_settings())}
-    wallets = {
-        str(w["_id"]): {"name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
-    }
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[cid]), company_id=cid, entity_id=eid,
+                                   settings=load_settings()) if cid else []
+    wallets = {w["_id"]: {"name": w.get("name") or w["_id"], "accountCode": w.get("accountCode", "")}
+               for w in wallets_list}
 
-    wids_by_date = {d: set() for d in dates}
-    for doc in db.processedPosition.aggregate([
-        {"$match": {"walletId": {"$in": list(wallets)}, "positionDate": {"$in": dates}}},
-        {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}}},
-    ]):
-        wids_by_date.get(str(doc["_id"]["d"])[:10], set()).add(str(doc["_id"]["w"]))
+    docs_by_date = api_processed_positions_multi(dates, company_ids=[cid]) if (cid and dates) else {}
+    wids_by_date = _wallets_present_by_date_multi(docs_by_date)
 
     rows = sorted([
         {
@@ -282,8 +421,8 @@ def get_processed_detail_grid():
             "name":        wallets[wid]["name"],
             "accountCode": wallets[wid]["accountCode"],
             "cells": [
-                {"label": "✓" if wid in wids_by_date[d] else "—",
-                 "cls":   _wallet_cls(1 if wid in wids_by_date[d] else 0)}
+                {"label": "✓" if wid in wids_by_date.get(d, set()) else "—",
+                 "cls":   _wallet_cls(1 if wid in wids_by_date.get(d, set()) else 0)}
                 for d in dates
             ],
         }
@@ -297,26 +436,40 @@ def get_processed_detail_grid():
 
 @bp.route("/api/wallet/list")
 def wallet_list():
-    """Lightweight: returns wallets for a company (id, name, accountCode only)."""
+    """Contexto:
+    Lightweight: retorna as carteiras de uma empresa (id, nome, accountCode),
+    opcionalmente restritas a uma entidade. Usada pra popular o seletor de
+    carteiras da tela de Carteiras.
+
+    Pseudocódigo:
+      1. Sem companyId, devolve lista vazia.
+      2. Filtra as carteiras da empresa (+ entidade, se informada) via catálogo.
+    """
     company_id = request.args.get("companyId", "").strip()
     entity_id  = request.args.get("entityId", "").strip()
     if not company_id:
         return jsonify([])
-    wq = {"companyId": company_id, **wallet_filter_query(load_settings())}
-    if entity_id:
-        wq["entityId"] = entity_id
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[company_id]), company_id=company_id,
+                                   entity_id=entity_id, settings=load_settings())
     wallets = sorted([
-        {"walletId": str(w["_id"]), "name": w.get("name", str(w["_id"])), "accountCode": w.get("accountCode", "")}
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1})
+        {"walletId": w["_id"], "name": w.get("name") or w["_id"], "accountCode": w.get("accountCode", "")}
+        for w in wallets_list
     ], key=lambda w: w["name"])
     return jsonify(wallets)
 
 
 @bp.route("/api/wallet/companies")
 def wallet_companies():
+    """Contexto:
+    Lista as empresas visíveis (respeitando o filtro de empresa das settings)
+    pra popular o seletor de empresa da tela de Carteiras.
+
+    Pseudocódigo:
+      1. Busca o catálogo de empresas via API e ordena por nome.
+      2. Aplica o filtro de empresa configurado, se houver.
+    """
     companies = sorted(
-        [{"id": str(c["_id"]), "name": c.get("name", "")}
-         for c in db.companies.find({}, {"name": 1})],
+        [{"id": c["_id"], "name": c.get("name", "")} for c in catalog_companies()],
         key=lambda c: c["name"],
     )
     cf = get_company_filter()
@@ -327,21 +480,26 @@ def wallet_companies():
 
 @bp.route("/api/wallet/entities")
 def wallet_entities():
+    """Contexto:
+    Lista as entidades distintas presentes nas carteiras de uma empresa —
+    alimenta o segundo filtro (Entidade) da tela de Carteiras. Antes lia
+    `db.wallets.distinct` + `db.entities.find` com `$in` de ObjectId; agora
+    resolve tudo a partir do catálogo (API), já com ids em string.
+
+    Pseudocódigo:
+      1. Filtra as carteiras da empresa via catálogo + settings.
+      2. Coleta os entityId distintos presentes nessas carteiras.
+      3. Resolve os nomes via catalog_entity_names() e ordena por nome.
+    """
     company_id = request.args.get("companyId", "").strip()
     if not company_id:
         return jsonify([])
-    wq = {"companyId": company_id, **wallet_filter_query(load_settings())}
-    entity_ids = db.wallets.distinct("entityId", wq)
-    oid_list = []
-    for eid in entity_ids:
-        if eid:
-            try:
-                oid_list.append(ObjectId(str(eid)))
-            except Exception:
-                pass
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[company_id]), company_id=company_id,
+                                   settings=load_settings())
+    entity_ids   = {w["entityId"] for w in wallets_list if w.get("entityId")}
+    entity_names = catalog_entity_names()
     entities = sorted(
-        [{"id": str(e["_id"]), "name": e.get("name", "")}
-         for e in db.entities.find({"_id": {"$in": oid_list}}, {"name": 1})],
+        [{"id": eid, "name": entity_names.get(eid, "")} for eid in entity_ids],
         key=lambda e: e["name"],
     )
     return jsonify(entities)
@@ -349,6 +507,20 @@ def wallet_entities():
 
 @bp.route("/api/wallet/rows")
 def get_wallet_rows():
+    """Contexto:
+    Grade de datas x carteiras da tela de Carteiras (Cargas, Processado ou NAV),
+    pra uma empresa (opcionalmente restrita a uma entidade). Chamada ao trocar
+    empresa/entidade/modo/período na tela.
+
+    Pseudocódigo:
+      1. Resolve as datas (janela explícita ou últimas `limit` datas úteis).
+      2. Filtra as carteiras da empresa (+ entidade) via catálogo + settings.
+      3. Modo "processed"/"nav": busca via API por data (fan-out por dia) e
+         marca presença por (carteira, data).
+      4. Modo "cargas": busca as posições não processadas na janela e conta
+         por (carteira, data).
+      5. Monta a grade com entidade/instituição e as células formatadas.
+    """
     company_id = request.args.get("companyId", "").strip()
     entity_id  = request.args.get("entityId", "").strip()
     limit      = int(request.args.get("limit", 10))
@@ -361,63 +533,46 @@ def get_wallet_rows():
 
     dates = get_biz_dates_range(start_date, end_date) if (start_date and end_date) else get_biz_dates(limit)
 
-    wq = {"companyId": company_id, **wallet_filter_query(load_settings())}
-    if entity_id:
-        wq["entityId"] = entity_id
-
+    wallets_list = filter_wallets(catalog_wallets(company_ids=[company_id]), company_id=company_id,
+                                   entity_id=entity_id, settings=load_settings())
     wallets = {
-        str(w["_id"]): {
-            "name":        w.get("name", str(w["_id"])),
+        w["_id"]: {
+            "name":        w.get("name") or w["_id"],
             "accountCode": w.get("accountCode", ""),
-            "entityId":    str(w.get("entityId", "")),
+            "entityId":    w.get("entityId", ""),
         }
-        for w in db.wallets.find(wq, {"name": 1, "accountCode": 1, "entityId": 1})
+        for w in wallets_list
     }
 
     if not wallets:
         return jsonify({"rows": [], "dates": dates})
 
-    entity_map = {
-        str(e["_id"]): {"name": e.get("name", ""), "beehusName": e.get("beehusName", "")}
-        for e in db.entities.find({}, {"name": 1, "beehusName": 1})
-    }
-    wid_list = list(wallets.keys())
+    entity_names = catalog_entity_names()
 
     if mode in ("processed", "nav"):
-        collection = db.processedPosition if mode == "processed" else db.navPackages
-        match = {"walletId": {"$in": wid_list}, "positionDate": {"$in": dates}}
-        if mode == "nav":
-            match["trashed"] = {"$ne": True}
-        wids_by_date = {d: set() for d in dates}
-        for doc in collection.aggregate([
-            {"$match": match},
-            {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}}},
-        ]):
-            wids_by_date.get(str(doc["_id"]["d"])[:10], set()).add(str(doc["_id"]["w"]))
+        if mode == "processed":
+            docs_by_date = api_processed_positions_multi(dates, company_ids=[company_id]) if dates else {}
+        else:
+            docs_by_date = api_nav_results_multi(dates, company_ids=[company_id]) if dates else {}
+        wids_by_date = _wallets_present_by_date_multi(docs_by_date)
 
         rows = sorted([{
             "walletId": wid, "name": wallets[wid]["name"],
             "accountCode": wallets[wid]["accountCode"],
-            "entity": entity_map.get(wallets[wid]["entityId"], {}).get("name", ""),
-            "institution": (entity_map.get(wallets[wid]["entityId"], {}).get("beehusName") or
-                            entity_map.get(wallets[wid]["entityId"], {}).get("name", "")),
-            "cells": [{"label": "✓" if wid in wids_by_date[d] else "—",
-                        "cls": _wallet_cls(1 if wid in wids_by_date[d] else 0)} for d in dates],
+            "entity": entity_names.get(wallets[wid]["entityId"], ""),
+            "institution": entity_names.get(wallets[wid]["entityId"], ""),
+            "cells": [{"label": "✓" if wid in wids_by_date.get(d, set()) else "—",
+                        "cls": _wallet_cls(1 if wid in wids_by_date.get(d, set()) else 0)} for d in dates],
         } for wid in wallets], key=lambda x: x["name"])
     else:
-        counts = {}
-        for doc in db.unprocessedSecurityPositions.aggregate([
-            {"$match": {"walletId": {"$in": wid_list}, "positionDate": {"$in": dates}}},
-            {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}, "n": {"$sum": 1}}},
-        ]):
-            counts[(str(doc["_id"]["w"]), str(doc["_id"]["d"])[:10])] = doc["n"]
+        docs   = api_unprocessed_positions(dates[0], dates[-1], company_ids=[company_id]) if dates else []
+        counts = _wallet_counts_by_date_flat(docs, dates)
 
         rows = sorted([{
             "walletId": wid, "name": wallets[wid]["name"],
             "accountCode": wallets[wid]["accountCode"],
-            "entity": entity_map.get(wallets[wid]["entityId"], {}).get("name", ""),
-            "institution": (entity_map.get(wallets[wid]["entityId"], {}).get("beehusName") or
-                            entity_map.get(wallets[wid]["entityId"], {}).get("name", "")),
+            "entity": entity_names.get(wallets[wid]["entityId"], ""),
+            "institution": entity_names.get(wallets[wid]["entityId"], ""),
             "cells": [{"label": str(counts.get((wid, d), 0)),
                         "cls": _wallet_cls(counts.get((wid, d), 0))} for d in dates],
         } for wid in wallets], key=lambda x: x["name"])
@@ -500,7 +655,17 @@ def delete_wallet_template(name):
 
 @bp.route("/api/wallet/template-rows")
 def get_wallet_template_rows():
-    """Load a template and return wallet-level grid data for its wallets."""
+    """Contexto:
+    Carrega um template salvo (que pode misturar carteiras de várias empresas)
+    e devolve a grade carteira x data (Cargas/Processado/NAV) pra essas
+    carteiras. Chamada ao selecionar um template salvo na tela de Carteiras.
+
+    Pseudocódigo:
+      1. Localiza o template e monta a lista/mapa de walletIds salvos.
+      2. Resolve a(s) empresa(s) dessas carteiras via catálogo completo (API).
+      3. Busca posições/NAV via API restrito a essas empresas.
+      4. Monta a grade aplicando o delay configurado por carteira no template.
+    """
     import traceback
     template_name = request.args.get("name", "").strip()
     limit         = int(request.args.get("limit", 10))
@@ -522,15 +687,9 @@ def get_wallet_template_rows():
         tmpl_map = {w["walletId"]: w for w in tmpl.get("wallets", []) if w.get("walletId")}
         elapsed  = {d: _biz_days_elapsed(d) for d in dates}
 
-        _oid_list = [ObjectId(wid) for wid in wid_list if len(wid) == 24]
-        _wallet_entity = {
-            str(w["_id"]): str(w.get("entityId", ""))
-            for w in db.wallets.find({"_id": {"$in": _oid_list}}, {"entityId": 1})
-        }
-        _ent_inst = {
-            str(e["_id"]): (e.get("beehusName") or e.get("name", ""))
-            for e in db.entities.find({}, {"name": 1, "beehusName": 1})
-        }
+        company_ids, wallet_by_id = _resolve_companies_for_wallets(wid_list)
+        _wallet_entity = {wid: wallet_by_id[wid].get("entityId", "") for wid in wid_list if wid in wallet_by_id}
+        _ent_inst = catalog_entity_names()
 
         def _cell(has_data, delay, d):
             expected = elapsed[d] >= delay
@@ -549,18 +708,15 @@ def get_wallet_template_rows():
             return {"label": "0", "cls": "bg-red-100 text-red-700"}
 
         if mode in ("processed", "nav"):
-            collection = db.processedPosition if mode == "processed" else db.navPackages
-            match = {"walletId": {"$in": wid_list}, "positionDate": {"$in": dates}}
-            if mode == "nav":
-                match["trashed"] = {"$ne": True}
-            wids_by_date = {d: set() for d in dates}
-            for doc in collection.aggregate([
-                {"$match": match},
-                {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}}},
-            ]):
-                d_key = str(doc["_id"]["d"])[:10]
-                if d_key in wids_by_date:
-                    wids_by_date[d_key].add(str(doc["_id"]["w"]))
+            if not company_ids or not dates:
+                docs_by_date = {}
+            elif mode == "processed":
+                docs_by_date = api_processed_positions_multi(dates, company_ids=company_ids)
+            else:
+                docs_by_date = api_nav_results_multi(dates, company_ids=company_ids)
+            wids_by_date = _wallets_present_by_date_multi(docs_by_date)
+            for d in dates:
+                wids_by_date.setdefault(d, set())
 
             rows = [{
                 "walletId": wid,
@@ -574,12 +730,8 @@ def get_wallet_template_rows():
                 "cells": [_cell(wid in wids_by_date[d], tmpl_map[wid].get("delay", 0), d) for d in dates],
             } for wid in wid_list if wid in tmpl_map]
         else:
-            counts = {}
-            for doc in db.unprocessedSecurityPositions.aggregate([
-                {"$match": {"walletId": {"$in": wid_list}, "positionDate": {"$in": dates}}},
-                {"$group": {"_id": {"w": "$walletId", "d": "$positionDate"}, "n": {"$sum": 1}}},
-            ]):
-                counts[(str(doc["_id"]["w"]), str(doc["_id"]["d"])[:10])] = doc["n"]
+            docs = api_unprocessed_positions(dates[0], dates[-1], company_ids=company_ids) if (company_ids and dates) else []
+            counts = _wallet_counts_by_date_flat(docs, dates)
 
             rows = [{
                 "walletId": wid,
@@ -602,7 +754,20 @@ def get_wallet_template_rows():
 
 @bp.route("/api/wallet/template-detail")
 def get_wallet_template_detail():
-    """Return daily issue detail for wallets in a template at a specific date."""
+    """Contexto:
+    Devolve o detalhe diário de pendências (issues, transações não
+    identificadas, posição processada, NAV) das carteiras de um template numa
+    data específica. Chamada ao abrir o drill-down diário de um template.
+
+    Pseudocódigo:
+      1. Localiza o template e a lista de walletIds salvos.
+      2. Resolve a(s) empresa(s) dessas carteiras via catálogo completo (API).
+      3. Conta issues pendentes por carteira/tipo (fallback Mongo, sem endpoint).
+      4. Conta transações não identificadas via API na data.
+      5. Verifica existência de posição processada e de NAV via API na data,
+         calculando a divergência rentabilidade NAV x Contribuição.
+      6. Monta as linhas com todos os indicadores por carteira.
+    """
     template_name = request.args.get("name", "").strip()
     date_str      = request.args.get("date", "").strip()
 
@@ -619,6 +784,9 @@ def get_wallet_template_detail():
     if not wid_list:
         return jsonify({"rows": [], "date": date_str})
 
+    wid_set = set(wid_list)
+    company_ids, _ = _resolve_companies_for_wallets(wid_list)
+
     issue_types = [
         "security_unmapped",
         "security_missing_classification",
@@ -630,6 +798,7 @@ def get_wallet_template_detail():
 
     # Count issues per (walletId, type)
     counts = {(wid, it): 0 for wid in wid_list for it in issue_types}
+    # Gap confirmado [2026-08-10]: sem endpoint de issues na API — fallback Mongo (CLAUDE.md §8).
     for doc in db.issues.aggregate([
         {"$match": {"walletId": {"$in": wid_list}, "date": date_str, "type": {"$in": issue_types}, "status": "pending"}},
         {"$group": {"_id": {"w": "$walletId", "t": "$type"}, "n": {"$sum": 1}}},
@@ -640,32 +809,30 @@ def get_wallet_template_detail():
 
     # Unidentified transactions (beehusTransactionType is null) per wallet
     unidentified = {wid: 0 for wid in wid_list}
-    for doc in db.transactions.aggregate([
-        {"$match": {"walletId": {"$in": wid_list}, "liquidationDate": date_str, "beehusTransactionType": None}},
-        {"$group": {"_id": "$walletId", "n": {"$sum": 1}}},
-    ]):
-        wid = str(doc["_id"])
-        if wid in unidentified:
-            unidentified[wid] = doc["n"]
+    if company_ids:
+        for doc in api_transactions(date_str, date_str, company_ids=company_ids, date_type="liquidation"):
+            wid = doc.get("walletId", "")
+            if wid in wid_set and doc.get("beehusTransactionType") is None:
+                unidentified[wid] += 1
 
     # Processed position existence per wallet
     pp_wids = set()
-    for doc in db.processedPosition.aggregate([
-        {"$match": {"walletId": {"$in": wid_list}, "positionDate": date_str}},
-        {"$group": {"_id": "$walletId"}},
-    ]):
-        pp_wids.add(str(doc["_id"]))
+    if company_ids:
+        for doc in api_processed_positions(date_str, company_ids=company_ids):
+            wid = doc.get("walletId", "")
+            if wid in wid_set:
+                pp_wids.add(wid)
 
     # NAV data per wallet (existence + returnNavPerShare / returnContribution)
     nav_wids = set()
     nav_dif  = {}  # walletId -> difRent value (or None)
-    for doc in db.navPackages.aggregate([
-        {"$match": {"walletId": {"$in": wid_list}, "positionDate": date_str, "trashed": {"$ne": True}}},
-        {"$project": {"walletId": 1, "dif": {"$subtract": [{"$ifNull": ["$returnNavPerShare", 0]}, {"$ifNull": ["$returnContribution", 0]}]}}},
-    ]):
-        wid = str(doc.get("walletId", ""))
-        nav_wids.add(wid)
-        nav_dif[wid] = doc.get("dif", 0)
+    if company_ids:
+        for doc in api_nav_results(date_str, company_ids=company_ids):
+            wid = normalize_id(doc.get("walletId", ""))
+            if wid not in wid_set:
+                continue
+            nav_wids.add(wid)
+            nav_dif[wid] = (doc.get("returnNavPerShare") or 0) - (doc.get("returnContribution") or 0)
 
     threshold = tmpl.get("difRentThreshold", 0.0005)
 

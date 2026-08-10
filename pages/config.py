@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request
-from db import db, load_config, load_config_delays, load_config_methods, load_config_responsible, load_settings, CONFIG_FILE, SETTINGS_FILE
+from db import (catalog_companies, catalog_company_names, catalog_entity_names, catalog_wallets,
+                load_config, load_config_delays, load_config_methods, load_config_responsible,
+                load_settings, CONFIG_FILE, SETTINGS_FILE)
 import json, os
 
 bp = Blueprint("config", __name__)
@@ -7,13 +9,13 @@ bp = Blueprint("config", __name__)
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _build_company_entity_list(selected, delays, methods, responsible):
-    company_names = {str(c["_id"]): c.get("name", "") for c in db.companies.find({}, {"name": 1})}
-    entity_names  = {str(e["_id"]): e.get("name", "") for e in db.entities.find({}, {"name": 1})}
+    company_names = catalog_company_names()
+    entity_names  = catalog_entity_names()
 
     company_map = {}
-    for w in db.wallets.find({}, {"companyId": 1, "entityId": 1}):
-        cid = str(w.get("companyId", ""))
-        eid = str(w.get("entityId", ""))
+    for w in catalog_wallets():
+        cid = w["companyId"]
+        eid = w["entityId"]
         if cid and eid:
             company_map.setdefault(cid, set()).add(eid)
 
@@ -98,8 +100,8 @@ def settings_save():
 def settings_companies():
     cf     = set(load_settings().get("company_filter", []))
     all_co = sorted(
-        [{"id": str(c["_id"]), "name": c.get("name", str(c["_id"]))}
-         for c in db.companies.find({}, {"name": 1})],
+        [{"id": c["_id"], "name": c.get("name") or c["_id"]}
+         for c in catalog_companies()],
         key=lambda c: c["name"],
     )
     for c in all_co:

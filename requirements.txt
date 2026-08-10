@@ -4,3 +4,4 @@ dnspython
 openpyxl
 certifi
 python-dateutil
+requests

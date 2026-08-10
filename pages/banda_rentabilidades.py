@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request
-from db import db, get_biz_dates, get_company_filter
-from bson import ObjectId
+from db import (db, get_biz_dates, get_company_filter, catalog_companies, catalog_wallets,
+                catalog_securities_by_id, catalog_groupings,
+                api_processed_positions_multi, api_nav_results_multi)
 import json, os, math
 
 bp = Blueprint("banda_rentabilidades", __name__)
@@ -70,12 +71,12 @@ def _compound(returns):
     return round(p - 1.0, 8)
 
 
-# ── MongoDB helpers ───────────────────────────────────────────────────────────
+# ── Helpers de dados (API-first — CLAUDE.md §8) ──────────────────────────────
 
 def _wallets_for_company(company_id):
     if not company_id:
         return set()
-    return {str(w["_id"]) for w in db.wallets.find({"companyId": company_id}, {"_id": 1})}
+    return {w["_id"] for w in catalog_wallets(company_ids=[company_id])}
 
 
 def _classify_type(sec):
@@ -114,23 +115,16 @@ def _classify_type(sec):
 
 def _sec_meta(sec_ids):
     """Returns {secId: {"name": ..., "type": ...}}."""
-    oid_list = []
+    by_id = catalog_securities_by_id()
+    meta  = {}
     for sid in sec_ids:
-        try:
-            oid_list.append(ObjectId(sid))
-        except Exception:
-            oid_list.append(sid)
-    meta = {}
-    for s in db.securities.find(
-        {"_id": {"$in": oid_list}},
-        {"beehusName": 1, "securityType": 1, "type": 1, "yield": 1, "indexerPercentual": 1}
-    ):
-        sid = str(s["_id"])
-        meta[sid] = {"name": s.get("beehusName", sid), "type": _classify_type(s)}
+        s = by_id.get(str(sid))
+        if s:
+            meta[str(sid)] = {"name": s.get("beehusName", sid), "type": _classify_type(s)}
     return meta
 
 
-def _compute_sec_returns(wids, all_dates):
+def _compute_sec_returns(company_id, wids, all_dates):
     """
     Compute daily contribution-based returns per security from processedPosition.
     all_dates: sorted list (oldest→newest).
@@ -140,23 +134,25 @@ def _compute_sec_returns(wids, all_dates):
         return {}
     sorted_dates = sorted(all_dates)
 
-    # Fetch all processedPositions in range for these wallets
+    # Fetch all processedPositions in range for these wallets — 1 chamada por
+    # data via a API (fan-out em paralelo, cacheado), filtrando no cliente
+    # pelas carteiras da empresa/tela.
+    by_date = api_processed_positions_multi(sorted_dates, company_ids=[company_id])
     positions = {}  # {wid: {date: {secId: {pu, qty, tc, ec}}}}
-    for doc in db.processedPosition.find(
-        {"walletId": {"$in": list(wids)}, "positionDate": {"$in": sorted_dates}},
-        {"walletId": 1, "positionDate": 1, "securities": 1}
-    ):
-        wid = str(doc["walletId"])
-        d   = str(doc["positionDate"])[:10]
-        positions.setdefault(wid, {})[d] = {
-            str(s.get("securityId", "")): {
-                "pu":  s.get("pu"),
-                "qty": s.get("quantity"),
-                "tc":  s.get("totalContribution"),
-                "ec":  s.get("eventContribution") or 0,
+    for d, docs in by_date.items():
+        for doc in docs:
+            wid = str(doc.get("walletId", ""))
+            if wid not in wids:
+                continue
+            positions.setdefault(wid, {})[d] = {
+                str(s.get("securityId", "")): {
+                    "pu":  s.get("pu"),
+                    "qty": s.get("quantity"),
+                    "tc":  s.get("totalContribution"),
+                    "ec":  s.get("eventContribution") or 0,
+                }
+                for s in doc.get("securities", []) if s.get("securityId")
             }
-            for s in doc.get("securities", []) if s.get("securityId")
-        }
 
     # Compute consecutive-date returns per wallet
     sec_ret = {}  # {secId: {date: [returns across wallets]}}
@@ -255,7 +251,13 @@ def _make_cells(item_date_returns, display_dates, bench_by_date):
 
 
 def _published_wallet_ids(wids, dates):
-    """Return subset of wids that have a published navPackage on any of the given dates."""
+    """Return subset of wids that have a published navPackage on any of the given dates.
+
+    Gap confirmado [2026-08-10]: nenhum endpoint da API expõe o `published`
+    de navPackage por CARTEIRA (`get_nav_results`/`walletsWithNavDetailed`
+    não tem esse campo — só existe no nível de agrupamento). Fica em Mongo
+    como fallback de leitura documentado (CLAUDE.md §8), só para este filtro.
+    """
     pub = set()
     for doc in db.navPackages.find(
         {"walletId": {"$in": list(wids)},
@@ -268,13 +270,58 @@ def _published_wallet_ids(wids, dates):
     return pub
 
 
+def _fetch_nav_data(company_id, wids, all_dates, published_only):
+    """Contexto:
+    {walletId: {date: return}} (returnNavPerShare, com fallback pra
+    returnContribution) para as carteiras/datas pedidas — usado por
+    "Carteiras" e "Agrupamentos". Retorna só carteiras em `wids`.
+
+    Pseudocódigo:
+      1. `published_only` -> gap confirmado (ver `_published_wallet_ids`):
+         não há campo `published` por carteira na API. Fica em Mongo.
+      2. Sem esse filtro -> `api_nav_results_multi` (1 chamada por data,
+         fan-out, cacheado) — caminho comum (não filtrado).
+    """
+    nav_data = {}
+    if published_only:
+        nav_filter = {
+            "walletId":     {"$in": list(wids)},
+            "positionDate": {"$in": all_dates},
+            "trashed":      {"$ne": True},
+            "published":    {"$in": [True, "true", "True", 1]},
+        }
+        for doc in db.navPackages.find(
+            nav_filter, {"walletId": 1, "positionDate": 1, "returnNavPerShare": 1, "returnContribution": 1}
+        ):
+            wid = str(doc["walletId"])
+            d   = str(doc["positionDate"])[:10]
+            ret = doc.get("returnNavPerShare")
+            if ret is None:
+                ret = doc.get("returnContribution")
+            if ret is not None:
+                nav_data.setdefault(wid, {})[d] = ret
+        return nav_data
+
+    by_date = api_nav_results_multi(all_dates, company_ids=[company_id])
+    for d, items in by_date.items():
+        for item in items:
+            wid = str(item.get("walletId", ""))
+            if wid not in wids:
+                continue
+            ret = item.get("returnNavPerShare")
+            if ret is None:
+                ret = item.get("returnContribution")
+            if ret is not None:
+                nav_data.setdefault(wid, {})[d] = ret
+    return nav_data
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @bp.route("/banda-rentabilidades")
 def index():
     companies = sorted(
-        [{"id": str(c["_id"]), "name": c.get("name", str(c["_id"]))}
-         for c in db.companies.find({}, {"name": 1})],
+        [{"id": c["_id"], "name": c.get("name") or c["_id"]} for c in catalog_companies()],
         key=lambda c: c["name"],
     )
     cf = get_company_filter()
@@ -285,6 +332,9 @@ def index():
 
 @bp.route("/api/banda-rentabilidades/dates")
 def get_dates():
+    """Gap confirmado [2026-08-10]: nenhum endpoint da API dá "a última data
+    com dado, em lote" — o mesmo gap já documentado no app-irmão ControleCargas
+    (colunas "Última Unp/Pro/Pub"). Fica em Mongo como fallback de leitura."""
     company_id = request.args.get("companyId", "")
     end_date   = request.args.get("endDate") or None
     wids = list(_wallets_for_company(company_id))
@@ -329,7 +379,7 @@ def get_ativos():
     if published_only:
         use_wids = _published_wallet_ids(wids, display_dates[-5:])
 
-    sec_returns = _compute_sec_returns(use_wids, all_dates)
+    sec_returns = _compute_sec_returns(company_id, use_wids, all_dates)
     if not sec_returns:
         cols = display_dates if mode == "daily" else ["Semanal", "Mensal", "Anual"]
         return jsonify({"rows": [], "dates": cols, "mode": mode})
@@ -423,41 +473,14 @@ def get_carteiras():
     display_dates = get_biz_dates(n_extra, end_date)
     all_dates     = get_biz_dates(n_extra + _HIST_DAYS, end_date)
 
-    nav_filter = {
-        "walletId":     {"$in": list(wids)},
-        "positionDate": {"$in": all_dates},
-        "trashed":      {"$ne": True},
-    }
-    if published_only:
-        nav_filter["published"] = {"$in": [True, "true", "True", 1]}
-
-    nav_data = {}  # {wid: {date: return}}
-    for doc in db.navPackages.find(
-        nav_filter,
-        {"walletId": 1, "positionDate": 1, "returnNavPerShare": 1, "returnContribution": 1}
-    ):
-        wid = str(doc["walletId"])
-        d   = str(doc["positionDate"])[:10]
-        ret = doc.get("returnNavPerShare")
-        if ret is None:
-            ret = doc.get("returnContribution")
-        if ret is not None:
-            nav_data.setdefault(wid, {})[d] = ret
+    nav_data = _fetch_nav_data(company_id, wids, all_dates, published_only)
 
     if not nav_data:
         cols = display_dates if mode == "daily" else ["Semanal", "Mensal", "Anual"]
         return jsonify({"rows": [], "dates": cols, "mode": mode})
 
     # Wallet names
-    try:
-        wallet_names = {
-            str(w["_id"]): w.get("name", str(w["_id"]))
-            for w in db.wallets.find(
-                {"_id": {"$in": [ObjectId(w) for w in wids]}}, {"name": 1}
-            )
-        }
-    except Exception:
-        wallet_names = {}
+    wallet_names = {w["_id"]: w["name"] or w["_id"] for w in catalog_wallets(company_ids=[company_id])}
 
     # Cross-wallet EWMA benchmark
     all_wret = {}  # {date: [returns]}
@@ -555,23 +578,15 @@ def get_agrupamentos():
     if not company_wids:
         return jsonify({"rows": [], "dates": [], "mode": mode})
 
-    # Discover groups and which wallet fields they use
-    try:
-        groups_docs = list(db.groups.find({}, {"name": 1, "walletIds": 1, "wallets": 1, "companyId": 1}))
-    except Exception:
-        groups_docs = []
-
+    # Discover groupings for this company via a API (substitui a antiga
+    # leitura de `db.groups` — collection SEM nenhum documento, bug
+    # pré-existente que fazia esta aba sempre voltar vazia; ver
+    # `db.catalog_groupings`).
     groups = []
-    for g in groups_docs:
-        raw = g.get("walletIds") or g.get("wallets") or []
-        g_wids = {str(w) for w in (raw if isinstance(raw, list) else [])}
-        overlap = g_wids & company_wids
+    for g in catalog_groupings(company_id):
+        overlap = set(g["walletIds"]) & company_wids
         if overlap:
-            groups.append({
-                "id":        str(g["_id"]),
-                "name":      g.get("name", str(g["_id"])),
-                "walletIds": list(overlap),
-            })
+            groups.append({"id": g["_id"], "name": g["name"] or g["_id"], "walletIds": list(overlap)})
 
     if not groups:
         cols = get_biz_dates(_N_DISPLAY, end_date) if mode == "daily" else ["Semanal", "Mensal", "Anual"]
@@ -587,26 +602,7 @@ def get_agrupamentos():
     display_dates = get_biz_dates(n_extra, end_date)
     all_dates     = get_biz_dates(n_extra + _HIST_DAYS, end_date)
 
-    nav_filter = {
-        "walletId":     {"$in": list(all_group_wids)},
-        "positionDate": {"$in": all_dates},
-        "trashed":      {"$ne": True},
-    }
-    if published_only:
-        nav_filter["published"] = {"$in": [True, "true", "True", 1]}
-
-    nav_data = {}  # {wid: {date: return}}
-    for doc in db.navPackages.find(
-        nav_filter,
-        {"walletId": 1, "positionDate": 1, "returnNavPerShare": 1, "returnContribution": 1}
-    ):
-        wid = str(doc["walletId"])
-        d   = str(doc["positionDate"])[:10]
-        ret = doc.get("returnNavPerShare")
-        if ret is None:
-            ret = doc.get("returnContribution")
-        if ret is not None:
-            nav_data.setdefault(wid, {})[d] = ret
+    nav_data = _fetch_nav_data(company_id, all_group_wids, all_dates, published_only)
 
     # Aggregate returns per group (average of member wallets)
     group_returns = {}
@@ -722,7 +718,7 @@ def get_benchmarks():
     display_dates = get_biz_dates(n_extra, end_date)
     all_dates     = get_biz_dates(n_extra + _HIST_DAYS + 1, end_date)
 
-    sec_returns = _compute_sec_returns(wids, all_dates)
+    sec_returns = _compute_sec_returns(company_id, wids, all_dates)
     if not sec_returns:
         cols = display_dates if mode == "daily" else ["Semanal", "Mensal", "Anual"]
         return jsonify({"rows": [], "dates": cols, "mode": mode})
@@ -815,8 +811,30 @@ def get_benchmarks():
 
 # ── Detalhe ao clicar num ativo discrepante ───────────────────────────────────
 
+_ATIVO_DETAIL_WINDOW_DU = 40  # janela de busca (du) — folga sobre os 12 pontos pedidos
+
+
 @bp.route("/api/banda-rentabilidades/ativo-detail")
 def get_ativo_detail():
+    """Contexto:
+    Histórico dos últimos ~12 pontos de um ativo numa carteira, para o
+    drill-down de uma anomalia. Substitui `db.processedPosition.find(...)
+    .sort().limit(12)` por carteira — a API não tem um "últimos N documentos"
+    por carteira, então buscamos uma janela de `_ATIVO_DETAIL_WINDOW_DU` dias
+    úteis (folga generosa sobre os 12 pontos) via `api_processed_positions_multi`
+    e pegamos, por carteira, as 12 datas mais recentes que realmente têm
+    posição — equivalente na prática (carteiras ativas têm posição quase
+    todo dia útil), mas não é garantia estrita como o `limit(12)` do Mongo
+    era para carteiras com histórico muito esparso.
+
+    Pseudocódigo:
+      1. Janela de datas ≤ endDate (ou último du).
+      2. 1 chamada `api_processed_positions_multi` (fan-out por data, 1 empresa).
+      3. Por carteira: filtra as datas com o `securityId` pedido, ordena
+         desc., mantém as 12 mais recentes.
+      4. Calcula retorno (contribuição e PU) entre pontos consecutivos, igual
+         à lógica original.
+    """
     security_id = request.args.get("securityId", "")
     company_id  = request.args.get("companyId", "")
     end_date    = request.args.get("endDate") or None
@@ -824,15 +842,23 @@ def get_ativo_detail():
     if not security_id or not company_id:
         return jsonify({"history": []})
 
-    wids     = list(_wallets_for_company(company_id))
+    wids     = _wallets_for_company(company_id)
     end_d    = end_date or get_biz_dates(1)[0]
     history  = []
 
-    for wid in wids:
-        positions = list(db.processedPosition.find(
-            {"walletId": wid, "positionDate": {"$lte": end_d}},
-            {"securities": 1, "positionDate": 1}
-        ).sort("positionDate", -1).limit(12))
+    window_dates = get_biz_dates(_ATIVO_DETAIL_WINDOW_DU, end_d)
+    by_date = api_processed_positions_multi(window_dates, company_ids=[company_id])
+    # {wid: {date: doc}}
+    by_wallet_date = {}
+    for d, docs in by_date.items():
+        for doc in docs:
+            wid = doc.get("walletId", "")
+            if wid in wids:
+                by_wallet_date.setdefault(wid, {})[d] = doc
+
+    for wid, date_map in by_wallet_date.items():
+        recent_dates = sorted(date_map.keys(), reverse=True)[:12]
+        positions = [date_map[d] for d in recent_dates]
 
         # Check if this wallet has this security
         has_sec = any(
